@@ -1,0 +1,9 @@
+# Invalid: negative dose_g value
+brewspec_version: "0.1"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "pour_over"
+    coffee:
+      dose_g: -10
+    water:
+      weight_g: 320

@@ -1,0 +1,14 @@
+brewspec_version: "0.1"
+brews:
+  - date: "2026-02-13T06:45:00Z"
+    type: "espresso"
+    method: "Breville Barista Express"
+    coffee:
+      dose_g: 18
+    water:
+      weight_g: 36
+      temp_c: 93
+    grind: "fine, setting 5"
+    duration_s: 28
+    rating: 5
+    notes: "Thick crema, balanced sweetness"

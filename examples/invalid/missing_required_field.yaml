@@ -1,0 +1,8 @@
+# Invalid: brew missing required 'date' field
+brewspec_version: "0.1"
+brews:
+  - type: "pour_over"
+    coffee:
+      dose_g: 20
+    water:
+      weight_g: 320

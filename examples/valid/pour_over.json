@@ -1,0 +1,22 @@
+{
+  "brewspec_version": "0.1",
+  "brews": [
+    {
+      "date": "2026-02-15T08:30:00Z",
+      "type": "pour_over",
+      "method": "Hario V60",
+      "coffee": {
+        "dose_g": 20
+      },
+      "water": {
+        "weight_g": 320,
+        "volume_ml": 320,
+        "temp_c": 96
+      },
+      "grind": "medium-fine",
+      "duration_s": 180,
+      "rating": 4,
+      "notes": "Bright acidity, slightly under-extracted"
+    }
+  ]
+}

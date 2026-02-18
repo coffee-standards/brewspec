@@ -1,0 +1,8 @@
+brewspec_version: "0.1"
+brews:
+  - date: "2026-02-14T07:00:00Z"
+    type: "immersion"
+    coffee:
+      dose_g: 30
+    water:
+      weight_g: 500

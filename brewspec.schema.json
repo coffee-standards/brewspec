@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brewspec.org/schema/v0.1/brewspec.schema.json",
+  "title": "BrewSpec v0.1",
+  "description": "An open standard for describing coffee brews.",
+  "type": "object",
+  "required": ["brewspec_version", "brews"],
+  "additionalProperties": false,
+  "properties": {
+    "brewspec_version": {
+      "const": "0.1",
+      "description": "The BrewSpec version. Must be \"0.1\"."
+    },
+    "brews": {
+      "type": "array",
+      "description": "Array of brew records. At least one brew is required.",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/brew"
+      }
+    }
+  },
+  "$defs": {
+    "brew": {
+      "type": "object",
+      "required": ["date", "type", "coffee", "water"],
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "description": "Brew timestamp in ISO 8601 UTC format.",
+          "examples": ["2026-02-15T08:30:00Z"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["immersion", "pour_over", "espresso", "hybrid"],
+          "description": "Brew method category."
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Freeform brewer description.",
+          "examples": ["Hario V60", "French press", "AeroPress inverted"]
+        },
+        "coffee": {
+          "$ref": "#/$defs/coffee"
+        },
+        "water": {
+          "$ref": "#/$defs/water"
+        },
+        "grind": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Freeform grind description.",
+          "examples": ["medium-fine", "setting 15 on Comandante"]
+        },
+        "duration_s": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Brew duration in seconds. Zero is valid for instant methods."
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Brew rating. 1 = poor, 5 = excellent."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Freeform tasting or session notes."
+        }
+      }
+    },
+    "coffee": {
+      "type": "object",
+      "required": ["dose_g"],
+      "additionalProperties": false,
+      "properties": {
+        "dose_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Coffee dose in grams. Must be > 0."
+        }
+      }
+    },
+    "water": {
+      "type": "object",
+      "required": ["weight_g"],
+      "additionalProperties": false,
+      "properties": {
+        "weight_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Water weight in grams. Must be > 0."
+        },
+        "volume_ml": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Water volume in milliliters. Must be > 0."
+        },
+        "temp_c": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Water temperature in celsius. Range 0-100."
+        }
+      }
+    }
+  }
+}
