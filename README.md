@@ -2,6 +2,8 @@
 
 **An open source standard for describing coffee brews.**
 
+BrewSpec repository: https://github.com/coffee-standards/brewspec
+
 BrewSpec is to coffee what BeerXML is to beer: a common data format that makes brew data portable and interoperable across tools. Track your brews in one app, export the data, and import it into another — no vendor lock-in, no proprietary formats.
 
 ---
@@ -25,18 +27,25 @@ Create a YAML file describing your brew:
 
 ```yaml
 # my_brew.yaml
-brewspec_version: "0.1"
+brewspec_version: "0.2"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
     method: "Hario V60"
+    dose_g: 20
+    water_weight_g: 320
+    water_temp_c: 96
     coffee:
-      dose_g: 20
+      roast_date: "2026-01-20"
+      type: "single_origin"
+      origin: ["Ethiopia"]
+      varietal: "Heirloom"
+      process: "Washed"
     water:
-      weight_g: 320
-      temp_c: 96
+      ppm: 150
     grind: "medium-fine"
     duration_s: 180
+    tds: 1.38
     rating: 4
     notes: "Bright acidity, slightly under-extracted"
 ```
@@ -91,7 +100,7 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 
 ### 3. Read the spec
 
-See [`brewspec-v0.1.md`](./brewspec-v0.1.md) for the full field reference, constraints, and design decisions.
+See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, constraints, and design decisions.
 
 ---
 
@@ -99,7 +108,8 @@ See [`brewspec-v0.1.md`](./brewspec-v0.1.md) for the full field reference, const
 
 ```
 ├── brewspec.schema.json     # JSON Schema (canonical spec)
-├── brewspec-v0.1.md         # Human-readable spec document
+├── brewspec-v0.2.md         # Human-readable spec document (current)
+├── brewspec-v0.1.md         # Human-readable spec document (v0.1, for reference)
 ├── README.md                # This file
 ├── LICENSE                  # Apache 2.0
 ├── NOTICE                   # Copyright attribution
@@ -109,14 +119,17 @@ See [`brewspec-v0.1.md`](./brewspec-v0.1.md) for the full field reference, const
 │   │   ├── pour_over.json
 │   │   ├── immersion_minimal.yaml
 │   │   ├── espresso.yaml
-│   │   └── multi_brew.yaml
+│   │   ├── multi_brew.yaml
+│   │   └── hybrid.yaml
 │   └── invalid/             # Invalid examples (for testing)
 │       ├── missing_version.yaml
 │       ├── missing_required_field.yaml
 │       ├── invalid_type_enum.yaml
 │       ├── rating_out_of_range.yaml
 │       ├── negative_weight.yaml
-│       └── empty_brews_array.yaml
+│       ├── empty_brews_array.yaml
+│       ├── v0.1_format.yaml
+│       └── zero_duration.yaml
 └── tests/
     └── test_brewspec_schema.py
 ```
@@ -125,10 +138,10 @@ See [`brewspec-v0.1.md`](./brewspec-v0.1.md) for the full field reference, const
 
 ## Schema
 
-BrewSpec v0.1 uses **JSON Schema Draft 2020-12**.
+BrewSpec v0.2 uses **JSON Schema Draft 2020-12**.
 
 - **Schema file:** [`brewspec.schema.json`](./brewspec.schema.json)
-- **Version:** 0.1 (stable)
+- **Version:** 0.2 (stable)
 - **Format:** YAML or JSON (both validate against the same schema)
 
 ---
@@ -136,11 +149,12 @@ BrewSpec v0.1 uses **JSON Schema Draft 2020-12**.
 ## Examples
 
 **Valid examples** demonstrate correct usage:
-- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with all optional fields
+- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with full coffee metadata, water ppm, tds
 - [`examples/valid/pour_over.json`](./examples/valid/pour_over.json) — Same brew in JSON format
 - [`examples/valid/immersion_minimal.yaml`](./examples/valid/immersion_minimal.yaml) — Minimal brew (required fields only)
-- [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with rating and notes
-- [`examples/valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews in one file
+- [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with rating, notes, and tds
+- [`examples/valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews; includes blend with multiple origins
+- [`examples/valid/hybrid.yaml`](./examples/valid/hybrid.yaml) — AeroPress hybrid brew with blend coffee and water ppm
 
 **Invalid examples** demonstrate common validation failures (useful for testing parsers):
 - [`examples/invalid/missing_version.yaml`](./examples/invalid/missing_version.yaml)
@@ -149,17 +163,22 @@ BrewSpec v0.1 uses **JSON Schema Draft 2020-12**.
 - [`examples/invalid/rating_out_of_range.yaml`](./examples/invalid/rating_out_of_range.yaml)
 - [`examples/invalid/negative_weight.yaml`](./examples/invalid/negative_weight.yaml)
 - [`examples/invalid/empty_brews_array.yaml`](./examples/invalid/empty_brews_array.yaml)
+- [`examples/invalid/v0.1_format.yaml`](./examples/invalid/v0.1_format.yaml) — v0.1 structure with nested dose_g
+- [`examples/invalid/zero_duration.yaml`](./examples/invalid/zero_duration.yaml) — duration_s: 0
 
 ---
 
 ## Spec Document
 
-The human-readable spec is in [`brewspec-v0.1.md`](./brewspec-v0.1.md). It includes:
-- Field reference table (types, constraints, descriptions, examples)
-- Enumeration definitions (brew types)
+The human-readable spec is in [`brewspec-v0.2.md`](./brewspec-v0.2.md). It includes:
+- Field reference tables (types, constraints, descriptions, examples)
+- Enumeration definitions (brew types, coffee types)
 - Validation instructions (Python, JavaScript, CLI)
-- Design decisions (why array-only format, why freeform method/grind, etc.)
+- Design decisions (object model restructure, field naming, origin as array, etc.)
+- Backward compatibility guide (v0.1 to v0.2 migration)
 - Future version roadmap
+
+The v0.1 spec is preserved at [`brewspec-v0.1.md`](./brewspec-v0.1.md) for backward compatibility reference.
 
 ---
 
@@ -171,11 +190,11 @@ BrewSpec is an open standard. We welcome contributions!
 
 1. **Propose changes** — Open an issue or pull request in the BrewSpec repository describing your proposal
 2. **Report problems** — File an issue if you find ambiguities, errors, or missing information in the spec
-3. **Share usage data** — Help us understand how people use the spec to inform v0.2 design
+3. **Share usage data** — Help us understand how people use the spec to inform v0.3 design
 
 ### Contribution guidelines
 
-- **Backward compatibility matters** — v0.2+ must support v0.1 files. Breaking changes require a major version bump.
+- **Backward compatibility matters** — Breaking changes require a version bump and a migration guide.
 - **Simplicity first** — New fields must justify their existence. Complexity is earned, not assumed.
 - **Real usage drives design** — Propose enumerations or new fields only when real usage data shows a clear pattern.
 - **Tests prove the spec** — All changes must include test cases (valid and invalid examples).
@@ -212,9 +231,9 @@ Copyright 2026 Scott Luengen. See [NOTICE](./NOTICE) for details.
 
 ## Questions?
 
-- Read the spec: [`brewspec-v0.1.md`](./brewspec-v0.1.md)
+- Read the spec: [`brewspec-v0.2.md`](./brewspec-v0.2.md)
 - Check the examples: [`examples/`](./examples/)
-- Open an issue in the BrewSpec repository
+- Open an issue: https://github.com/coffee-standards/brewspec
 
 ---
 

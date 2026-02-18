@@ -1,0 +1,10 @@
+# This file demonstrates the v0.1 data structure, which is invalid against the v0.2 schema.
+# dose_g nested inside coffee and weight_g inside water are not valid in v0.2.
+brewspec_version: "0.2"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "pour_over"
+    coffee:
+      dose_g: 20
+    water:
+      weight_g: 320

@@ -1,0 +1,21 @@
+brewspec_version: "0.2"
+brews:
+  - date: "2026-02-18T07:15:00Z"
+    type: "hybrid"
+    method: "AeroPress inverted"
+    dose_g: 15
+    water_weight_g: 200
+    water_temp_c: 85
+    coffee:
+      roast_date: "2026-02-01"
+      type: "blend"
+      origin: ["Ethiopia", "Colombia"]
+      varietal: "Mixed"
+      process: "Natural"
+    water:
+      ppm: 75
+    grind: "medium"
+    duration_s: 120
+    tds: 1.55
+    rating: 4
+    notes: "Smooth and sweet, slightly fruity from the Ethiopian component"

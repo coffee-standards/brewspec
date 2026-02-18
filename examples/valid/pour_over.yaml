@@ -1,15 +1,22 @@
-brewspec_version: "0.1"
+brewspec_version: "0.2"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
     method: "Hario V60"
+    dose_g: 20
+    water_weight_g: 320
+    water_volume_ml: 320
+    water_temp_c: 96
     coffee:
-      dose_g: 20
+      roast_date: "2026-01-20"
+      type: "single_origin"
+      origin: ["Ethiopia"]
+      varietal: "Heirloom"
+      process: "Washed"
     water:
-      weight_g: 320
-      volume_ml: 320
-      temp_c: 96
+      ppm: 150
     grind: "medium-fine"
     duration_s: 180
+    tds: 1.38
     rating: 4
     notes: "Bright acidity, slightly under-extracted"

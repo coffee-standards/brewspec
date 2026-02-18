@@ -2,7 +2,5 @@
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
-    coffee:
-      dose_g: 20
-    water:
-      weight_g: 320
+    dose_g: 20
+    water_weight_g: 320

@@ -1,25 +1,26 @@
-brewspec_version: "0.1"
+brewspec_version: "0.2"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
     method: "Hario V60"
+    dose_g: 20
+    water_weight_g: 320
+    water_temp_c: 96
     coffee:
-      dose_g: 20
-    water:
-      weight_g: 320
-      temp_c: 96
+      roast_date: "2026-01-20"
+      type: "single_origin"
+      origin: ["Ethiopia"]
     rating: 4
   - date: "2026-02-14T07:00:00Z"
     type: "immersion"
     method: "French press"
+    dose_g: 30
+    water_weight_g: 500
     coffee:
-      dose_g: 30
-    water:
-      weight_g: 500
+      type: "blend"
+      origin: ["Ethiopia", "Colombia"]
     rating: 3
   - date: "2026-02-13T06:45:00Z"
     type: "espresso"
-    coffee:
-      dose_g: 18
-    water:
-      weight_g: 36
+    dose_g: 18
+    water_weight_g: 36

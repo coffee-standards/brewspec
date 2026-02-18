@@ -1,0 +1,8 @@
+# duration_s: 0 is invalid in v0.2. Use exclusiveMinimum: 0 — duration must be > 0.
+brewspec_version: "0.2"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "espresso"
+    dose_g: 18
+    water_weight_g: 36
+    duration_s: 0
