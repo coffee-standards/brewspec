@@ -8,7 +8,7 @@
 
 ## Overview
 
-BrewSpec is an open source standard for describing coffee brews. Like BeerXML for beer, BrewSpec provides a common data format that any tool can adopt, making brew data portable and interoperable across applications.
+BrewSpec is an open source standard for describing coffee brews. BrewSpec provides a common data format that any tool can adopt, making brew data portable and interoperable across applications.
 
 BrewSpec repository: https://github.com/coffee-standards/brewspec
 
@@ -67,17 +67,17 @@ Even a single brew is represented as an array with one element. This simplifies 
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
-| `brewspec_version` | string | Required | Must be `"0.2"` | The BrewSpec version |
-| `brews` | array | Required | Minimum 1 element | Array of brew objects |
+| `brewspec_version` | string | **Required** | Must be `"0.2"` | The BrewSpec version |
+| `brews` | array | **Required** | Minimum 1 element | Array of brew objects |
 
 ### Brew Object
 
 | Field | Type | Required | Constraints | Description | Examples |
 |-------|------|----------|-------------|-------------|----------|
-| `date` | string | Required | ISO 8601 UTC: `YYYY-MM-DDTHH:MM:SSZ` | Brew timestamp | `"2026-02-15T08:30:00Z"` |
-| `type` | string | Required | Enum: `immersion`, `pour_over`, `espresso`, `hybrid` | Brew method category | `"pour_over"` |
-| `dose_g` | number | Required | > 0 (exclusive) | Coffee dose in grams | `20`, `18` |
-| `water_weight_g` | number | Required | > 0 (exclusive) | Water weight in grams | `320`, `36` |
+| `date` | string | **Required** | ISO 8601 UTC: `YYYY-MM-DDTHH:MM:SSZ` | Brew timestamp | `"2026-02-15T08:30:00Z"` |
+| `type` | string | **Required** | Enum: `immersion`, `pour_over`, `espresso`, `hybrid` | Brew method category | `"pour_over"` |
+| `dose_g` | number | **Required** | > 0 (exclusive) | Coffee dose in grams | `20`, `18` |
+| `water_weight_g` | number | **Required** | > 0 (exclusive) | Water weight in grams | `320`, `36` |
 | `method` | string | Optional | Min length 1 | Freeform brewer description | `"Hario V60"`, `"AeroPress inverted"` |
 | `water_volume_ml` | number | Optional | > 0 (exclusive) | Water volume in milliliters | `320` |
 | `water_temp_c` | number | Optional | 0–100 inclusive | Water temperature in celsius | `96`, `93` |

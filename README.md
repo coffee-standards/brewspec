@@ -109,7 +109,6 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 ```
 ├── brewspec.schema.json     # JSON Schema (canonical spec)
 ├── brewspec-v0.2.md         # Human-readable spec document (current)
-├── brewspec-v0.1.md         # Human-readable spec document (v0.1, for reference)
 ├── README.md                # This file
 ├── LICENSE                  # Apache 2.0
 ├── NOTICE                   # Copyright attribution
@@ -130,6 +129,8 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 │       ├── empty_brews_array.yaml
 │       ├── v0.1_format.yaml
 │       └── zero_duration.yaml
+├── versions/
+│   └── v0.1.md              # Archived spec (v0.1)
 └── tests/
     └── test_brewspec_schema.py
 ```
@@ -178,7 +179,7 @@ The human-readable spec is in [`brewspec-v0.2.md`](./brewspec-v0.2.md). It inclu
 - Backward compatibility guide (v0.1 to v0.2 migration)
 - Future version roadmap
 
-The v0.1 spec is preserved at [`brewspec-v0.1.md`](./brewspec-v0.1.md) for backward compatibility reference.
+The v0.1 spec is archived at [`versions/v0.1.md`](./versions/v0.1.md) for backward compatibility reference.
 
 ---
 
