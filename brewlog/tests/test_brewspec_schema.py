@@ -12,11 +12,12 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, ValidationError
 from jsonschema.validators import validator_for
 
-# Paths
-REPO_ROOT = Path(__file__).parent.parent
-SCHEMA_PATH = REPO_ROOT / "brewspec" / "spec" / "brewspec.schema.json"
-VALID_DIR = REPO_ROOT / "brewspec" / "spec" / "examples" / "valid"
-INVALID_DIR = REPO_ROOT / "brewspec" / "spec" / "examples" / "invalid"
+# Paths — use the v0.3 schema bundled in the package and fixtures alongside this file
+BREWLOG_ROOT = Path(__file__).parent.parent
+SCHEMA_PATH = BREWLOG_ROOT / "src" / "brewlog" / "brewspec.schema.json"
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+VALID_EXAMPLES = sorted(FIXTURES_DIR.glob("valid_*.yaml")) + sorted(FIXTURES_DIR.glob("valid_*.json"))
+INVALID_EXAMPLES = sorted(FIXTURES_DIR.glob("invalid_*.yaml"))
 
 
 @pytest.fixture
@@ -436,14 +437,14 @@ def load_example_file(filepath):
         return yaml.safe_load(filepath.read_text())
 
 
-@pytest.mark.parametrize("example_file", sorted(VALID_DIR.glob("*.yaml")) + sorted(VALID_DIR.glob("*.json")))
+@pytest.mark.parametrize("example_file", VALID_EXAMPLES)
 def test_valid_examples_pass(validator, example_file):
     """All valid example files must pass schema validation."""
     data = load_example_file(example_file)
     validator.validate(data)  # Raises ValidationError if invalid
 
 
-@pytest.mark.parametrize("example_file", sorted(INVALID_DIR.glob("*.yaml")))
+@pytest.mark.parametrize("example_file", INVALID_EXAMPLES)
 def test_invalid_examples_fail(validator, example_file):
     """All invalid example files must fail schema validation."""
     data = load_example_file(example_file)
@@ -472,7 +473,7 @@ def test_json_format_supported(validator):
     validator.validate(brew_data)
 
     # Also verify we can load and validate a JSON file
-    json_files = list(VALID_DIR.glob("*.json"))
+    json_files = [f for f in VALID_EXAMPLES if f.suffix == ".json"]
     if json_files:
         json_data = load_example_file(json_files[0])
         validator.validate(json_data)
