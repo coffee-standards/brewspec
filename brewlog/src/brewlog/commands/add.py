@@ -114,6 +114,14 @@ def add(
 ) -> None:
     """Log a new brew."""
 
+    # -- Tip: shown only in fully interactive mode (no required flags given) --
+
+    if date is None and brew_type is None and dose is None and water_weight is None:
+        click.echo(
+            'Tip: add optional details with flags, e.g. --method "V60" --rating 4'
+            "  (run --help for all options)"
+        )
+
     # -- Resolve required fields (prompt if not supplied as flags) --
 
     if date is None:

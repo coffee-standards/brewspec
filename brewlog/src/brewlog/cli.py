@@ -14,6 +14,7 @@ from brewlog.commands.list_ import list_cmd
 from brewlog.commands.show import show
 from brewlog.commands.export import export
 from brewlog.commands.import_ import import_cmd
+from brewlog.commands.update import update
 
 
 ASCII_CUP = """\
@@ -42,3 +43,4 @@ cli.add_command(list_cmd, name="list")
 cli.add_command(show)
 cli.add_command(export)
 cli.add_command(import_cmd, name="import")
+cli.add_command(update)

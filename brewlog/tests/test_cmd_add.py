@@ -338,3 +338,33 @@ def test_add_interactive_reprompts_invalid_dose(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["add"], input="\npour_over\nabc\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Brew #1 logged." in result.output
+
+
+# ---------------------------------------------------------------------------
+# v0.2: Flag hint in fully-interactive mode
+# ---------------------------------------------------------------------------
+
+def test_add_interactive_shows_tip(tmp_path, monkeypatch):
+    """v0.2: tip line printed when no required flags are supplied."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "tip_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add"], input="\npour_over\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    assert "Tip:" in result.output
+    assert "--rating" in result.output
+
+
+def test_add_with_flags_no_tip(runner_with_db):
+    """v0.2: tip NOT shown when required flags are supplied."""
+    result = runner_with_db.invoke(cli, [
+        "add",
+        "--date", "2026-02-19T08:30:00Z",
+        "--type", "pour_over",
+        "--dose", "18.0",
+        "--water", "280.0",
+    ])
+    assert result.exit_code == 0
+    assert "Tip:" not in result.output

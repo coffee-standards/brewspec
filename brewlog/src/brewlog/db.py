@@ -233,3 +233,26 @@ def get_all_brews(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     """Return all brews ordered by date descending. Used by export."""
     sql = "SELECT * FROM brews ORDER BY date DESC"
     return conn.execute(sql).fetchall()
+
+
+def get_latest_brew_id(conn: sqlite3.Connection) -> int | None:
+    """Return the id of the most-recently-dated brew, or None if the table is empty."""
+    row = conn.execute("SELECT id FROM brews ORDER BY date DESC LIMIT 1").fetchone()
+    return row["id"] if row else None
+
+
+def update_brew(brew_id: int, updates: dict, conn: sqlite3.Connection) -> bool:
+    """
+    SET only the columns in `updates` for the row with brew_id.
+    Returns True if the row was found and updated, False otherwise.
+    All column names in `updates` must be valid brews table columns.
+    Uses parameterised ? placeholders — no string interpolation of values.
+    """
+    set_clauses = ", ".join(f"{col} = ?" for col in updates)
+    values = list(updates.values()) + [brew_id]
+    cursor = conn.execute(
+        f"UPDATE brews SET {set_clauses} WHERE id = ?",  # noqa: S608
+        values,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
