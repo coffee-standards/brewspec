@@ -1,0 +1,6 @@
+brewspec_version: "0.2"
+brews:
+  - date: "2026-02-19T08:30:00Z"
+    type: pour_over
+    # Missing required dose_g and water_weight_g
+    notes: This brew is missing required fields

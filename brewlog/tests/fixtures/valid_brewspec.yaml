@@ -1,0 +1,22 @@
+brewspec_version: "0.3"
+brews:
+  - date: "2026-02-19T08:30:00Z"
+    type: pour_over
+    dose_g: 18.0
+    water_weight_g: 280.0
+    method: Hario V60
+    water_temp_c: 96.0
+    grind: medium-fine
+    duration_s: 180
+    tds: 1.38
+    rating: 4
+    notes: Bright acidity
+    coffee:
+      roast_date: "2026-01-20"
+      type: single_origin
+      origin:
+        - Ethiopia
+      varietal: Heirloom
+      process: Washed
+    water:
+      ppm: 150.0

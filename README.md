@@ -131,8 +131,12 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 │       └── zero_duration.yaml
 ├── versions/
 │   └── v0.1.md              # Archived spec (v0.1)
-└── tests/
-    └── test_brewspec_schema.py
+├── tests/
+│   └── test_brewspec_schema.py
+└── brewlog/                 # BrewLog CLI (reference implementation)
+    ├── pyproject.toml
+    ├── src/brewlog/         # Python package
+    └── tests/               # Test suite
 ```
 
 ---
@@ -224,9 +228,38 @@ Copyright 2026 Scott Luengen. See [NOTICE](./NOTICE) for details.
 
 ---
 
-## Related Projects
+## BrewLog CLI
 
-- **BrewLog CLI** — A local command-line tool for tracking brews using the BrewSpec format (coming soon)
+**BrewLog** is the reference CLI implementation for BrewSpec — a local command-line tool for logging and tracking coffee brews using the BrewSpec format.
+
+### Install
+
+```bash
+cd brewlog
+pip install -e .
+```
+
+### Usage
+
+```bash
+# Add a brew interactively
+brewlog add
+
+# List all logged brews
+brewlog list
+
+# Show details for brew #3
+brewlog show 3
+
+# Export brews to a BrewSpec YAML file
+brewlog export my_brews.yaml
+
+# Import brews from a BrewSpec file
+brewlog import my_brews.yaml
+```
+
+BrewLog stores brews in a local SQLite database and validates all input against the BrewSpec schema.
+See [`brewlog/`](./brewlog/) for the full source code and tests.
 
 ---
 
