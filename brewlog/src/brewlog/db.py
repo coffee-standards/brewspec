@@ -229,10 +229,71 @@ def list_brews(
     return cursor.fetchall()
 
 
+def list_brews_filtered(
+    conn: sqlite3.Connection,
+    limit: int = 20,
+    all_rows: bool = False,
+    brew_type: str | None = None,
+    rating: int | None = None,
+    since: str | None = None,
+) -> list[sqlite3.Row]:
+    """
+    Return brews ordered by date descending with optional filters.
+
+    All filters are applied as AND conditions. Condition strings are static;
+    values are always passed as parameters — no string interpolation of values.
+
+    Args:
+        brew_type: exact match on the type column.
+        rating: exact match on the rating column.
+        since: lower bound (inclusive) on date, compared as 'YYYY-MM-DDT00:00:00Z'.
+        limit: maximum rows to return (ignored when all_rows is True).
+        all_rows: if True, return all matching rows.
+    """
+    conditions: list[str] = []
+    params: list = []
+
+    if brew_type is not None:
+        conditions.append("type = ?")
+        params.append(brew_type)
+
+    if rating is not None:
+        conditions.append("rating = ?")
+        params.append(rating)
+
+    if since is not None:
+        # Compare at day granularity using a lower-bound ISO 8601 string.
+        # Stored dates are 'YYYY-MM-DDTHH:MM:SSZ'; 'YYYY-MM-DDT00:00:00Z'
+        # as the lower bound includes any time on the since date.
+        conditions.append("date >= ?")
+        params.append(since + "T00:00:00Z")
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    if all_rows:
+        sql = f"SELECT * FROM brews {where} ORDER BY date DESC"
+        cursor = conn.execute(sql, params)
+    else:
+        sql = f"SELECT * FROM brews {where} ORDER BY date DESC LIMIT ?"
+        cursor = conn.execute(sql, params + [limit])
+
+    return cursor.fetchall()
+
+
 def get_all_brews(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     """Return all brews ordered by date descending. Used by export."""
     sql = "SELECT * FROM brews ORDER BY date DESC"
     return conn.execute(sql).fetchall()
+
+
+def delete_brew(brew_id: int, conn: sqlite3.Connection) -> bool:
+    """
+    Delete the brew with the given ID. Returns True if a row was deleted.
+    Uses a parameterised ? placeholder — no string interpolation.
+    """
+    cursor = conn.execute("DELETE FROM brews WHERE id = ?", (brew_id,))
+    conn.commit()
+    return cursor.rowcount > 0
 
 
 def get_latest_brew_id(conn: sqlite3.Connection) -> int | None:

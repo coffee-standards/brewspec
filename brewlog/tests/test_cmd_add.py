@@ -295,7 +295,7 @@ def test_add_interactive_accepts_default_date(tmp_path, monkeypatch):
 
     runner = CliRunner()
     # Simulate: press Enter (accept default date), then provide type/dose/water
-    result = runner.invoke(cli, ["add"], input="\npour_over\n18.0\n280.0\n")
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Brew #1 logged." in result.output
 
@@ -307,7 +307,7 @@ def test_add_interactive_shows_date_prompt(tmp_path, monkeypatch):
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["add"], input="\npour_over\n18.0\n280.0\n")
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Date" in result.output
 
@@ -319,12 +319,11 @@ def test_add_interactive_reprompts_invalid_type(tmp_path, monkeypatch):
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
 
     runner = CliRunner()
-    # First provide invalid type 'drip', then valid 'pour_over'
-    result = runner.invoke(cli, ["add"], input="\ndrip\npour_over\n18.0\n280.0\n")
+    # First provide invalid menu choice '9', then valid '4' (pour_over)
+    result = runner.invoke(cli, ["add"], input="\n9\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Brew #1 logged." in result.output
-    # Should show an error message about the invalid type
-    assert "immersion" in result.output or "error" in result.output.lower() or "invalid" in result.output.lower()
+    assert "Invalid choice" in result.output
 
 
 def test_add_interactive_reprompts_invalid_dose(tmp_path, monkeypatch):
@@ -334,8 +333,8 @@ def test_add_interactive_reprompts_invalid_dose(tmp_path, monkeypatch):
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
 
     runner = CliRunner()
-    # Provide: default date, valid type, invalid dose 'abc', then valid dose 18.0
-    result = runner.invoke(cli, ["add"], input="\npour_over\nabc\n18.0\n280.0\n")
+    # Provide: default date, valid type (4=pour_over), invalid dose 'abc', then valid
+    result = runner.invoke(cli, ["add"], input="\n4\nabc\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Brew #1 logged." in result.output
 
@@ -351,7 +350,7 @@ def test_add_interactive_shows_tip(tmp_path, monkeypatch):
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["add"], input="\npour_over\n18.0\n280.0\n")
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Tip:" in result.output
     assert "--rating" in result.output
@@ -368,3 +367,153 @@ def test_add_with_flags_no_tip(runner_with_db):
     ])
     assert result.exit_code == 0
     assert "Tip:" not in result.output
+
+
+# ---------------------------------------------------------------------------
+# v0.2: Numbered brew type menu
+# ---------------------------------------------------------------------------
+
+def test_add_interactive_numbered_menu_shown(tmp_path, monkeypatch):
+    """AC-10: numbered menu shows all four brew types."""
+    import brewlog.db as db_mod
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_path / "menu_test.db")
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    assert "1)" in result.output
+    assert "espresso" in result.output
+    assert "pour_over" in result.output
+
+
+def test_add_interactive_type_stored_as_string(tmp_path, monkeypatch):
+    """AC-13: selecting option stores enum string, not integer."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "string_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner = CliRunner()
+    runner.invoke(cli, ["add"], input="\n3\n18.0\n280.0\n")  # 3 = immersion
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        assert row["type"] == "immersion"
+    finally:
+        conn.close()
+
+
+def test_add_interactive_invalid_choice_reprompts(tmp_path, monkeypatch):
+    """AC-11: invalid choice re-prompts with error message."""
+    import brewlog.db as db_mod
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_path / "reprompt_menu.db")
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add"], input="\n5\n4\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    assert "Invalid choice" in result.output
+
+
+# ---------------------------------------------------------------------------
+# v0.2: --ey, --grinder, --brewer flags on add (AC-14 to AC-17)
+# ---------------------------------------------------------------------------
+
+def test_add_ey_flag_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-14: --ey stored in DB."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "ey_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--ey", "22.5",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["ey"] == 22.5
+    finally:
+        conn.close()
+
+
+def test_add_ey_invalid_zero(runner_with_db):
+    """AC-14: --ey 0 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--ey", "0",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_ey_invalid_negative(runner_with_db):
+    """AC-14: --ey -1 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--ey", "-1",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_grinder_flag_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-15: --grinder stored in DB."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "grinder_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--grinder", "Comandante C40",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["equipment_grinder"] == "Comandante C40"
+    finally:
+        conn.close()
+
+
+def test_add_grinder_empty_string(runner_with_db):
+    """AC-15: --grinder '' -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--grinder", "",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_brewer_flag_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-16: --brewer stored in DB."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "brewer_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--brewer", "Hario V60-02",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["equipment_brewer"] == "Hario V60-02"
+    finally:
+        conn.close()
+
+
+def test_add_brewer_empty_string(runner_with_db):
+    """AC-16: --brewer '' -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--brewer", "",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_ey_grinder_brewer_together(runner_with_db, tmp_path, monkeypatch):
+    """AC-17: all three new flags together stored in single INSERT."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "all_three.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-21T08:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+        "--ey", "21.0", "--grinder", "Niche Zero", "--brewer", "Chemex",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        assert row["ey"] == 21.0
+        assert row["equipment_grinder"] == "Niche Zero"
+        assert row["equipment_brewer"] == "Chemex"
+    finally:
+        conn.close()

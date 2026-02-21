@@ -33,7 +33,7 @@ def show(id: int) -> None:
         conn.close()
 
     if row is None:
-        click.echo(f"No brew found with ID {id}.")
+        click.echo(f"No brew found with ID {id}.", err=True)
         sys.exit(1)
 
     click.echo(f"Brew #{id}")

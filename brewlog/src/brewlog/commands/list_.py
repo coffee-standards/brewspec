@@ -7,10 +7,12 @@ Displays a formatted table of recent brews, ordered by date descending.
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 
 import click
 
 from brewlog import db
+from brewlog.models import BREW_TYPE_ENUM
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +84,19 @@ def _format_row(row) -> str:
     "--all", "show_all", is_flag=True, default=False,
     help="Show all brews.",
 )
-def list_cmd(limit: int, show_all: bool) -> None:
+@click.option(
+    "--type", "brew_type", type=str, default=None,
+    help="Filter by brew type: immersion, pour_over, espresso, hybrid.",
+)
+@click.option(
+    "--rating", type=int, default=None,
+    help="Filter by rating (1-5).",
+)
+@click.option(
+    "--since", type=str, default=None,
+    help="Filter brews on or after this date (YYYY-MM-DD).",
+)
+def list_cmd(limit: int, show_all: bool, brew_type: str | None, rating: int | None, since: str | None) -> None:
     """List recent brews."""
 
     # Validate limit
@@ -90,14 +104,54 @@ def list_cmd(limit: int, show_all: bool) -> None:
         click.echo("Error: --limit must be a positive integer.", err=True)
         sys.exit(1)
 
+    # Validate --type
+    if brew_type is not None and brew_type not in BREW_TYPE_ENUM:
+        click.echo(
+            f"Error: invalid brew type '{brew_type}'. "
+            f"Must be one of: {', '.join(sorted(BREW_TYPE_ENUM))}.",
+            err=True,
+        )
+        sys.exit(1)
+
+    # Validate --rating
+    if rating is not None and not (1 <= rating <= 5):
+        click.echo("Error: --rating must be an integer between 1 and 5.", err=True)
+        sys.exit(1)
+
+    # Validate --since
+    if since is not None:
+        try:
+            datetime.strptime(since, "%Y-%m-%d")
+        except ValueError:
+            click.echo(
+                f"Error: --since '{since}' is not a valid date. Use YYYY-MM-DD format.",
+                err=True,
+            )
+            sys.exit(1)
+
+    has_filters = brew_type is not None or rating is not None or since is not None
+
     conn = db.get_connection()
     try:
-        rows = db.list_brews(conn, limit=limit, all_rows=show_all)
+        if has_filters:
+            rows = db.list_brews_filtered(
+                conn,
+                limit=limit,
+                all_rows=show_all,
+                brew_type=brew_type,
+                rating=rating,
+                since=since,
+            )
+        else:
+            rows = db.list_brews(conn, limit=limit, all_rows=show_all)
     finally:
         conn.close()
 
     if not rows:
-        click.echo("No brews logged yet. Run 'brewlog add' to get started.")
+        if has_filters:
+            click.echo("No brews match the given filters.")
+        else:
+            click.echo("No brews logged yet. Run 'brewlog add' to get started.")
         return
 
     click.echo(_format_header())
