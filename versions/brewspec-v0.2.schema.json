@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.3",
+  "title": "BrewSpec v0.2",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.3",
-      "description": "The BrewSpec version. Must be \"0.3\"."
+      "const": "0.2",
+      "description": "The BrewSpec version. Must be \"0.2\"."
     },
     "brews": {
       "type": "array",
@@ -40,7 +40,6 @@
         "method": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 100,
           "description": "Freeform brewer description.",
           "examples": ["Hario V60", "French press", "AeroPress inverted"]
         },
@@ -71,13 +70,9 @@
         "water": {
           "$ref": "#/$defs/water"
         },
-        "equipment": {
-          "$ref": "#/$defs/equipment"
-        },
         "grind": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 100,
           "description": "Freeform grind description.",
           "examples": ["medium-fine", "setting 15 on Comandante"]
         },
@@ -91,11 +86,6 @@
           "exclusiveMinimum": 0,
           "description": "Total dissolved solids percentage of the finished brew. Optional. Must be > 0 if present."
         },
-        "ey": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Extraction yield as a percentage (e.g., 20.1 for 20.1%). Optional. Must be > 0 if present. No maximum enforced."
-        },
         "rating": {
           "type": "integer",
           "minimum": 1,
@@ -105,7 +95,6 @@
         "notes": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 2000,
           "description": "Freeform tasting or session notes."
         }
       }
@@ -131,8 +120,7 @@
           "minItems": 1,
           "items": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 100
+            "minLength": 1
           },
           "description": "Origin country or region(s). Array supports blends with multiple origins.",
           "examples": [["Ethiopia"], ["Ethiopia", "Colombia"]]
@@ -140,14 +128,12 @@
         "varietal": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 100,
           "description": "Coffee variety or cultivar. Freeform.",
           "examples": ["Heirloom", "Gesha", "Bourbon"]
         },
         "process": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 100,
           "description": "Processing method. Freeform.",
           "examples": ["Washed", "Natural", "Honey"]
         }
@@ -162,27 +148,6 @@
           "type": "number",
           "minimum": 0,
           "description": "Water total dissolved solids in parts per million. Must be >= 0 if present."
-        }
-      }
-    },
-    "equipment": {
-      "type": "object",
-      "additionalProperties": false,
-      "description": "Optional equipment descriptor. All fields optional.",
-      "properties": {
-        "grinder": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Grinder model. Freeform.",
-          "examples": ["Comandante C40 MK4", "Baratza Encore ESP"]
-        },
-        "brewer": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Brewer or brewing vessel. Freeform.",
-          "examples": ["Hario V60 02", "AeroPress Original", "Moka Pot"]
         }
       }
     }

@@ -1,0 +1,7 @@
+# Invalid: brewspec_version "0.2" is rejected by the v0.3 schema
+brewspec_version: "0.2"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "pour_over"
+    dose_g: 20
+    water_weight_g: 320

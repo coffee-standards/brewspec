@@ -1,0 +1,25 @@
+brewspec_version: "0.3"
+brews:
+  - date: "2026-02-20T07:30:00Z"
+    type: "pour_over"
+    method: "Hario V60 02"
+    dose_g: 18
+    water_weight_g: 288
+    water_temp_c: 96
+    grind: "medium-fine, setting 20"
+    duration_s: 185
+    tds: 1.42
+    ey: 21.3
+    rating: 5
+    notes: "Clean and bright, excellent clarity"
+    coffee:
+      roast_date: "2026-02-01"
+      type: "single_origin"
+      origin: ["Ethiopia", "Yirgacheffe"]
+      varietal: "Heirloom"
+      process: "Washed"
+    water:
+      ppm: 120
+    equipment:
+      grinder: "Comandante C40 MK4"
+      brewer: "Hario V60 02"
