@@ -15,7 +15,7 @@ import click
 from pydantic import ValidationError
 
 from brewlog import db
-from brewlog.models import BrewInput, CoffeeInput, WaterInput, DATE_PATTERN, BREW_TYPE_ENUM
+from brewlog.models import BrewInput, CoffeeInput, WaterInput, EquipmentInput, DATE_PATTERN, BREW_TYPE_ENUM
 
 
 # ---------------------------------------------------------------------------
@@ -40,15 +40,22 @@ def _prompt_date() -> str:
 
 
 def _prompt_brew_type() -> str:
-    """Prompt for brew type. Re-prompts on invalid enum value."""
-    valid = ", ".join(sorted(BREW_TYPE_ENUM))
+    """Prompt for brew type using a numbered menu. Re-prompts on invalid selection."""
+    options = sorted(BREW_TYPE_ENUM)
+    n = len(options)
     while True:
-        value = click.prompt(f"Brew type ({valid})")
-        if value in BREW_TYPE_ENUM:
-            return value
-        click.echo(
-            f"  Error: brew type must be one of: {valid}"
-        )
+        click.echo("Brew type:")
+        for i, opt in enumerate(options, start=1):
+            click.echo(f"  {i}) {opt}")
+        raw = click.prompt(f"Choice [1-{n}]")
+        try:
+            choice = int(raw)
+        except ValueError:
+            click.echo(f"  Invalid choice. Please enter a number between 1 and {n}.")
+            continue
+        if 1 <= choice <= n:
+            return options[choice - 1]
+        click.echo(f"  Invalid choice. Please enter a number between 1 and {n}.")
 
 
 def _prompt_positive_float(label: str) -> float:
@@ -106,11 +113,17 @@ def _prompt_positive_float(label: str) -> float:
               help="Water mineral content in ppm (>= 0).")
 @click.option("--tds",         "tds",          type=float, default=None,
               help="Brew TDS percentage (> 0).")
+@click.option("--ey",          "ey",           type=float, default=None,
+              help="Extraction yield percentage (> 0).")
+@click.option("--grinder",     "grinder",      type=str,   default=None,
+              help="Grinder name or description.")
+@click.option("--brewer",      "brewer",       type=str,   default=None,
+              help="Brewer/dripper name or description.")
 def add(
     date, brew_type, dose, water_weight,
     method, temp, grind, duration, rating, notes,
     roast_date, coffee_type, origin, varietal, process,
-    water_ppm, tds,
+    water_ppm, tds, ey, grinder, brewer,
 ) -> None:
     """Log a new brew."""
 
@@ -167,6 +180,14 @@ def add(
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
             sys.exit(1)
 
+    equipment_obj = None
+    if grinder is not None or brewer is not None:
+        try:
+            equipment_obj = EquipmentInput(grinder=grinder, brewer=brewer)
+        except ValidationError as exc:
+            click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
+            sys.exit(1)
+
     try:
         brew = BrewInput(
             date=date,
@@ -174,15 +195,17 @@ def add(
             dose_g=dose,
             water_weight_g=water_weight,
             method=method or None,
-            water_volume_ml=None,           # not exposed as flag in v0.1
+            water_volume_ml=None,
             water_temp_c=temp,
             grind=grind,
             duration_s=duration,
             tds=tds,
+            ey=ey,
             rating=rating,
             notes=notes,
             coffee=coffee_obj,
             water=water_obj,
+            equipment=equipment_obj,
         )
     except ValidationError as exc:
         click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)

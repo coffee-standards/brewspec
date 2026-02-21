@@ -108,6 +108,13 @@ def validate_export_path(path_str: str) -> Path:
     if ".." in p.parts:
         click.echo("Error: path must not contain '..' components.", err=True)
         sys.exit(1)
+    # Reject paths without a recognised extension
+    if p.suffix.lower() not in (".yaml", ".yml", ".json"):
+        click.echo(
+            "Error: output path must end with .yaml, .yml, or .json.",
+            err=True,
+        )
+        sys.exit(1)
     # Reject if parent directory does not exist
     if not p.parent.exists():
         click.echo(f"Error: directory '{p.parent}' does not exist.", err=True)

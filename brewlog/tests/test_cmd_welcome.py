@@ -23,9 +23,7 @@ def test_no_args_shows_ascii_cup(runner):
     """AC-34: ASCII cup in output."""
     result = runner.invoke(cli, [])
     assert result.exit_code == 0
-    # The ASCII cup contains specific characters that form the cup shape
-    # Check for key visual elements
-    assert "(" in result.output or "." in result.output or "_" in result.output
+    assert ".______." in result.output
 
 
 def test_no_args_shows_version(runner):
@@ -45,6 +43,7 @@ def test_no_args_shows_help(runner):
     assert "show" in result.output
     assert "export" in result.output
     assert "import" in result.output
+    assert "delete" in result.output
 
 
 def test_no_args_shows_brewlog_name(runner):

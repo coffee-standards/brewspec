@@ -231,3 +231,37 @@ def test_export_force_skips_prompt(runner_with_db, tmp_path):
     assert result.exit_code == 0
     # File was overwritten
     assert Path(out_file).read_text() != "existing content"
+
+
+# ---------------------------------------------------------------------------
+# AC-2 (v0.2): export path extension validation
+# ---------------------------------------------------------------------------
+
+def test_export_no_extension_rejected(runner_with_db, tmp_path):
+    """AC-2: extensionless path -> exit 1."""
+    result = runner_with_db.invoke(cli, ["export", str(tmp_path / "myfile")])
+    assert result.exit_code == 1
+
+
+def test_export_wrong_extension_rejected(runner_with_db, tmp_path):
+    """AC-2: .csv extension -> exit 1."""
+    result = runner_with_db.invoke(cli, ["export", str(tmp_path / "myfile.csv")])
+    assert result.exit_code == 1
+
+
+def test_export_valid_extension_yaml(runner_with_db, tmp_path):
+    """AC-2: .yaml extension -> accepted (exit 0 with brews or no-brews message)."""
+    result = runner_with_db.invoke(cli, ["export", str(tmp_path / "out.yaml")])
+    assert result.exit_code == 0
+
+
+def test_export_valid_extension_yml(runner_with_db, tmp_path):
+    """AC-2: .yml extension -> accepted."""
+    result = runner_with_db.invoke(cli, ["export", str(tmp_path / "out.yml")])
+    assert result.exit_code == 0
+
+
+def test_export_valid_extension_json(runner_with_db, tmp_path):
+    """AC-2: .json extension -> accepted."""
+    result = runner_with_db.invoke(cli, ["export", str(tmp_path / "out.json")])
+    assert result.exit_code == 0

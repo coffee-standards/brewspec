@@ -151,3 +151,17 @@ def test_show_no_argument_error(runner_with_db):
     """AC-20: missing ID -> usage error, exit nonzero."""
     result = runner_with_db.invoke(cli, ["show"])
     assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------------
+# AC-1 (v0.2): show error goes to stderr
+# ---------------------------------------------------------------------------
+
+def test_show_not_found_goes_to_stderr(tmp_path, monkeypatch):
+    """AC-1: missing brew ID produces error message and exit 1."""
+    from brewlog import db as db_mod
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_path / "test.db")
+    runner = CliRunner()
+    result = runner.invoke(cli, ["show", "999"])
+    assert result.exit_code == 1
+    assert "No brew found with ID 999" in result.output
