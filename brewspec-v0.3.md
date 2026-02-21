@@ -1,8 +1,8 @@
-# BrewSpec v0.2
+# BrewSpec v0.3
 
 **Status:** Stable
-**Version:** 0.2
-**Last Updated:** 2026-02-18
+**Version:** 0.3
+**Last Updated:** 2026-02-21
 
 ---
 
@@ -18,22 +18,23 @@ Make the coffee supply chain more sustainable for everyone by enabling open, int
 
 ### Scope
 
-BrewSpec v0.2 defines:
+BrewSpec v0.3 defines:
 - A JSON Schema for validation
 - Required and optional fields for describing a brew
 - Coffee ingredient metadata (origin, roast date, varietal, process)
 - Water mineral content (`ppm`)
-- Brew result field (`tds`)
+- Brew result fields (`tds`, `ey`)
+- Equipment descriptor (`grinder`, `brewer`)
+- `maxLength` constraints on all freeform string fields
 - Constraints on field types and values
 - A standard file format (YAML or JSON)
 
-What v0.2 still defers to future versions:
-- Equipment details (grinder model, numeric grind settings)
+What v0.3 still defers to future versions:
 - Standardized enumerations for `method` and `grind` (deferred pending usage data)
 - Pour schedules and step-by-step timing
 - Tasting dimensions (cupping scores, flavor notes taxonomy)
-- Extraction yield (`ey` field)
 - Extended water chemistry (pH, bicarbonate, mineral breakdown)
+- Date-only format for `date` field (requires schema change; tracked for v0.4)
 
 ---
 
@@ -49,7 +50,7 @@ BrewSpec files use **YAML** or **JSON** format:
 All BrewSpec files contain a `brews` array with minimum 1 element:
 
 ```yaml
-brewspec_version: "0.2"
+brewspec_version: "0.3"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
@@ -67,7 +68,7 @@ Even a single brew is represented as an array with one element. This simplifies 
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
-| `brewspec_version` | string | **Required** | Must be `"0.2"` | The BrewSpec version |
+| `brewspec_version` | string | **Required** | Must be `"0.3"` | The BrewSpec version |
 | `brews` | array | **Required** | Minimum 1 element | Array of brew objects |
 
 ### Brew Object
@@ -78,16 +79,18 @@ Even a single brew is represented as an array with one element. This simplifies 
 | `type` | string | **Required** | Enum: `immersion`, `pour_over`, `espresso`, `hybrid` | Brew method category | `"pour_over"` |
 | `dose_g` | number | **Required** | > 0 (exclusive) | Coffee dose in grams | `20`, `18` |
 | `water_weight_g` | number | **Required** | > 0 (exclusive) | Water weight in grams | `320`, `36` |
-| `method` | string | Optional | Min length 1 | Freeform brewer description | `"Hario V60"`, `"AeroPress inverted"` |
+| `method` | string | Optional | Min length 1, max length 100 | Freeform brewer description | `"Hario V60"`, `"AeroPress inverted"` |
 | `water_volume_ml` | number | Optional | > 0 (exclusive) | Water volume in milliliters | `320` |
 | `water_temp_c` | number | Optional | 0–100 inclusive | Water temperature in celsius | `96`, `93` |
 | `coffee` | object | Optional | See Coffee Object | Coffee ingredient descriptor | |
 | `water` | object | Optional | See Water Object | Water ingredient descriptor | |
-| `grind` | string | Optional | Min length 1 | Freeform grind description | `"medium-fine"` |
+| `equipment` | object | Optional | See Equipment Object | Equipment descriptor | |
+| `grind` | string | Optional | Min length 1, max length 100 | Freeform grind description | `"medium-fine"` |
 | `duration_s` | number | Optional | > 0 (exclusive) | Brew duration in seconds | `180`, `28` |
 | `tds` | number | Optional | > 0 (exclusive) | TDS percentage of finished brew | `1.38`, `8.5` |
+| `ey` | number | Optional | > 0 (exclusive) | Extraction yield percentage | `20.5`, `21.3` |
 | `rating` | integer | Optional | 1–5 inclusive | Brew rating. 1 = poor, 5 = excellent | `4` |
-| `notes` | string | Optional | Min length 1 | Freeform tasting or session notes | `"Bright acidity"` |
+| `notes` | string | Optional | Min length 1, max length 2000 | Freeform tasting or session notes | `"Bright acidity"` |
 
 ### Coffee Object
 
@@ -97,9 +100,9 @@ The entire `coffee` object is optional. When present, all fields within are also
 |-------|------|----------|-------------|-------------|----------|
 | `roast_date` | string | Optional | Pattern `YYYY-MM-DD` | Roast date. Plain date, no time. | `"2026-01-20"` |
 | `type` | string | Optional | Enum: `single_origin`, `blend` | Coffee classification | `"single_origin"` |
-| `origin` | array of strings | Optional | Min 1 item; each item min length 1 | Origin(s). Multiple entries for blends. | `["Ethiopia"]`, `["Ethiopia", "Colombia"]` |
-| `varietal` | string | Optional | Min length 1 | Coffee variety or cultivar. Freeform. | `"Heirloom"`, `"Gesha"` |
-| `process` | string | Optional | Min length 1 | Processing method. Freeform. | `"Washed"`, `"Natural"` |
+| `origin` | array of strings | Optional | Min 1 item; each item min length 1, max length 100 | Origin(s). Multiple entries for blends. | `["Ethiopia"]`, `["Ethiopia", "Colombia"]` |
+| `varietal` | string | Optional | Min length 1, max length 100 | Coffee variety or cultivar. Freeform. | `"Heirloom"`, `"Gesha"` |
+| `process` | string | Optional | Min length 1, max length 100 | Processing method. Freeform. | `"Washed"`, `"Natural"` |
 
 ### Water Object
 
@@ -108,6 +111,15 @@ The entire `water` object is optional. When present, all fields within are also 
 | Field | Type | Required | Constraints | Description | Examples |
 |-------|------|----------|-------------|-------------|----------|
 | `ppm` | number | Optional | >= 0 | Total dissolved solids in parts per million | `150`, `75`, `0` |
+
+### Equipment Object
+
+The entire `equipment` object is optional. When present, all fields within are also optional. No fields are required inside the object; `equipment: {}` is valid.
+
+| Field | Type | Required | Constraints | Description | Examples |
+|-------|------|----------|-------------|-------------|----------|
+| `grinder` | string | Optional | Min length 1, max length 100 | Grinder model. Freeform. | `"Comandante C40 MK4"`, `"Baratza Encore ESP"` |
+| `brewer` | string | Optional | Min length 1, max length 100 | Brewer or brewing vessel. Freeform. | `"Hario V60 02"`, `"AeroPress Original"` |
 
 ---
 
@@ -199,7 +211,7 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 - Method naming is inconsistent across brands (e.g., "V60", "Hario V60", "pour over cone").
 - Standardizing prematurely adds false precision and frustrates users who don't fit the categories.
 
-**v0.3 plan:** Analyze real v0.2 usage data. If clear patterns emerge, propose optional enumerations with freeform fallback.
+**v0.4 candidate:** Analyze real v0.3 usage data from BrewLog CLI. If clear patterns emerge, propose optional enumerations with freeform fallback.
 
 ### Why metric units only?
 
@@ -212,6 +224,8 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 **Decision:** `date` field uses strict format `YYYY-MM-DDTHH:MM:SSZ` (UTC only).
 
 **Rationale:** Unambiguous, sortable, machine-parseable, universally supported. Tools can display in local timezone, but storage is UTC.
+
+**Known friction:** Users report the full datetime format is onerous for a manual logging tool. A date-only format (`YYYY-MM-DD`) would be more natural but requires a schema change and corresponding tool updates. This is tracked as a candidate for v0.4.
 
 ### Why snake_case?
 
@@ -232,15 +246,31 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 
 **Decision:** `dose_g`, `water_weight_g`, `water_volume_ml`, and `water_temp_c` are direct properties of the brew object. The `coffee` and `water` objects describe the ingredient, not the brew parameters.
 
-**Rationale:** A coffee dose is a parameter of the brew act — you dose differently for a V60 and an espresso even when using the same coffee. `origin`, `roast_date`, and `varietal` describe the coffee itself — they are the same regardless of brew method. Mixing ingredient identity with brew-specific quantities (as v0.1 did) produces a model that becomes increasingly incoherent as coffee metadata is added. v0.2 corrects this while adoption is near-zero.
+**Rationale:** A coffee dose is a parameter of the brew act — you dose differently for a V60 and an espresso even when using the same coffee. `origin`, `roast_date`, and `varietal` describe the coffee itself — they are the same regardless of brew method. Mixing ingredient identity with brew-specific quantities (as v0.1 did) produces a model that becomes increasingly incoherent as coffee metadata is added. v0.2 corrected this while adoption was near-zero.
 
-**Changed from v0.1:** This is a breaking change. v0.1 files require migration (see Backward Compatibility).
+### Why is `ey` flat on the brew object, not grouped with `tds` in a `result` object?
 
-### Why `water_` prefix on brew-level water fields?
+**Decision:** `ey` is placed at the same level as `tds`, `rating`, and `notes` — not inside a `result: {}` wrapper.
 
-**Decision:** Brew-level water quantity fields are named `water_weight_g`, `water_volume_ml`, `water_temp_c` — prefixed with `water_`.
+**Rationale:** Two fields do not warrant a wrapping object at this stage. A `result` object would add structural complexity without adding clarity. If a third result-type field emerges in a future version, grouping can be introduced then with a stronger motivation. Premature grouping locks in a structural decision before the data model is stable.
 
-**Rationale:** The prefix retains semantic association with water without nesting the fields in an object. `dose_g` carries no prefix because the brew context makes "dose" unambiguously a coffee dose — no other ingredient in the spec is measured by dose.
+### Why is `equipment` a separate object, not flat fields?
+
+**Decision:** `grinder` and `brewer` live inside an `equipment: {}` object rather than as top-level brew fields.
+
+**Rationale:** Equipment fields describe the physical setup used, not the brew parameters or the ingredients. Grouping them in a named object keeps the brew level semantically clean, follows the same pattern as `coffee` and `water`, and provides a natural extension point for future equipment fields (e.g., `kettle`, `scale`) without polluting the top-level namespace.
+
+### Why freeform strings for equipment fields?
+
+**Decision:** `equipment.grinder` and `equipment.brewer` are freeform strings with no enumeration.
+
+**Rationale:** Equipment identity is objective (a grinder model is a grinder model), but standardizing names requires a curated registry that does not exist yet. Freeform strings let users record what they actually use without waiting for an enumeration. A tool-maintained registry or fuzzy matching layer can normalize values at the application level without a schema constraint.
+
+### Why `maxLength` constraints in v0.3?
+
+**Decision:** All freeform string fields now have explicit `maxLength` — 100 for most fields, 2000 for `notes`.
+
+**Rationale:** The v0.2 review flagged the absence of length limits as a low-concern security issue: without `maxLength`, a malicious or buggy file could contain arbitrarily large strings that crash naive parsers or cause DB column overflow. Now that implementing tools are being built against the spec, closing this gap in the spec is preferable to patching it in each tool independently. The limits are generous — 100 characters covers any realistic grinder name, brew method, or varietal; 2000 characters covers detailed tasting notes.
 
 ### Why is `coffee.origin` an array?
 
@@ -252,80 +282,62 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 
 **Decision:** `roast_date` uses format `YYYY-MM-DD`, not the full ISO 8601 datetime used by `date`.
 
-**Rationale:** Roasters label bags by day only. A full datetime (`2026-01-20T00:00:00Z`) would imply time-of-day precision that does not exist in practice and would make manual entry unnecessarily verbose. The spec uses two date formats intentionally: `date` (brew timestamp, needs UTC precision for sorting and deduplication) and `roast_date` (ingredient label, day precision is sufficient). The field name and table notes make this distinction explicit.
+**Rationale:** Roasters label bags by day only. A full datetime (`2026-01-20T00:00:00Z`) would imply time-of-day precision that does not exist in practice and would make manual entry unnecessarily verbose. The spec uses two date formats intentionally: `date` (brew timestamp, needs UTC precision for sorting and deduplication) and `roast_date` (ingredient label, day precision is sufficient).
 
-### Why is `tds` a flat brew-level field, not nested in a `result` object?
+### Why is `tds` a flat brew-level field?
 
-**Decision:** `tds` is placed at the same level as `rating` and `notes`, not inside a `result: {}` wrapper.
+**Decision:** `tds` is at the brew level alongside `rating` and `notes`, not inside a `result: {}` wrapper.
 
-**Rationale:** A single field does not warrant a wrapping object. A `result` object would add structural complexity without adding clarity at this stage. If v0.3 adds extraction yield (`ey`) or other result fields, grouping can be introduced then. Adding a wrapper object for a single field in v0.2 would produce premature structure.
-
-### Why was `duration_s: 0` corrected to require `> 0`?
-
-**Decision:** `duration_s` uses `exclusiveMinimum: 0`. Zero is no longer valid.
-
-**Rationale:** v0.1 set `minimum: 0` with the rationale that instant methods might have zero brew time. That rationale does not hold — even the fastest espresso shot has a non-zero contact time, and a recorded duration of zero is almost certainly a data entry error. `exclusiveMinimum: 0` is consistent with all other positive-value fields in the schema. This is a breaking change from v0.1 only for files that recorded `duration_s: 0`.
+**Rationale:** This was established in v0.2 and is consistent with the v0.3 decision to keep `ey` flat as well. Grouping in a `result` object is deferred until a stronger motivation (a third result-type field) emerges.
 
 ### Why does `coffee.type` not conflict with `brew.type`?
 
 **Decision:** The `coffee.type` field (values: `single_origin`, `blend`) lives inside the `coffee` object. The `brew.type` field (values: `immersion`, `pour_over`, `espresso`, `hybrid`) lives at the brew level. They are distinct fields with distinct semantics.
 
-**Rationale:** The namespacing is handled naturally by JSON/YAML object nesting. Tool builders should access `brew.type` and `brew.coffee.type` — or in code, `brew["type"]` and `brew["coffee"]["type"]` — which are unambiguous. The spec document and field reference tables make this clear by documenting them in separate sections.
+**Rationale:** The namespacing is handled naturally by JSON/YAML object nesting. Tool builders access `brew["type"]` and `brew["coffee"]["type"]` — unambiguous in any language. The field reference tables document them in separate sections.
 
 ---
 
 ## Backward Compatibility
 
-v0.2 is a breaking change from v0.1. v0.1 files are valid against the v0.1 schema
-only and will fail validation against the v0.2 schema.
+### v0.3 from v0.2 — Additive only, no migration required
 
-### What changed
+v0.3 is fully additive relative to v0.2. The only breaking change is the `brewspec_version` const (`"0.2"` → `"0.3"`). All field additions are optional.
 
-| v0.1 field | v0.2 field | Notes |
-|---|---|---|
-| `coffee.dose_g` (inside coffee object) | `dose_g` (brew level) | Required; moved out of `coffee` object |
-| `water.weight_g` (inside water object) | `water_weight_g` (brew level) | Required; renamed and moved |
-| `water.volume_ml` (inside water object) | `water_volume_ml` (brew level) | Optional; renamed and moved |
-| `water.temp_c` (inside water object) | `water_temp_c` (brew level) | Optional; renamed and moved |
-| `brewspec_version: "0.1"` | `brewspec_version: "0.2"` | Must be updated |
-| `duration_s: 0` | Not valid in v0.2 | Must be corrected or removed |
+**What changed:**
 
-### Why this change was made now
+| Change | Type | Notes |
+|--------|------|-------|
+| `brewspec_version` const | Breaking | Must be updated from `"0.2"` to `"0.3"` |
+| `equipment` object | Addition | Optional; does not affect existing brews |
+| `ey` field | Addition | Optional; does not affect existing brews |
+| `maxLength` on freeform strings | Tightening | Only breaks files with abnormally long strings (> 100 chars for most fields, > 2000 for `notes`) — unlikely in practice |
 
-The v0.1 data model conflated ingredient identity with brew-specific quantities.
-This becomes increasingly incoherent as coffee metadata grows. The fix is made in
-v0.2 while adoption is near-zero and no production tooling has been built against v0.1.
-Deferring this correction would entrench a confusing model and require a more
-costly migration later.
+**To upgrade a v0.2 file to v0.3:**
 
-### Migrating v0.1 files
+1. Change `brewspec_version` from `"0.2"` to `"0.3"`
+2. Optionally add `equipment`, `ey`, or any other new fields
+3. Validate against the v0.3 schema
 
-Tools should validate `brewspec_version` before selecting a schema and must not
-attempt to validate v0.1 files against the v0.2 schema.
+No field removals, renames, or structural changes. The upgrade is a version bump plus optional field additions.
 
-To migrate a v0.1 file:
+### v0.3 from v0.1
 
-1. Change `brewspec_version` from `"0.1"` to `"0.2"`
-2. Move `coffee.dose_g` to `dose_g` at the brew level; remove the `coffee` key if it has no other fields
-3. Move `water.weight_g` to `water_weight_g` at the brew level
-4. Move `water.volume_ml` (if present) to `water_volume_ml` at the brew level
-5. Move `water.temp_c` (if present) to `water_temp_c` at the brew level
-6. Remove the `water` key if it has no other fields (or retain it if you are adding `ppm`)
-7. If any brew has `duration_s: 0`, remove or correct the value
+v0.1 files require the same migration as v0.2 (structural changes to brew quantities), plus the version bump to `"0.3"`. See the [archived v0.2 spec](./versions/brewspec-v0.2.md) for the full v0.1 → v0.2 migration guide, then apply the v0.2 → v0.3 steps above.
 
 ---
 
 ## Future Versions
 
-BrewSpec v0.2 is intentionally scoped. Future versions may add:
+BrewSpec v0.3 is intentionally scoped. Future versions may add:
 
-- **v0.3 candidates:**
-  - Standardized enumerations for method/grind (based on v0.2 usage data)
-  - Equipment fields (grinder model, numeric grind setting)
+- **v0.4 candidates:**
+  - Date-only `date` format (`YYYY-MM-DD`) — more natural for manual logging; requires coordinated schema + tool update
+  - Standardized enumerations for `method` and `grind` (pending real-world usage data from BrewLog CLI)
   - Pour schedules and step-by-step timing
   - Tasting dimensions (SCA-style cupping scores)
-  - Extraction yield (ey field), likely alongside a result object grouping with tds
   - Extended water chemistry (pH, bicarbonate, mineral breakdown)
+  - A `result` object grouping `tds` and `ey` if a third result-type field emerges
 
 ---
 
@@ -336,10 +348,11 @@ See [`examples/`](./examples/) directory:
 **Valid examples:**
 - [`valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with all optional fields including full coffee metadata, water ppm, tds
 - [`valid/pour_over.json`](./examples/valid/pour_over.json) — Same brew in JSON format
-- [`valid/immersion_minimal.yaml`](./examples/valid/immersion_minimal.yaml) — Minimal brew (required fields only, no coffee or water objects)
+- [`valid/immersion_minimal.yaml`](./examples/valid/immersion_minimal.yaml) — Minimal brew (required fields only)
 - [`valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with rating, notes, and tds
 - [`valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews; demonstrates blend with multiple origins
 - [`valid/hybrid.yaml`](./examples/valid/hybrid.yaml) — AeroPress hybrid brew with blend coffee metadata
+- [`valid/equipment.yaml`](./examples/valid/equipment.yaml) — Full brew with equipment, ey, and all v0.3 fields
 
 **Invalid examples (for testing):**
 - [`invalid/missing_version.yaml`](./examples/invalid/missing_version.yaml) — Missing `brewspec_version`
@@ -349,6 +362,7 @@ See [`examples/`](./examples/) directory:
 - [`invalid/negative_weight.yaml`](./examples/invalid/negative_weight.yaml) — Negative `dose_g`
 - [`invalid/empty_brews_array.yaml`](./examples/invalid/empty_brews_array.yaml) — Empty `brews` array
 - [`invalid/v0.1_format.yaml`](./examples/invalid/v0.1_format.yaml) — v0.1 structure with nested `coffee.dose_g`
+- [`invalid/v0.2_format.yaml`](./examples/invalid/v0.2_format.yaml) — `brewspec_version: "0.2"` rejected by v0.3 schema
 - [`invalid/zero_duration.yaml`](./examples/invalid/zero_duration.yaml) — `duration_s: 0`
 
 ---
@@ -367,6 +381,6 @@ BrewSpec repository: https://github.com/coffee-standards/brewspec
 
 - **Propose changes:** Open an issue or pull request in the BrewSpec repository
 - **Report problems:** File an issue describing the ambiguity or error in the spec
-- **Share usage data:** Help us understand how people use the spec to inform v0.3 design
+- **Share usage data:** Help us understand how people use the spec to inform v0.4 design
 
 See [`README.md`](./README.md) for contribution guidelines.
