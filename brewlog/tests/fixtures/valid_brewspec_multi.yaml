@@ -1,31 +1,37 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
     dose_g: 18.0
     water_weight_g: 280.0
     method: Hario V60
-    rating: 4
     notes: First brew
+    result:
+      ratings:
+        overall: 4
   - date: "2026-02-18T07:15:00Z"
     type: immersion
     dose_g: 20.0
     water_weight_g: 300.0
     method: French Press
     duration_s: 240
-    rating: 3
     coffee:
       origin:
         - Ethiopia
         - Colombia
       type: blend
+    result:
+      ratings:
+        overall: 3
   - date: "2026-02-17T06:00:00Z"
     type: espresso
     dose_g: 18.0
     water_weight_g: 36.0
     duration_s: 28
-    tds: 8.5
-    rating: 5
     notes: Perfect extraction
     water:
       ppm: 100.0
+    result:
+      tds: 8.5
+      ratings:
+        overall: 5

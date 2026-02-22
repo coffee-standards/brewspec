@@ -1,4 +1,4 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-13T06:45:00Z"
     type: "espresso"
@@ -6,8 +6,13 @@ brews:
     dose_g: 18
     water_weight_g: 36
     water_temp_c: 93
-    grind: "fine, setting 5"
+    grind: "espresso"
     duration_s: 28
-    tds: 8.5
-    rating: 5
     notes: "Thick crema, balanced sweetness"
+    result:
+      tds: 8.5
+      ey: 19.8
+      brix: 1.5
+      ratings:
+        overall: 4
+        mouthfeel: 5

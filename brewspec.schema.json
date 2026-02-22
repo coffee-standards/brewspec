@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.3",
+  "title": "BrewSpec v0.4",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.3",
-      "description": "The BrewSpec version. Must be \"0.3\"."
+      "const": "0.4",
+      "description": "The BrewSpec version. Must be \"0.4\"."
     },
     "brews": {
       "type": "array",
@@ -28,9 +28,18 @@
       "properties": {
         "date": {
           "type": "string",
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
-          "description": "Brew timestamp in ISO 8601 UTC format.",
-          "examples": ["2026-02-15T08:30:00Z"]
+          "oneOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "description": "Full ISO 8601 UTC datetime."
+            },
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date-only in YYYY-MM-DD format."
+            }
+          ],
+          "description": "Brew date. Accepts YYYY-MM-DD (date-only) or YYYY-MM-DDTHH:MM:SSZ (full UTC datetime).",
+          "examples": ["2026-02-21", "2026-02-15T08:30:00Z"]
         },
         "type": {
           "type": "string",
@@ -76,37 +85,22 @@
         },
         "grind": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Freeform grind description.",
-          "examples": ["medium-fine", "setting 15 on Comandante"]
+          "enum": ["turkish", "espresso", "fine", "medium_fine", "medium", "medium_coarse", "coarse"],
+          "description": "Grind size. Standard vocabulary from finest to coarsest: turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse."
         },
         "duration_s": {
           "type": "number",
           "exclusiveMinimum": 0,
           "description": "Brew duration in seconds. Must be > 0."
         },
-        "tds": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Total dissolved solids percentage of the finished brew. Optional. Must be > 0 if present."
-        },
-        "ey": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Extraction yield as a percentage (e.g., 20.1 for 20.1%). Optional. Must be > 0 if present. No maximum enforced."
-        },
-        "rating": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 5,
-          "description": "Brew rating. 1 = poor, 5 = excellent."
-        },
         "notes": {
           "type": "string",
           "minLength": 1,
           "maxLength": 2000,
-          "description": "Freeform tasting or session notes."
+          "description": "Brew-process notes — operational observations about the preparation (e.g. 'washed filter paper', 'water from Brita filter', 'grinder re-calibrated'). For sensory description, use result.tasting_notes."
+        },
+        "result": {
+          "$ref": "#/$defs/result"
         }
       }
     },
@@ -183,6 +177,92 @@
           "maxLength": 100,
           "description": "Brewer or brewing vessel. Freeform.",
           "examples": ["Hario V60 02", "AeroPress Original", "Moka Pot"]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional brew outcome descriptor. Groups measurements and sensory evaluation. All fields optional.",
+      "properties": {
+        "tds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Total dissolved solids percentage of the finished brew. Must be > 0 if present."
+        },
+        "ey": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Extraction yield as a percentage (e.g., 20.1 for 20.1%). Must be > 0 if present. No maximum enforced."
+        },
+        "brix": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Dissolved sugar content in degrees Brix. A value of 0 is valid (distilled water). Must be >= 0 if present."
+        },
+        "tasting_notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Sensory description of the brew (e.g. 'Bright citrus acidity, caramel sweetness, clean finish'). For brew-process notes, use the top-level notes field."
+        },
+        "ratings": {
+          "$ref": "#/$defs/ratings"
+        }
+      }
+    },
+    "ratings": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional multi-dimensional sensory ratings. Dimensions align with SCA cupping protocol. All fields optional integers 1-5.",
+      "properties": {
+        "overall": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Holistic impression. 1 = poor, 5 = excellent."
+        },
+        "fragrance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Dry grounds aroma before water is added."
+        },
+        "aroma": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Wet aroma after water is added."
+        },
+        "flavour": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Taste and aroma experienced during drinking."
+        },
+        "aftertaste": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Length and quality of positive flavour attributes after swallowing."
+        },
+        "acidity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Quality (not quantity) of acidity; brightness."
+        },
+        "sweetness": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Perceived sweetness."
+        },
+        "mouthfeel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Tactile sensation; body and texture."
         }
       }
     }

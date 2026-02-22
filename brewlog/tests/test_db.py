@@ -5,10 +5,9 @@ and the Security parameterised-query requirement.
 """
 
 import json
-import pytest
 
 from brewlog import db as db_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput
+from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput, RatingsInput
 
 
 # ---------------------------------------------------------------------------
@@ -70,10 +69,8 @@ def _full_brew():
         water_weight_g=280.0,
         method="Hario V60",
         water_temp_c=96.0,
-        grind="medium-fine",
+        grind="medium_fine",
         duration_s=180,
-        tds=1.38,
-        rating=4,
         notes="Bright acidity",
         coffee=CoffeeInput(
             roast_date="2026-01-20",
@@ -83,6 +80,13 @@ def _full_brew():
             process="Washed",
         ),
         water=WaterInput(ppm=150.0),
+        result=ResultInput(
+            tds=1.38,
+            ey=20.5,
+            brix=1.5,
+            tasting_notes="Bright citrus",
+            ratings=RatingsInput(overall=4, acidity=5),
+        ),
     )
 
 
@@ -110,16 +114,21 @@ def test_insert_brew_all_fields(tmp_db):
     assert row["dose_g"] == 18.0
     assert row["water_weight_g"] == 280.0
     assert row["water_temp_c"] == 96.0
-    assert row["grind"] == "medium-fine"
+    assert row["grind"] == "medium_fine"
     assert row["duration_s"] == 180
-    assert row["tds"] == 1.38
-    assert row["rating"] == 4
+    assert row["result_tds"] == 1.38
+    assert row["result_ey"] == 20.5
+    assert row["result_brix"] == 1.5
+    assert row["result_tasting_notes"] == "Bright citrus"
     assert row["notes"] == "Bright acidity"
     assert row["coffee_roast_date"] == "2026-01-20"
     assert row["coffee_type"] == "single_origin"
     assert row["coffee_varietal"] == "Heirloom"
     assert row["coffee_process"] == "Washed"
     assert row["water_ppm"] == 150.0
+    ratings = json.loads(row["result_ratings"])
+    assert ratings["overall"] == 4
+    assert ratings["acidity"] == 5
 
 
 def test_insert_brew_origin_serialised(tmp_db):
@@ -244,10 +253,8 @@ def test_insert_brew_dict_full(tmp_db):
         "water_weight_g": 280.0,
         "method": "Hario V60",
         "water_temp_c": 96.0,
-        "grind": "medium-fine",
+        "grind": "medium_fine",
         "duration_s": 180,
-        "tds": 1.38,
-        "rating": 4,
         "notes": "Bright acidity",
         "coffee": {
             "roast_date": "2026-01-20",
@@ -257,6 +264,10 @@ def test_insert_brew_dict_full(tmp_db):
             "process": "Washed",
         },
         "water": {"ppm": 150.0},
+        "result": {
+            "tds": 1.38,
+            "ey": 20.5,
+        },
     }
     brew_id = db_module.insert_brew_dict(brew_dict, tmp_db)
     tmp_db.commit()
@@ -265,6 +276,8 @@ def test_insert_brew_dict_full(tmp_db):
     assert row["coffee_type"] == "single_origin"
     assert json.loads(row["coffee_origin"]) == ["Ethiopia"]
     assert row["water_ppm"] == 150.0
+    assert row["result_tds"] == 1.38
+    assert row["result_ey"] == 20.5
 
 
 def test_insert_brew_dict_no_dedup(tmp_db):
@@ -298,14 +311,12 @@ def test_parameterised_query_safety(tmp_db):
         water_weight_g=280.0,
         method=malicious,
         notes=malicious,
-        grind=malicious,
     )
     brew_id = db_module.insert_brew(brew, tmp_db)
     row = db_module.get_brew(brew_id, tmp_db)
     assert row is not None
     assert row["method"] == malicious
     assert row["notes"] == malicious
-    assert row["grind"] == malicious
     # Table still exists
     cursor = tmp_db.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='brews'"

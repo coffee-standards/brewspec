@@ -1,4 +1,4 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
@@ -15,8 +15,14 @@ brews:
       process: "Washed"
     water:
       ppm: 150
-    grind: "medium-fine"
+    grind: "medium_fine"
     duration_s: 180
-    tds: 1.38
-    rating: 4
     notes: "Bright acidity, slightly under-extracted"
+    result:
+      tds: 1.38
+      ey: 20.5
+      tasting_notes: "Bright citrus acidity, caramel sweetness, clean finish"
+      ratings:
+        overall: 4
+        aroma: 4
+        acidity: 5

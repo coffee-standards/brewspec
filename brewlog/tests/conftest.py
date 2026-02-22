@@ -4,7 +4,6 @@ Shared fixtures for BrewLog CLI tests.
 
 import pytest
 from click.testing import CliRunner
-from pathlib import Path
 
 from brewlog import db as db_module
 
@@ -48,10 +47,8 @@ def full_brew_dict():
         "water_weight_g": 280.0,
         "method": "Hario V60",
         "water_temp_c": 96.0,
-        "grind": "medium-fine",
+        "grind": "medium_fine",
         "duration_s": 180,
-        "tds": 1.38,
-        "rating": 4,
         "notes": "Bright acidity",
         "coffee": {
             "roast_date": "2026-01-20",
@@ -61,6 +58,10 @@ def full_brew_dict():
             "process": "Washed",
         },
         "water": {"ppm": 150.0},
+        "result": {
+            "tds": 1.38,
+            "ey": 20.5,
+        },
     }
 
 

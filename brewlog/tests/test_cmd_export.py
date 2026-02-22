@@ -4,7 +4,6 @@ Tests map to AC-21, AC-22, AC-23, AC-24, AC-25, AC-26, AC-27.
 """
 
 import json
-import os
 import pytest
 import yaml
 from pathlib import Path
@@ -12,7 +11,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module, schema as schema_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput
+from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput
 
 
 @pytest.fixture
@@ -46,10 +45,8 @@ def _insert_full(db_path):
             water_weight_g=280.0,
             method="Hario V60",
             water_temp_c=96.0,
-            grind="medium-fine",
+            grind="medium_fine",
             duration_s=180,
-            tds=1.38,
-            rating=4,
             notes="Bright acidity",
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
@@ -59,6 +56,7 @@ def _insert_full(db_path):
                 process="Washed",
             ),
             water=WaterInput(ppm=150.0),
+            result=ResultInput(tds=1.38, ey=20.5),
         )
         db_module.insert_brew(brew, conn)
     finally:
@@ -122,7 +120,7 @@ def test_export_document_structure(runner_with_db, tmp_path):
     runner_with_db.invoke(cli, ["export", out_file])
     doc = yaml.safe_load(Path(out_file).read_text())
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.3"
+    assert doc["brewspec_version"] == "0.4"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
 

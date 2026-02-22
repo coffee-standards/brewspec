@@ -26,7 +26,7 @@ _COL_TYPE = 10
 _COL_METHOD = 15
 _COL_DOSE = 9
 _COL_WATER = 10
-_COL_RATING = 6
+_COL_TDS = 6
 
 
 def _format_header() -> str:
@@ -38,7 +38,7 @@ def _format_header() -> str:
         f"{'Method':<{_COL_METHOD}}  "
         f"{'Dose (g)':>{_COL_DOSE}}  "
         f"{'Water (g)':>{_COL_WATER}}  "
-        f"{'Rating':>{_COL_RATING}}"
+        f"{'TDS':>{_COL_TDS}}"
     )
 
 
@@ -51,14 +51,14 @@ def _format_separator() -> str:
         f"{'':->{ _COL_METHOD}}  "
         f"{'':->{ _COL_DOSE}}  "
         f"{'':->{ _COL_WATER}}  "
-        f"{'':->{ _COL_RATING}}"
+        f"{'':->{ _COL_TDS}}"
     )
 
 
 def _format_row(row) -> str:
     """Format a single brew row for the table."""
     method = row["method"] if row["method"] is not None else "-"
-    rating = str(row["rating"]) if row["rating"] is not None else "-"
+    tds = str(row["result_tds"]) if row["result_tds"] is not None else "-"
 
     return (
         f"{row['id']:>{_COL_ID}}  "
@@ -67,7 +67,7 @@ def _format_row(row) -> str:
         f"{method:<{_COL_METHOD}}  "
         f"{row['dose_g']:>{_COL_DOSE}.1f}  "
         f"{row['water_weight_g']:>{_COL_WATER}.1f}  "
-        f"{rating:>{_COL_RATING}}"
+        f"{tds:>{_COL_TDS}}"
     )
 
 
@@ -89,14 +89,10 @@ def _format_row(row) -> str:
     help="Filter by brew type: immersion, pour_over, espresso, hybrid.",
 )
 @click.option(
-    "--rating", type=int, default=None,
-    help="Filter by rating (1-5).",
-)
-@click.option(
     "--since", type=str, default=None,
     help="Filter brews on or after this date (YYYY-MM-DD).",
 )
-def list_cmd(limit: int, show_all: bool, brew_type: str | None, rating: int | None, since: str | None) -> None:
+def list_cmd(limit: int, show_all: bool, brew_type: str | None, since: str | None) -> None:
     """List recent brews."""
 
     # Validate limit
@@ -113,11 +109,6 @@ def list_cmd(limit: int, show_all: bool, brew_type: str | None, rating: int | No
         )
         sys.exit(1)
 
-    # Validate --rating
-    if rating is not None and not (1 <= rating <= 5):
-        click.echo("Error: --rating must be an integer between 1 and 5.", err=True)
-        sys.exit(1)
-
     # Validate --since
     if since is not None:
         try:
@@ -129,7 +120,7 @@ def list_cmd(limit: int, show_all: bool, brew_type: str | None, rating: int | No
             )
             sys.exit(1)
 
-    has_filters = brew_type is not None or rating is not None or since is not None
+    has_filters = brew_type is not None or since is not None
 
     conn = db.get_connection()
     try:
@@ -139,7 +130,6 @@ def list_cmd(limit: int, show_all: bool, brew_type: str | None, rating: int | No
                 limit=limit,
                 all_rows=show_all,
                 brew_type=brew_type,
-                rating=rating,
                 since=since,
             )
         else:

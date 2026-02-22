@@ -64,14 +64,14 @@ def test_list_shows_table_headers(runner_with_db, tmp_path):
     assert "Method" in result.output
     assert "Dose" in result.output
     assert "Water" in result.output
-    assert "Rating" in result.output
+    assert "TDS" in result.output
 
 
 def test_list_optional_field_dash_when_absent(runner_with_db, tmp_path):
     """AC-13: missing optional field shows '-'."""
     _populate_brews(tmp_path / "test.db", 1)
     result = runner_with_db.invoke(cli, ["list"])
-    # Method and Rating are not set; should show '-'
+    # Method and TDS are not set; should show '-'
     assert "-" in result.output
 
 
@@ -87,7 +87,7 @@ def test_list_default_limit_20(runner_with_db, tmp_path):
     # Count data rows (lines after the header separator that start with data)
     lines = result.output.strip().split("\n")
     # Count lines containing date patterns (data rows)
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 20
 
 
@@ -112,7 +112,7 @@ def test_list_custom_limit(runner_with_db, tmp_path):
     result = runner_with_db.invoke(cli, ["list", "--limit", "5"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 5
 
 
@@ -138,5 +138,5 @@ def test_list_all(runner_with_db, tmp_path):
     result = runner_with_db.invoke(cli, ["list", "--all"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 25

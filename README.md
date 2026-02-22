@@ -27,7 +27,7 @@ Create a YAML file describing your brew:
 
 ```yaml
 # my_brew.yaml
-brewspec_version: "0.2"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
@@ -43,11 +43,14 @@ brews:
       process: "Washed"
     water:
       ppm: 150
-    grind: "medium-fine"
+    grind: "medium_fine"
     duration_s: 180
-    tds: 1.38
-    rating: 4
-    notes: "Bright acidity, slightly under-extracted"
+    notes: "Washed filter paper before brewing"
+    result:
+      tds: 1.38
+      tasting_notes: "Bright acidity, slightly under-extracted"
+      ratings:
+        overall: 4
 ```
 
 ### 2. Validate against the schema
@@ -100,7 +103,7 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 
 ### 3. Read the spec
 
-See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, constraints, and design decisions.
+See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, constraints, and design decisions.
 
 ---
 
@@ -108,7 +111,7 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 
 ```
 ├── brewspec.schema.json     # JSON Schema (canonical spec)
-├── brewspec-v0.2.md         # Human-readable spec document (current)
+├── brewspec-v0.4.md         # Human-readable spec document (current)
 ├── README.md                # This file
 ├── LICENSE                  # Apache 2.0
 ├── NOTICE                   # Copyright attribution
@@ -119,18 +122,20 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 │   │   ├── immersion_minimal.yaml
 │   │   ├── espresso.yaml
 │   │   ├── multi_brew.yaml
-│   │   └── hybrid.yaml
+│   │   ├── hybrid.yaml
+│   │   └── equipment.yaml
 │   └── invalid/             # Invalid examples (for testing)
 │       ├── missing_version.yaml
 │       ├── missing_required_field.yaml
 │       ├── invalid_type_enum.yaml
-│       ├── rating_out_of_range.yaml
 │       ├── negative_weight.yaml
 │       ├── empty_brews_array.yaml
 │       ├── v0.1_format.yaml
 │       └── zero_duration.yaml
 ├── versions/
-│   └── v0.1.md              # Archived spec (v0.1)
+│   ├── v0.1.md              # Archived spec (v0.1)
+│   ├── brewspec-v0.2.md     # Archived spec (v0.2)
+│   └── brewspec-v0.3.md     # Archived spec (v0.3)
 ├── tests/
 │   └── test_brewspec_schema.py
 └── brewlog/                 # BrewLog CLI (reference implementation)
@@ -143,10 +148,10 @@ See [`brewspec-v0.2.md`](./brewspec-v0.2.md) for the full field reference, const
 
 ## Schema
 
-BrewSpec v0.2 uses **JSON Schema Draft 2020-12**.
+BrewSpec v0.4 uses **JSON Schema Draft 2020-12**.
 
 - **Schema file:** [`brewspec.schema.json`](./brewspec.schema.json)
-- **Version:** 0.2 (stable)
+- **Version:** 0.4 (stable)
 - **Format:** YAML or JSON (both validate against the same schema)
 
 ---
@@ -154,18 +159,18 @@ BrewSpec v0.2 uses **JSON Schema Draft 2020-12**.
 ## Examples
 
 **Valid examples** demonstrate correct usage:
-- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with full coffee metadata, water ppm, tds
+- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with full coffee metadata, water ppm, result object
 - [`examples/valid/pour_over.json`](./examples/valid/pour_over.json) — Same brew in JSON format
 - [`examples/valid/immersion_minimal.yaml`](./examples/valid/immersion_minimal.yaml) — Minimal brew (required fields only)
-- [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with rating, notes, and tds
+- [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with result.ratings and tasting_notes
 - [`examples/valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews; includes blend with multiple origins
 - [`examples/valid/hybrid.yaml`](./examples/valid/hybrid.yaml) — AeroPress hybrid brew with blend coffee and water ppm
+- [`examples/valid/equipment.yaml`](./examples/valid/equipment.yaml) — Full brew with equipment and all v0.4 result fields
 
 **Invalid examples** demonstrate common validation failures (useful for testing parsers):
 - [`examples/invalid/missing_version.yaml`](./examples/invalid/missing_version.yaml)
 - [`examples/invalid/missing_required_field.yaml`](./examples/invalid/missing_required_field.yaml)
 - [`examples/invalid/invalid_type_enum.yaml`](./examples/invalid/invalid_type_enum.yaml)
-- [`examples/invalid/rating_out_of_range.yaml`](./examples/invalid/rating_out_of_range.yaml)
 - [`examples/invalid/negative_weight.yaml`](./examples/invalid/negative_weight.yaml)
 - [`examples/invalid/empty_brews_array.yaml`](./examples/invalid/empty_brews_array.yaml)
 - [`examples/invalid/v0.1_format.yaml`](./examples/invalid/v0.1_format.yaml) — v0.1 structure with nested dose_g
@@ -175,15 +180,13 @@ BrewSpec v0.2 uses **JSON Schema Draft 2020-12**.
 
 ## Spec Document
 
-The human-readable spec is in [`brewspec-v0.2.md`](./brewspec-v0.2.md). It includes:
+The human-readable spec is in [`brewspec-v0.4.md`](./brewspec-v0.4.md). It includes:
 - Field reference tables (types, constraints, descriptions, examples)
-- Enumeration definitions (brew types, coffee types)
-- Validation instructions (Python, JavaScript, CLI)
-- Design decisions (object model restructure, field naming, origin as array, etc.)
-- Backward compatibility guide (v0.1 to v0.2 migration)
-- Future version roadmap
-
-The v0.1 spec is archived at [`versions/v0.1.md`](./versions/v0.1.md) for backward compatibility reference.
+- Enumeration definitions (brew types, coffee types, grind sizes)
+- Validation instructions (Python, JavaScript, CLI) with storage-time guidance
+- Design decisions (result object, grind enum, dual-format date, etc.)
+- Backward compatibility guide (v0.3 to v0.4 migration, step-by-step)
+- Archived specs: [`versions/brewspec-v0.3.md`](./versions/brewspec-v0.3.md), [`versions/brewspec-v0.2.md`](./versions/brewspec-v0.2.md), [`versions/v0.1.md`](./versions/v0.1.md)
 
 ---
 
@@ -195,7 +198,7 @@ BrewSpec is an open standard. We welcome contributions!
 
 1. **Propose changes** — Open an issue or pull request in the BrewSpec repository describing your proposal
 2. **Report problems** — File an issue if you find ambiguities, errors, or missing information in the spec
-3. **Share usage data** — Help us understand how people use the spec to inform v0.3 design
+3. **Share usage data** — Help us understand how people use the spec to inform future design
 
 ### Contribution guidelines
 
@@ -265,7 +268,7 @@ See [`brewlog/`](./brewlog/) for the full source code and tests.
 
 ## Questions?
 
-- Read the spec: [`brewspec-v0.2.md`](./brewspec-v0.2.md)
+- Read the spec: [`brewspec-v0.4.md`](./brewspec-v0.4.md)
 - Check the examples: [`examples/`](./examples/)
 - Open an issue: https://github.com/coffee-standards/brewspec
 

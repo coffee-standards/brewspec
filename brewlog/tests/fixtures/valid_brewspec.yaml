@@ -1,4 +1,4 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
@@ -6,10 +6,8 @@ brews:
     water_weight_g: 280.0
     method: Hario V60
     water_temp_c: 96.0
-    grind: medium-fine
+    grind: medium_fine
     duration_s: 180
-    tds: 1.38
-    rating: 4
     notes: Bright acidity
     coffee:
       roast_date: "2026-01-20"
@@ -20,3 +18,7 @@ brews:
       process: Washed
     water:
       ppm: 150.0
+    result:
+      tds: 1.38
+      ratings:
+        overall: 4

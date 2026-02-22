@@ -1,6 +1,8 @@
 """
 CLI integration tests for `brewlog update`.
 Tests map to BrewLog v0.2 update command acceptance criteria.
+
+Note: v0.4 changes — rating moved to result.ratings.overall, grind is now enum.
 """
 
 import json
@@ -44,19 +46,20 @@ def _add_brew(runner, date="2026-02-19T08:30:00Z", brew_type="pour_over",
 # Happy path tests
 # ---------------------------------------------------------------------------
 
-def test_update_rating_on_latest(runner, db_path, monkeypatch):
-    """No ID arg — updates the latest brew's rating."""
+def test_update_overall_on_latest(runner, db_path, monkeypatch):
+    """No ID arg — updates the latest brew's overall rating."""
     monkeypatch.setattr(db_module, "DB_PATH", db_path)
     _add_brew(runner)
 
-    result = runner.invoke(cli, ["update", "--rating", "4"])
+    result = runner.invoke(cli, ["update", "--overall", "4"])
     assert result.exit_code == 0
     assert "Brew #1 updated." in result.output
 
     conn = db_module.get_connection(db_path=db_path)
     try:
         row = db_module.get_brew(1, conn)
-        assert row["rating"] == 4
+        ratings = json.loads(row["result_ratings"])
+        assert ratings["overall"] == 4
     finally:
         conn.close()
 
@@ -80,21 +83,22 @@ def test_update_by_id(runner, db_path, monkeypatch):
 
 
 def test_update_multiple_fields(runner, db_path, monkeypatch):
-    """Sets rating, method, and grind in one call."""
+    """Sets overall, method, and grind in one call."""
     monkeypatch.setattr(db_module, "DB_PATH", db_path)
     _add_brew(runner)
 
     result = runner.invoke(cli, [
-        "update", "--rating", "5", "--method", "Chemex", "--grind", "medium-coarse",
+        "update", "--overall", "5", "--method", "Chemex", "--grind", "medium_coarse",
     ])
     assert result.exit_code == 0
 
     conn = db_module.get_connection(db_path=db_path)
     try:
         row = db_module.get_brew(1, conn)
-        assert row["rating"] == 5
+        ratings = json.loads(row["result_ratings"])
+        assert ratings["overall"] == 5
         assert row["method"] == "Chemex"
-        assert row["grind"] == "medium-coarse"
+        assert row["grind"] == "medium_coarse"
     finally:
         conn.close()
 
@@ -105,7 +109,7 @@ def test_update_defaults_to_latest_not_oldest(runner, db_path, monkeypatch):
     _add_brew(runner, date="2026-02-18T08:00:00Z")   # brew #1 — older
     _add_brew(runner, date="2026-02-20T08:00:00Z")   # brew #2 — newer
 
-    result = runner.invoke(cli, ["update", "--rating", "3"])
+    result = runner.invoke(cli, ["update", "--overall", "3"])
     assert result.exit_code == 0
     assert "Brew #2 updated." in result.output
 
@@ -113,8 +117,9 @@ def test_update_defaults_to_latest_not_oldest(runner, db_path, monkeypatch):
     try:
         row1 = db_module.get_brew(1, conn)
         row2 = db_module.get_brew(2, conn)
-        assert row1["rating"] is None    # oldest untouched
-        assert row2["rating"] == 3       # latest updated
+        assert row1["result_ratings"] is None    # oldest untouched
+        ratings2 = json.loads(row2["result_ratings"])
+        assert ratings2["overall"] == 3           # latest updated
     finally:
         conn.close()
 
@@ -173,6 +178,22 @@ def test_update_equipment_fields(runner, db_path, monkeypatch):
         conn.close()
 
 
+def test_update_result_tds(runner, db_path, monkeypatch):
+    """--tds flag updates result_tds column."""
+    monkeypatch.setattr(db_module, "DB_PATH", db_path)
+    _add_brew(runner)
+
+    result = runner.invoke(cli, ["update", "--tds", "1.42"])
+    assert result.exit_code == 0
+
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        row = db_module.get_brew(1, conn)
+        assert row["result_tds"] == 1.42
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
@@ -190,25 +211,25 @@ def test_update_id_not_found(runner):
     """Explicit ID that doesn't exist -> exit 1."""
     _add_brew(runner)
 
-    result = runner.invoke(cli, ["update", "999", "--rating", "3"])
+    result = runner.invoke(cli, ["update", "999", "--overall", "3"])
     assert result.exit_code == 1
     assert "not found" in result.output.lower() or "999" in result.output
 
 
 def test_update_no_brews(runner):
     """Empty DB, no ID supplied -> exit 1."""
-    result = runner.invoke(cli, ["update", "--rating", "4"])
+    result = runner.invoke(cli, ["update", "--overall", "4"])
     assert result.exit_code == 1
     assert "no brews" in result.output.lower() or "empty" in result.output.lower()
 
 
-def test_update_invalid_rating(runner):
-    """rating=6 -> exit 1."""
+def test_update_invalid_overall(runner):
+    """overall=6 -> exit 1."""
     _add_brew(runner)
 
-    result = runner.invoke(cli, ["update", "--rating", "6"])
+    result = runner.invoke(cli, ["update", "--overall", "6"])
     assert result.exit_code == 1
-    assert "rating" in result.output.lower()
+    assert "overall" in result.output.lower() or "rating" in result.output.lower()
 
 
 def test_update_invalid_temp(runner):

@@ -3,9 +3,7 @@ CLI integration tests for `brewlog import`.
 Tests map to AC-28, AC-29, AC-30, AC-31, AC-32, AC-33.
 """
 
-import os
 import pytest
-import yaml
 from pathlib import Path
 from click.testing import CliRunner
 

@@ -1,0 +1,10 @@
+# This file demonstrates that tds at the flat brew level is now rejected.
+# tds was moved to the result object in v0.4.
+# Use result.tds instead.
+brewspec_version: "0.4"
+brews:
+  - date: "2026-02-21"
+    type: "pour_over"
+    dose_g: 20
+    water_weight_g: 320
+    tds: 1.38

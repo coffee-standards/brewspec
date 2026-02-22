@@ -1,6 +1,8 @@
 """
 CLI integration tests for `brewlog list` filtering.
 Tests map to AC-18 through AC-24 in brewlog-cli-v0.2 spec.
+
+Note: --rating filter removed in v0.4 (rating moved to result.ratings sub-object).
 """
 
 import pytest
@@ -26,7 +28,7 @@ def runner(db_path, monkeypatch):
     return CliRunner()
 
 
-def _insert(db_path, date, brew_type, rating=None, method=None):
+def _insert(db_path, date, brew_type, method=None):
     conn = db_module.get_connection(db_path=db_path)
     try:
         brew = BrewInput(
@@ -34,7 +36,6 @@ def _insert(db_path, date, brew_type, rating=None, method=None):
             type=brew_type,
             dose_g=18.0,
             water_weight_g=280.0,
-            rating=rating,
             method=method,
         )
         db_module.insert_brew(brew, conn)
@@ -86,59 +87,6 @@ def test_filter_type_all_valid_values(runner, db_path):
 
 
 # ---------------------------------------------------------------------------
-# AC-19: --rating filter
-# ---------------------------------------------------------------------------
-
-def test_filter_rating_returns_matching(runner, db_path):
-    """AC-19: --rating 4 returns only brews with rating 4."""
-    _insert(db_path, "2026-02-01T08:00:00Z", "pour_over", rating=4)
-    _insert(db_path, "2026-02-02T08:00:00Z", "pour_over", rating=5)
-    result = runner.invoke(cli, ["list", "--rating", "4"])
-    assert result.exit_code == 0
-    # rating 4 row must be present (check for the '4' in the Rating column)
-    lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
-    assert len(data_lines) == 1
-
-
-def test_filter_rating_excludes_others(runner, db_path):
-    """AC-19: --rating 4 excludes brews with rating 5."""
-    _insert(db_path, "2026-02-01T08:00:00Z", "pour_over", rating=4)
-    _insert(db_path, "2026-02-02T08:00:00Z", "pour_over", rating=5)
-    result = runner.invoke(cli, ["list", "--rating", "4"])
-    lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-02-02" in l]
-    assert len(data_lines) == 0, "Rating 5 brew should not appear"
-
-
-def test_filter_rating_invalid_zero(runner):
-    """AC-19: --rating 0 -> exit 1."""
-    result = runner.invoke(cli, ["list", "--rating", "0"])
-    assert result.exit_code == 1
-
-
-def test_filter_rating_invalid_six(runner):
-    """AC-19: --rating 6 -> exit 1."""
-    result = runner.invoke(cli, ["list", "--rating", "6"])
-    assert result.exit_code == 1
-
-
-def test_filter_rating_invalid_negative(runner):
-    """AC-19: --rating -1 -> exit 1."""
-    result = runner.invoke(cli, ["list", "--rating", "-1"])
-    assert result.exit_code == 1
-
-
-def test_filter_rating_valid_range(runner, db_path):
-    """AC-19: ratings 1-5 are all valid."""
-    for i, rating in enumerate(range(1, 6), start=1):
-        _insert(db_path, f"2026-02-{i:02d}T08:00:00Z", "pour_over", rating=rating)
-    for rating in range(1, 6):
-        result = runner.invoke(cli, ["list", "--rating", str(rating)])
-        assert result.exit_code == 0, f"--rating {rating} should be valid"
-
-
-# ---------------------------------------------------------------------------
 # AC-20: --since filter
 # ---------------------------------------------------------------------------
 
@@ -149,7 +97,7 @@ def test_filter_since_returns_matching(runner, db_path):
     result = runner.invoke(cli, ["list", "--since", "2026-02-01"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 1
     assert "2026-02-15" in result.output
 
@@ -186,31 +134,15 @@ def test_filter_since_invalid_date(runner):
 # AC-21: Filters are combinable (AND logic)
 # ---------------------------------------------------------------------------
 
-def test_filter_type_and_rating_combined(runner, db_path):
-    """AC-21: --type + --rating applied together as AND."""
-    _insert(db_path, "2026-02-01T08:00:00Z", "pour_over", rating=4)
-    _insert(db_path, "2026-02-02T08:00:00Z", "espresso", rating=4)
-    _insert(db_path, "2026-02-03T08:00:00Z", "pour_over", rating=5)
-    result = runner.invoke(cli, ["list", "--type", "pour_over", "--rating", "4"])
+def test_filter_type_and_since_combined(runner, db_path):
+    """AC-21: --type + --since applied together as AND."""
+    _insert(db_path, "2026-01-01T08:00:00Z", "pour_over")  # too old
+    _insert(db_path, "2026-02-01T08:00:00Z", "espresso")   # wrong type
+    _insert(db_path, "2026-02-03T08:00:00Z", "pour_over")  # matches all
+    result = runner.invoke(cli, ["list", "--type", "pour_over", "--since", "2026-02-01"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
-    assert len(data_lines) == 1
-    assert "2026-02-01" in result.output
-
-
-def test_filter_all_three_combined(runner, db_path):
-    """AC-21: --type + --rating + --since all applied as AND."""
-    _insert(db_path, "2026-01-01T08:00:00Z", "pour_over", rating=4)  # too old
-    _insert(db_path, "2026-02-01T08:00:00Z", "espresso", rating=4)   # wrong type
-    _insert(db_path, "2026-02-02T08:00:00Z", "pour_over", rating=5)  # wrong rating
-    _insert(db_path, "2026-02-03T08:00:00Z", "pour_over", rating=4)  # matches all
-    result = runner.invoke(cli, [
-        "list", "--type", "pour_over", "--rating", "4", "--since", "2026-02-01"
-    ])
-    assert result.exit_code == 0
-    lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 1
     assert "2026-02-03" in result.output
 
@@ -242,11 +174,11 @@ def test_filter_no_matches_no_table(runner, db_path):
 def test_filter_with_limit(runner, db_path):
     """AC-23: --limit applies to filtered result set."""
     for i in range(1, 6):
-        _insert(db_path, f"2026-02-{i:02d}T08:00:00Z", "pour_over", rating=4)
+        _insert(db_path, f"2026-02-{i:02d}T08:00:00Z", "pour_over")
     result = runner.invoke(cli, ["list", "--type", "pour_over", "--limit", "3"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 3
 
 
@@ -257,7 +189,7 @@ def test_filter_with_all(runner, db_path):
     result = runner.invoke(cli, ["list", "--type", "espresso", "--all"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 25
 
 
@@ -270,7 +202,7 @@ def test_filter_limit_applies_after_filter(runner, db_path):
         _insert(db_path, f"2026-02-{i:02d}T08:00:00Z", "pour_over")
     result = runner.invoke(cli, ["list", "--type", "espresso", "--limit", "3"])
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 3
     assert "pour_over" not in result.output
 
@@ -286,7 +218,7 @@ def test_no_filters_default_limit_20(runner, db_path):
     result = runner.invoke(cli, ["list"])
     assert result.exit_code == 0
     lines = result.output.strip().split("\n")
-    data_lines = [l for l in lines if "2026-" in l]
+    data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 20
 
 
