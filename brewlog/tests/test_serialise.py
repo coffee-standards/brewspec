@@ -4,14 +4,10 @@ Tests map to AC-24 (null omission), Section 6.1 (row_to_brew_dict),
 and security path validation (AC-26, AC-32).
 """
 
-import json
-import os
 import pytest
-from pathlib import Path
 
 from brewlog import db as db_module
 from brewlog import serialise
-from brewlog.models import BrewInput, CoffeeInput, WaterInput
 
 
 # ---------------------------------------------------------------------------
@@ -42,10 +38,8 @@ def _full_dict():
         "water_weight_g": 280.0,
         "method": "Hario V60",
         "water_temp_c": 96.0,
-        "grind": "medium-fine",
+        "grind": "medium_fine",
         "duration_s": 180,
-        "tds": 1.38,
-        "rating": 4,
         "notes": "Bright acidity",
         "coffee": {
             "roast_date": "2026-01-20",
@@ -55,6 +49,10 @@ def _full_dict():
             "process": "Washed",
         },
         "water": {"ppm": 150.0},
+        "result": {
+            "tds": 1.38,
+            "ey": 20.5,
+        },
     }
 
 
@@ -118,6 +116,22 @@ def test_row_to_brew_dict_water_object_omitted(tmp_db):
     assert "water" not in result
 
 
+def test_row_to_brew_dict_result_object_included(tmp_db):
+    """Section 6.1: result dict included when tds set."""
+    row = _make_row(tmp_db, _full_dict())
+    result = serialise.row_to_brew_dict(row)
+    assert "result" in result
+    assert result["result"]["tds"] == 1.38
+    assert result["result"]["ey"] == 20.5
+
+
+def test_row_to_brew_dict_result_object_omitted(tmp_db):
+    """AC-24: result dict absent when all result fields NULL."""
+    row = _make_row(tmp_db, _minimal_dict())
+    result = serialise.row_to_brew_dict(row)
+    assert "result" not in result
+
+
 def test_row_to_brew_dict_origin_deserialised(tmp_db):
     """Section 6.1: JSON string '["Ethiopia"]' becomes ["Ethiopia"]."""
     brew_dict = {**_minimal_dict(), "coffee": {"origin": ["Ethiopia"]}}
@@ -146,7 +160,7 @@ def test_rows_to_brewspec_document_structure(tmp_db):
     rows = db_module.get_all_brews(tmp_db)
     doc = serialise.rows_to_brewspec_document(rows)
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.3"
+    assert doc["brewspec_version"] == "0.4"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
     assert len(doc["brews"]) == 1
@@ -229,6 +243,6 @@ def test_validate_import_path_rejects_oversized(tmp_path):
 def test_validate_import_path_accepts_valid(tmp_path):
     """validate_import_path accepts a valid existing file."""
     valid_file = tmp_path / "test.yaml"
-    valid_file.write_text("brewspec_version: '0.2'\n")
+    valid_file.write_text("brewspec_version: '0.4'\n")
     result = serialise.validate_import_path(str(valid_file))
     assert result is not None

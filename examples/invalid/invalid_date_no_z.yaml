@@ -1,0 +1,8 @@
+# This file demonstrates that a datetime string without the Z suffix is rejected.
+# date must be YYYY-MM-DDTHH:MM:SSZ (Z is required) or YYYY-MM-DD (date-only).
+brewspec_version: "0.4"
+brews:
+  - date: "2026-02-21T09:00:00"
+    type: "pour_over"
+    dose_g: 20
+    water_weight_g: 320

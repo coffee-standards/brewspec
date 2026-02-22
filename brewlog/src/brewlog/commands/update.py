@@ -14,8 +14,8 @@ import click
 
 from brewlog import db
 from brewlog.models import (
-    BREW_TYPE_ENUM,
     COFFEE_TYPE_ENUM,
+    GRIND_ENUM,
     ROAST_DATE_PATTERN,
 )
 
@@ -25,19 +25,26 @@ from brewlog.models import (
 @click.option("--method",      "method",       type=str,   default=None,
               help="Brew method (e.g. 'V60').")
 @click.option("--grind",       "grind",        type=str,   default=None,
-              help="Grind description.")
+              help=(
+                  "Grind size: turkish, espresso, fine, medium_fine, "
+                  "medium, medium_coarse, coarse."
+              ))
 @click.option("--temp",        "temp",         type=float, default=None,
-              help="Water temperature in Celsius (0–100).")
+              help="Water temperature in Celsius (0-100).")
 @click.option("--duration",    "duration",     type=int,   default=None,
               help="Brew duration in seconds (> 0).")
-@click.option("--rating",      "rating",       type=int,   default=None,
-              help="Rating 1–5.")
 @click.option("--notes",       "notes",        type=str,   default=None,
-              help="Tasting notes.")
+              help="Brew process notes.")
 @click.option("--tds",         "tds",          type=float, default=None,
               help="TDS percentage (> 0).")
 @click.option("--ey",          "ey",           type=float, default=None,
               help="Extraction yield (> 0).")
+@click.option("--brix",        "brix",         type=float, default=None,
+              help="Degrees Brix (>= 0).")
+@click.option("--tasting-notes", "tasting_notes", type=str, default=None,
+              help="Sensory tasting notes.")
+@click.option("--overall",     "overall",      type=int,   default=None,
+              help="Overall rating 1-5.")
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
@@ -57,7 +64,7 @@ from brewlog.models import (
               help="Brewer/dripper name.")
 def update(
     brew_id,
-    method, grind, temp, duration, rating, notes, tds, ey,
+    method, grind, temp, duration, notes, tds, ey, brix, tasting_notes, overall,
     roast_date, coffee_type, origin, varietal, process,
     water_ppm, grinder, brewer,
 ) -> None:
@@ -65,8 +72,8 @@ def update(
 
     # -- Validate flag values --
 
-    if rating is not None and not (1 <= rating <= 5):
-        click.echo("Error: rating must be between 1 and 5", err=True)
+    if overall is not None and not (1 <= overall <= 5):
+        click.echo("Error: overall rating must be between 1 and 5", err=True)
         sys.exit(1)
 
     if temp is not None and not (0 <= temp <= 100):
@@ -85,6 +92,10 @@ def update(
         click.echo("Error: ey must be greater than 0", err=True)
         sys.exit(1)
 
+    if brix is not None and brix < 0:
+        click.echo("Error: brix must be >= 0", err=True)
+        sys.exit(1)
+
     if roast_date is not None and not ROAST_DATE_PATTERN.match(roast_date):
         click.echo("Error: roast-date must be in YYYY-MM-DD format", err=True)
         sys.exit(1)
@@ -101,31 +112,38 @@ def update(
         sys.exit(1)
 
     if method is not None and (len(method.strip()) == 0 or len(method) > 100):
-        click.echo("Error: method must be 1–100 characters", err=True)
+        click.echo("Error: method must be 1-100 characters", err=True)
         sys.exit(1)
 
-    if grind is not None and (len(grind.strip()) == 0 or len(grind) > 100):
-        click.echo("Error: grind must be 1–100 characters", err=True)
+    if grind is not None and grind not in GRIND_ENUM:
+        click.echo(
+            f"Error: grind must be one of: {sorted(GRIND_ENUM)}",
+            err=True,
+        )
         sys.exit(1)
 
     if notes is not None and (len(notes.strip()) == 0 or len(notes) > 2000):
-        click.echo("Error: notes must be 1–2000 characters", err=True)
+        click.echo("Error: notes must be 1-2000 characters", err=True)
+        sys.exit(1)
+
+    if tasting_notes is not None and (len(tasting_notes.strip()) == 0 or len(tasting_notes) > 2000):
+        click.echo("Error: tasting-notes must be 1-2000 characters", err=True)
         sys.exit(1)
 
     if varietal is not None and (len(varietal.strip()) == 0 or len(varietal) > 100):
-        click.echo("Error: varietal must be 1–100 characters", err=True)
+        click.echo("Error: varietal must be 1-100 characters", err=True)
         sys.exit(1)
 
     if process is not None and (len(process.strip()) == 0 or len(process) > 100):
-        click.echo("Error: process must be 1–100 characters", err=True)
+        click.echo("Error: process must be 1-100 characters", err=True)
         sys.exit(1)
 
     if grinder is not None and (len(grinder.strip()) == 0 or len(grinder) > 100):
-        click.echo("Error: grinder must be 1–100 characters", err=True)
+        click.echo("Error: grinder must be 1-100 characters", err=True)
         sys.exit(1)
 
     if brewer is not None and (len(brewer.strip()) == 0 or len(brewer) > 100):
-        click.echo("Error: brewer must be 1–100 characters", err=True)
+        click.echo("Error: brewer must be 1-100 characters", err=True)
         sys.exit(1)
 
     # -- Build updates dict (DB column -> value) --
@@ -141,14 +159,19 @@ def update(
         updates["water_temp_c"] = temp
     if duration is not None:
         updates["duration_s"] = duration
-    if rating is not None:
-        updates["rating"] = rating
     if notes is not None:
         updates["notes"] = notes
     if tds is not None:
-        updates["tds"] = tds
+        updates["result_tds"] = tds
     if ey is not None:
-        updates["ey"] = ey
+        updates["result_ey"] = ey
+    if brix is not None:
+        updates["result_brix"] = brix
+    if tasting_notes is not None:
+        updates["result_tasting_notes"] = tasting_notes
+    if overall is not None:
+        # Merge into existing result_ratings JSON or create new
+        updates["_overall"] = overall  # sentinel; handled below
     if roast_date is not None:
         updates["coffee_roast_date"] = roast_date
     if coffee_type is not None:
@@ -172,6 +195,27 @@ def update(
             err=True,
         )
         sys.exit(1)
+
+    # -- Handle overall rating: merge into result_ratings JSON --
+    if "_overall" in updates:
+        overall_val = updates.pop("_overall")
+        # Fetch existing ratings to merge
+        conn_read = db.get_connection()
+        try:
+            existing_id = brew_id
+            if existing_id is None:
+                existing_id = db.get_latest_brew_id(conn_read)
+            if existing_id is not None:
+                existing_row = db.get_brew(existing_id, conn_read)
+                existing_ratings = {}
+                if existing_row and existing_row["result_ratings"]:
+                    existing_ratings = _json.loads(existing_row["result_ratings"])
+                existing_ratings["overall"] = overall_val
+                updates["result_ratings"] = _json.dumps(existing_ratings)
+            else:
+                updates["result_ratings"] = _json.dumps({"overall": overall_val})
+        finally:
+            conn_read.close()
 
     # -- Resolve brew ID --
 

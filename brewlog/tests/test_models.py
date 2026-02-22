@@ -1,6 +1,6 @@
 """
 Unit tests for Pydantic models in brewlog.models.
-Tests map to input validation requirements for BrewSpec v0.3.
+Tests map to input validation requirements for BrewSpec v0.4.
 """
 
 import pytest
@@ -14,7 +14,7 @@ from brewlog.models import BrewInput, CoffeeInput, EquipmentInput, WaterInput
 # ---------------------------------------------------------------------------
 
 def test_brew_input_valid_minimal():
-    """AC-9: Required-only fields accepted."""
+    """Required-only fields accepted."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
@@ -31,7 +31,9 @@ def test_brew_input_valid_minimal():
 
 
 def test_brew_input_valid_all_fields():
-    """AC-8, AC-9: All optional fields accepted."""
+    """All optional fields accepted (v0.4: result replaces tds/ey/rating)."""
+    from brewlog.models import ResultInput, RatingsInput
+
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="immersion",
@@ -42,8 +44,6 @@ def test_brew_input_valid_all_fields():
         water_temp_c=95.0,
         grind="coarse",
         duration_s=240,
-        tds=1.5,
-        rating=3,
         notes="Smooth and balanced",
         coffee=CoffeeInput(
             roast_date="2026-01-15",
@@ -53,30 +53,60 @@ def test_brew_input_valid_all_fields():
             process="Natural",
         ),
         water=WaterInput(ppm=120.0),
+        result=ResultInput(
+            tds=1.5,
+            ey=20.1,
+            brix=1.2,
+            tasting_notes="Smooth and balanced",
+            ratings=RatingsInput(overall=3, acidity=4),
+        ),
     )
     assert brew.method == "French Press"
     assert brew.water_volume_ml == 300.0
     assert brew.water_temp_c == 95.0
     assert brew.grind == "coarse"
     assert brew.duration_s == 240
-    assert brew.tds == 1.5
-    assert brew.rating == 3
     assert brew.notes == "Smooth and balanced"
     assert brew.coffee is not None
     assert brew.coffee.origin == ["Ethiopia", "Colombia"]
     assert brew.water is not None
     assert brew.water.ppm == 120.0
+    assert brew.result is not None
+    assert brew.result.tds == 1.5
+    assert brew.result.ratings.overall == 3
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — date validation
+# BrewInput — date validation (v0.4: dual-format)
 # ---------------------------------------------------------------------------
+
+def test_brew_input_date_only_accepted():
+    """AC v0.4: date: YYYY-MM-DD (date-only) is accepted."""
+    brew = BrewInput(
+        date="2026-02-21",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    assert brew.date == "2026-02-21"
+
+
+def test_brew_input_date_full_datetime_accepted():
+    """AC v0.4: date: YYYY-MM-DDTHH:MM:SSZ (full datetime) is still accepted."""
+    brew = BrewInput(
+        date="2026-02-21T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    assert brew.date == "2026-02-21T08:30:00Z"
+
 
 def test_brew_input_invalid_date_format():
-    """AC-9: Non-ISO-8601 date rejected."""
+    """date: string matching neither accepted format is rejected."""
     with pytest.raises(ValidationError, match="date"):
         BrewInput(
-            date="2026-02-19",
+            date="not-a-date",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
@@ -84,7 +114,7 @@ def test_brew_input_invalid_date_format():
 
 
 def test_brew_input_invalid_date_missing_z():
-    """AC-9: Date without trailing Z rejected."""
+    """AC v0.4: Date without trailing Z (and with time component) rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00",
@@ -95,10 +125,21 @@ def test_brew_input_invalid_date_missing_z():
 
 
 def test_brew_input_invalid_date_impossible():
-    """AC-9: Impossible datetime (month 13) rejected."""
+    """AC v0.4: Impossible datetime (month 13) rejected for full datetime."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-13-01T00:00:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+        )
+
+
+def test_brew_input_invalid_date_wrong_order():
+    """date in DD-MM-YYYY order is rejected."""
+    with pytest.raises(ValidationError):
+        BrewInput(
+            date="21-02-2026",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
@@ -110,7 +151,7 @@ def test_brew_input_invalid_date_impossible():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_invalid_type_enum():
-    """AC-9: Unknown type string rejected."""
+    """Unknown type string rejected."""
     with pytest.raises(ValidationError, match="type"):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -121,7 +162,7 @@ def test_brew_input_invalid_type_enum():
 
 
 def test_brew_input_valid_all_types():
-    """AC-9: All valid brew types accepted."""
+    """All valid brew types accepted."""
     for brew_type in ("immersion", "pour_over", "espresso", "hybrid"):
         brew = BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -137,7 +178,7 @@ def test_brew_input_valid_all_types():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_dose_zero():
-    """AC-9: dose_g=0 rejected."""
+    """dose_g=0 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -148,7 +189,7 @@ def test_brew_input_dose_zero():
 
 
 def test_brew_input_dose_negative():
-    """AC-9: dose_g=-1 rejected."""
+    """dose_g=-1 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -163,7 +204,7 @@ def test_brew_input_dose_negative():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_water_weight_zero():
-    """AC-9: water_weight_g=0 rejected."""
+    """water_weight_g=0 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -178,7 +219,7 @@ def test_brew_input_water_weight_zero():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_temp_boundary_low():
-    """AC-9: water_temp_c=0 accepted."""
+    """water_temp_c=0 accepted."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
@@ -190,7 +231,7 @@ def test_brew_input_temp_boundary_low():
 
 
 def test_brew_input_temp_boundary_high():
-    """AC-9: water_temp_c=100 accepted."""
+    """water_temp_c=100 accepted."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
@@ -202,7 +243,7 @@ def test_brew_input_temp_boundary_high():
 
 
 def test_brew_input_temp_out_of_range():
-    """AC-9: water_temp_c=101 rejected."""
+    """water_temp_c=101 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -214,7 +255,7 @@ def test_brew_input_temp_out_of_range():
 
 
 def test_brew_input_temp_below_zero():
-    """AC-9: water_temp_c=-1 rejected."""
+    """water_temp_c=-1 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -230,7 +271,7 @@ def test_brew_input_temp_below_zero():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_duration_zero():
-    """AC-9: duration_s=0 rejected."""
+    """duration_s=0 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -242,7 +283,7 @@ def test_brew_input_duration_zero():
 
 
 def test_brew_input_duration_negative():
-    """AC-9: duration_s=-1 rejected."""
+    """duration_s=-1 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -254,91 +295,50 @@ def test_brew_input_duration_negative():
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — rating validation
+# BrewInput — grind enum validation (v0.4)
 # ---------------------------------------------------------------------------
 
-def test_brew_input_rating_low_boundary():
-    """AC-9: rating=1 accepted."""
+@pytest.mark.parametrize("grind_value", [
+    "turkish", "espresso", "fine", "medium_fine", "medium", "medium_coarse", "coarse"
+])
+def test_brew_input_grind_enum_all_values_accepted(grind_value):
+    """AC v0.4: Each of the 7 grind enum values is accepted."""
     brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
+        date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
         water_weight_g=280.0,
-        rating=1,
+        grind=grind_value,
     )
-    assert brew.rating == 1
+    assert brew.grind == grind_value
 
 
-def test_brew_input_rating_high_boundary():
-    """AC-9: rating=5 accepted."""
-    brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
-        type="pour_over",
-        dose_g=18.0,
-        water_weight_g=280.0,
-        rating=5,
-    )
-    assert brew.rating == 5
-
-
-def test_brew_input_rating_below_min():
-    """AC-9: rating=0 rejected."""
+def test_brew_input_grind_freeform_rejected():
+    """AC v0.4: grind: freeform string not in the enum is rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
-            date="2026-02-19T08:30:00Z",
+            date="2026-02-21T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
-            rating=0,
+            grind="setting 15",
         )
 
 
-def test_brew_input_rating_above_max():
-    """AC-9: rating=6 rejected."""
+def test_brew_input_grind_wrong_case_rejected():
+    """AC v0.4: grind: 'Medium' (wrong case) is rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
-            date="2026-02-19T08:30:00Z",
+            date="2026-02-21T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
-            rating=6,
+            grind="Medium",
         )
 
 
-# ---------------------------------------------------------------------------
-# BrewInput — tds validation
-# ---------------------------------------------------------------------------
-
-def test_brew_input_tds_zero():
-    """AC-9: tds=0 rejected."""
-    with pytest.raises(ValidationError):
-        BrewInput(
-            date="2026-02-19T08:30:00Z",
-            type="pour_over",
-            dose_g=18.0,
-            water_weight_g=280.0,
-            tds=0,
-        )
-
-
-# ---------------------------------------------------------------------------
-# BrewInput — freeform text field validation
-# ---------------------------------------------------------------------------
-
-def test_brew_input_method_empty_string():
-    """AC-9: method="" rejected."""
-    with pytest.raises(ValidationError):
-        BrewInput(
-            date="2026-02-19T08:30:00Z",
-            type="pour_over",
-            dose_g=18.0,
-            water_weight_g=280.0,
-            method="",
-        )
-
-
-def test_brew_input_grind_empty_string():
-    """AC-9: grind="" rejected."""
+def test_brew_input_grind_empty_string_rejected():
+    """grind='' is rejected (not in enum)."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -349,8 +349,35 @@ def test_brew_input_grind_empty_string():
         )
 
 
+def test_brew_input_grind_omitted_accepted():
+    """grind omitted is valid (optional field)."""
+    brew = BrewInput(
+        date="2026-02-21T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    assert brew.grind is None
+
+
+# ---------------------------------------------------------------------------
+# BrewInput — freeform text field validation
+# ---------------------------------------------------------------------------
+
+def test_brew_input_method_empty_string():
+    """method="" rejected."""
+    with pytest.raises(ValidationError):
+        BrewInput(
+            date="2026-02-19T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            method="",
+        )
+
+
 def test_brew_input_notes_empty_string():
-    """AC-9: notes="" rejected."""
+    """notes="" rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -362,7 +389,7 @@ def test_brew_input_notes_empty_string():
 
 
 def test_brew_input_method_whitespace_only():
-    """AC-9: method with only whitespace rejected."""
+    """method with only whitespace rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
@@ -374,17 +401,70 @@ def test_brew_input_method_whitespace_only():
 
 
 # ---------------------------------------------------------------------------
+# BrewInput — result field (v0.4)
+# ---------------------------------------------------------------------------
+
+def test_brew_input_with_result_tds_ey():
+    """BrewInput with result containing tds and ey is valid."""
+    from brewlog.models import ResultInput
+
+    brew = BrewInput(
+        date="2026-02-21T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+        result=ResultInput(tds=1.38, ey=20.1),
+    )
+    assert brew.result is not None
+    assert brew.result.tds == 1.38
+    assert brew.result.ey == 20.1
+
+
+def test_brew_input_result_omitted():
+    """BrewInput with result omitted is valid."""
+    brew = BrewInput(
+        date="2026-02-21T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    assert brew.result is None
+
+
+def test_brew_input_with_full_result():
+    """BrewInput with fully populated result is valid (including date-only format)."""
+    from brewlog.models import ResultInput, RatingsInput
+
+    brew = BrewInput(
+        date="2026-02-21",
+        type="pour_over",
+        dose_g=20.0,
+        water_weight_g=320.0,
+        result=ResultInput(
+            tds=1.38,
+            ey=20.1,
+            brix=1.5,
+            tasting_notes="Bright citrus, caramel finish",
+            ratings=RatingsInput(overall=4, acidity=5, mouthfeel=3),
+        ),
+    )
+    assert brew.result.brix == 1.5
+    assert brew.result.tasting_notes == "Bright citrus, caramel finish"
+    assert brew.result.ratings.overall == 4
+
+
+# ---------------------------------------------------------------------------
 # WaterInput — ppm validation
 # ---------------------------------------------------------------------------
 
 def test_brew_input_water_ppm_zero():
-    """AC-9: ppm=0 accepted (>= 0 is valid)."""
+    """ppm=0 accepted (>= 0 is valid)."""
     water = WaterInput(ppm=0)
     assert water.ppm == 0
 
 
 def test_brew_input_water_ppm_negative():
-    """AC-9: ppm=-1 rejected."""
+    """ppm=-1 rejected."""
     with pytest.raises(ValidationError):
         WaterInput(ppm=-1)
 
@@ -394,19 +474,19 @@ def test_brew_input_water_ppm_negative():
 # ---------------------------------------------------------------------------
 
 def test_coffee_input_roast_date_valid():
-    """AC-9: roast_date='2026-01-20' accepted."""
+    """roast_date='2026-01-20' accepted."""
     coffee = CoffeeInput(roast_date="2026-01-20")
     assert coffee.roast_date == "2026-01-20"
 
 
 def test_coffee_input_roast_date_invalid_format():
-    """AC-9: roast_date='01-20-2026' rejected."""
+    """roast_date='01-20-2026' rejected."""
     with pytest.raises(ValidationError):
         CoffeeInput(roast_date="01-20-2026")
 
 
 def test_coffee_input_roast_date_invalid_no_dashes():
-    """AC-9: roast_date='20260120' rejected."""
+    """roast_date='20260120' rejected."""
     with pytest.raises(ValidationError):
         CoffeeInput(roast_date="20260120")
 
@@ -416,19 +496,19 @@ def test_coffee_input_roast_date_invalid_no_dashes():
 # ---------------------------------------------------------------------------
 
 def test_coffee_input_type_valid_single_origin():
-    """AC-9: type='single_origin' accepted."""
+    """type='single_origin' accepted."""
     coffee = CoffeeInput(type="single_origin")
     assert coffee.type == "single_origin"
 
 
 def test_coffee_input_type_valid_blend():
-    """AC-9: type='blend' accepted."""
+    """type='blend' accepted."""
     coffee = CoffeeInput(type="blend")
     assert coffee.type == "blend"
 
 
 def test_coffee_input_type_invalid():
-    """AC-9: type='unknown' rejected."""
+    """type='unknown' rejected."""
     with pytest.raises(ValidationError):
         CoffeeInput(type="unknown")
 
@@ -438,25 +518,25 @@ def test_coffee_input_type_invalid():
 # ---------------------------------------------------------------------------
 
 def test_coffee_input_origin_empty_list():
-    """AC-9: origin=[] rejected (minItems 1)."""
+    """origin=[] rejected (minItems 1)."""
     with pytest.raises(ValidationError):
         CoffeeInput(origin=[])
 
 
 def test_coffee_input_origin_empty_item():
-    """AC-9: origin=[''] rejected (each item must be non-empty string)."""
+    """origin=[''] rejected (each item must be non-empty string)."""
     with pytest.raises(ValidationError):
         CoffeeInput(origin=[""])
 
 
 def test_coffee_input_origin_multiple():
-    """AC-8: origin=['Ethiopia', 'Colombia'] accepted."""
+    """origin=['Ethiopia', 'Colombia'] accepted."""
     coffee = CoffeeInput(origin=["Ethiopia", "Colombia"])
     assert coffee.origin == ["Ethiopia", "Colombia"]
 
 
 def test_coffee_input_origin_single():
-    """AC-9: origin=['Ethiopia'] accepted."""
+    """origin=['Ethiopia'] accepted."""
     coffee = CoffeeInput(origin=["Ethiopia"])
     assert coffee.origin == ["Ethiopia"]
 
@@ -466,13 +546,13 @@ def test_coffee_input_origin_single():
 # ---------------------------------------------------------------------------
 
 def test_coffee_input_varietal_empty_rejected():
-    """AC-9: varietal='' rejected."""
+    """varietal='' rejected."""
     with pytest.raises(ValidationError):
         CoffeeInput(varietal="")
 
 
 def test_coffee_input_process_empty_rejected():
-    """AC-9: process='' rejected."""
+    """process='' rejected."""
     with pytest.raises(ValidationError):
         CoffeeInput(process="")
 
@@ -486,7 +566,7 @@ def test_coffee_input_all_none_valid():
 
 
 # ---------------------------------------------------------------------------
-# CoffeeInput — maxLength validators (v0.3)
+# CoffeeInput — maxLength validators
 # ---------------------------------------------------------------------------
 
 def test_coffee_input_varietal_maxlength_accepted():
@@ -526,7 +606,7 @@ def test_coffee_input_origin_item_maxlength_exceeded():
 
 
 # ---------------------------------------------------------------------------
-# EquipmentInput — basic validation (v0.3)
+# EquipmentInput — basic validation
 # ---------------------------------------------------------------------------
 
 def test_equipment_input_both_fields():
@@ -600,58 +680,63 @@ def test_equipment_input_brewer_maxlength_exceeded():
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — ey field (v0.3)
+# BrewInput — method maxLength
 # ---------------------------------------------------------------------------
 
-def test_brew_input_ey_valid():
-    """ey=20.1 is accepted (exclusiveMinimum: 0)."""
+def test_brew_input_method_maxlength_accepted():
+    """method of exactly 100 chars is accepted."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
         water_weight_g=280.0,
-        ey=20.1,
+        method="x" * 100,
     )
-    assert brew.ey == 20.1
+    assert len(brew.method) == 100
 
 
-def test_brew_input_ey_zero_rejected():
-    """ey=0 is rejected."""
+def test_brew_input_method_maxlength_exceeded():
+    """method of 101 chars is rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
-            ey=0,
+            method="x" * 101,
         )
 
 
-def test_brew_input_ey_negative_rejected():
-    """ey=-1 is rejected."""
+# ---------------------------------------------------------------------------
+# BrewInput — notes maxLength
+# ---------------------------------------------------------------------------
+
+def test_brew_input_notes_maxlength_accepted():
+    """notes of exactly 2000 chars is accepted."""
+    brew = BrewInput(
+        date="2026-02-19T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+        notes="x" * 2000,
+    )
+    assert len(brew.notes) == 2000
+
+
+def test_brew_input_notes_maxlength_exceeded():
+    """notes of 2001 chars is rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
             water_weight_g=280.0,
-            ey=-1,
+            notes="x" * 2001,
         )
 
 
-def test_brew_input_ey_omitted():
-    """ey omitted is valid (optional field)."""
-    brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
-        type="pour_over",
-        dose_g=18.0,
-        water_weight_g=280.0,
-    )
-    assert brew.ey is None
-
-
 # ---------------------------------------------------------------------------
-# BrewInput — equipment field (v0.3)
+# BrewInput — with equipment field
 # ---------------------------------------------------------------------------
 
 def test_brew_input_with_equipment():
@@ -680,80 +765,170 @@ def test_brew_input_equipment_omitted():
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — method and grind maxLength (v0.3)
+# RatingsInput — v0.4
 # ---------------------------------------------------------------------------
 
-def test_brew_input_method_maxlength_accepted():
-    """method of exactly 100 chars is accepted."""
-    brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
-        type="pour_over",
-        dose_g=18.0,
-        water_weight_g=280.0,
-        method="x" * 100,
+def test_ratings_input_partial():
+    """RatingsInput with only some dimensions is valid."""
+    from brewlog.models import RatingsInput
+
+    ratings = RatingsInput(overall=4, acidity=3)
+    assert ratings.overall == 4
+    assert ratings.acidity == 3
+    assert ratings.fragrance is None
+
+
+def test_ratings_input_all_dimensions():
+    """RatingsInput with all 8 dimensions is valid."""
+    from brewlog.models import RatingsInput
+
+    ratings = RatingsInput(
+        overall=4, fragrance=3, aroma=4, flavour=5,
+        aftertaste=4, acidity=5, sweetness=3, mouthfeel=4
     )
-    assert len(brew.method) == 100
+    assert ratings.mouthfeel == 4
 
 
-def test_brew_input_method_maxlength_exceeded():
-    """method of 101 chars is rejected."""
+def test_ratings_input_boundary_minimum():
+    """Each dimension: 1 is accepted (minimum boundary)."""
+    from brewlog.models import RatingsInput
+
+    ratings = RatingsInput(overall=1)
+    assert ratings.overall == 1
+
+
+def test_ratings_input_boundary_maximum():
+    """Each dimension: 5 is accepted (maximum boundary)."""
+    from brewlog.models import RatingsInput
+
+    ratings = RatingsInput(overall=5)
+    assert ratings.overall == 5
+
+
+def test_ratings_input_below_minimum_rejected():
+    """rating dimension: 0 is rejected (minimum: 1)."""
+    from brewlog.models import RatingsInput
+
     with pytest.raises(ValidationError):
-        BrewInput(
-            date="2026-02-19T08:30:00Z",
-            type="pour_over",
-            dose_g=18.0,
-            water_weight_g=280.0,
-            method="x" * 101,
-        )
+        RatingsInput(overall=0)
 
 
-def test_brew_input_grind_maxlength_accepted():
-    """grind of exactly 100 chars is accepted."""
-    brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
-        type="pour_over",
-        dose_g=18.0,
-        water_weight_g=280.0,
-        grind="x" * 100,
-    )
-    assert len(brew.grind) == 100
+def test_ratings_input_above_maximum_rejected():
+    """rating dimension: 6 is rejected (maximum: 5)."""
+    from brewlog.models import RatingsInput
 
-
-def test_brew_input_grind_maxlength_exceeded():
-    """grind of 101 chars is rejected."""
     with pytest.raises(ValidationError):
-        BrewInput(
-            date="2026-02-19T08:30:00Z",
-            type="pour_over",
-            dose_g=18.0,
-            water_weight_g=280.0,
-            grind="x" * 101,
-        )
+        RatingsInput(overall=6)
+
+
+def test_ratings_input_empty():
+    """RatingsInput with no fields is valid (all optional)."""
+    from brewlog.models import RatingsInput
+
+    ratings = RatingsInput()
+    assert ratings.overall is None
+    assert ratings.fragrance is None
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — notes maxLength (v0.3)
+# ResultInput — v0.4
 # ---------------------------------------------------------------------------
 
-def test_brew_input_notes_maxlength_accepted():
-    """notes of exactly 2000 chars is accepted."""
-    brew = BrewInput(
-        date="2026-02-19T08:30:00Z",
-        type="pour_over",
-        dose_g=18.0,
-        water_weight_g=280.0,
-        notes="x" * 2000,
-    )
-    assert len(brew.notes) == 2000
+def test_result_input_brix_zero_accepted():
+    """ResultInput.brix: 0 is accepted (minimum: 0, not exclusive)."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput(brix=0)
+    assert result.brix == 0
 
 
-def test_brew_input_notes_maxlength_exceeded():
-    """notes of 2001 chars is rejected."""
+def test_result_input_brix_positive_accepted():
+    """ResultInput.brix: 1.5 is accepted."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput(brix=1.5)
+    assert result.brix == 1.5
+
+
+def test_result_input_brix_negative_rejected():
+    """ResultInput.brix: -1 is rejected."""
+    from brewlog.models import ResultInput
+
     with pytest.raises(ValidationError):
-        BrewInput(
-            date="2026-02-19T08:30:00Z",
-            type="pour_over",
-            dose_g=18.0,
-            water_weight_g=280.0,
-            notes="x" * 2001,
-        )
+        ResultInput(brix=-1)
+
+
+def test_result_input_tds_zero_rejected():
+    """ResultInput.tds: 0 is rejected (exclusiveMinimum: 0)."""
+    from brewlog.models import ResultInput
+
+    with pytest.raises(ValidationError):
+        ResultInput(tds=0)
+
+
+def test_result_input_tds_positive_accepted():
+    """ResultInput.tds: 1.38 is accepted."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput(tds=1.38)
+    assert result.tds == 1.38
+
+
+def test_result_input_ey_negative_rejected():
+    """ResultInput.ey: -1 is rejected."""
+    from brewlog.models import ResultInput
+
+    with pytest.raises(ValidationError):
+        ResultInput(ey=-1)
+
+
+def test_result_input_ey_zero_rejected():
+    """ResultInput.ey: 0 is rejected (exclusiveMinimum: 0)."""
+    from brewlog.models import ResultInput
+
+    with pytest.raises(ValidationError):
+        ResultInput(ey=0)
+
+
+def test_result_input_tasting_notes_empty_rejected():
+    """ResultInput.tasting_notes: empty string is rejected."""
+    from brewlog.models import ResultInput
+
+    with pytest.raises(ValidationError):
+        ResultInput(tasting_notes="")
+
+
+def test_result_input_tasting_notes_valid():
+    """ResultInput.tasting_notes: non-empty string is accepted."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput(tasting_notes="Bright citrus")
+    assert result.tasting_notes == "Bright citrus"
+
+
+def test_result_input_tasting_notes_maxlength_accepted():
+    """ResultInput.tasting_notes: 2000 chars is accepted."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput(tasting_notes="x" * 2000)
+    assert len(result.tasting_notes) == 2000
+
+
+def test_result_input_tasting_notes_maxlength_exceeded():
+    """ResultInput.tasting_notes: 2001 chars is rejected."""
+    from brewlog.models import ResultInput
+
+    with pytest.raises(ValidationError):
+        ResultInput(tasting_notes="x" * 2001)
+
+
+def test_result_input_empty():
+    """ResultInput with no fields is valid (all optional)."""
+    from brewlog.models import ResultInput
+
+    result = ResultInput()
+    assert result.tds is None
+    assert result.ey is None
+    assert result.brix is None
+    assert result.tasting_notes is None
+    assert result.ratings is None

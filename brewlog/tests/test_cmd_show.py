@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput
+from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput, RatingsInput
 
 
 @pytest.fixture
@@ -42,10 +42,8 @@ def _insert_full(db_path):
             water_weight_g=280.0,
             method="Hario V60",
             water_temp_c=96.0,
-            grind="medium-fine",
+            grind="medium_fine",
             duration_s=180,
-            tds=1.38,
-            rating=4,
             notes="Bright acidity",
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
@@ -55,6 +53,11 @@ def _insert_full(db_path):
                 process="Washed",
             ),
             water=WaterInput(ppm=150.0),
+            result=ResultInput(
+                tds=1.38,
+                ey=20.5,
+                ratings=RatingsInput(overall=4),
+            ),
         )
         db_module.insert_brew(brew, conn)
     finally:
@@ -77,6 +80,15 @@ def test_show_existing_brew(runner_with_db, tmp_path):
     assert "280.0" in result.output
 
 
+def test_show_result_fields_displayed(runner_with_db, tmp_path):
+    """AC-17: result sub-object fields shown."""
+    _insert_full(tmp_path / "test.db")
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert result.exit_code == 0
+    assert "TDS" in result.output
+    assert "1.38" in result.output
+
+
 def test_show_omits_null_fields(runner_with_db, tmp_path):
     """AC-17: field not set is absent from output."""
     _insert_minimal(tmp_path / "test.db")
@@ -85,9 +97,7 @@ def test_show_omits_null_fields(runner_with_db, tmp_path):
     # These optional fields were not set — they should not appear
     assert "Method" not in result.output
     assert "Grind" not in result.output
-    assert "Notes" not in result.output
     assert "TDS" not in result.output
-    assert "Rating" not in result.output
 
 
 # ---------------------------------------------------------------------------
@@ -115,7 +125,7 @@ def test_show_omits_empty_sections(runner_with_db, tmp_path):
     # Note: "Water weight:" is a brew parameter field and legitimately contains "Water".
     # We check for section headings as standalone words on their own line.
     lines = result.output.split("\n")
-    section_headings = [l.strip() for l in lines]
+    section_headings = [ln.strip() for ln in lines]
     assert "Coffee" not in section_headings
     assert "Water" not in section_headings
 

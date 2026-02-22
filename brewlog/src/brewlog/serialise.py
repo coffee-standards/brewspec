@@ -21,7 +21,7 @@ import click
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.3 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v0.4 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).
@@ -29,6 +29,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     - coffee sub-object is only included if at least one coffee field is present.
     - water sub-object is only included if water_ppm is present.
     - equipment sub-object is only included if grinder or brewer is present.
+    - result sub-object is only included if at least one result field is present.
+    - result_ratings is deserialised from JSON string to dict.
     """
     r = dict(row)  # sqlite3.Row to plain dict
 
@@ -43,7 +45,7 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     # Optional brew-level fields — include only if not NULL
     for field in (
         "method", "water_volume_ml", "water_temp_c", "grind",
-        "duration_s", "tds", "ey", "rating", "notes"
+        "duration_s", "notes"
     ):
         if r.get(field) is not None:
             brew[field] = r[field]
@@ -76,16 +78,31 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     if equipment:  # only include if at least one field is present
         brew["equipment"] = equipment
 
+    # Result sub-object
+    result: dict = {}
+    if r.get("result_tds") is not None:
+        result["tds"] = r["result_tds"]
+    if r.get("result_ey") is not None:
+        result["ey"] = r["result_ey"]
+    if r.get("result_brix") is not None:
+        result["brix"] = r["result_brix"]
+    if r.get("result_tasting_notes") is not None:
+        result["tasting_notes"] = r["result_tasting_notes"]
+    if r.get("result_ratings") is not None:
+        result["ratings"] = json.loads(r["result_ratings"])
+    if result:  # only include if at least one result field is present
+        brew["result"] = result
+
     return brew
 
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.3 document dict.
-    Returns {"brewspec_version": "0.3", "brews": [...]}
+    Convert a list of DB rows to a full BrewSpec v0.4 document dict.
+    Returns {"brewspec_version": "0.4", "brews": [...]}
     """
     return {
-        "brewspec_version": "0.3",
+        "brewspec_version": "0.4",
         "brews": [row_to_brew_dict(row) for row in rows],
     }
 

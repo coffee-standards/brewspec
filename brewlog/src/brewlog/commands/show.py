@@ -71,19 +71,29 @@ def show(id: int) -> None:
     if row["water_volume_ml"] is not None:
         _print_field("Water volume:", row["water_volume_ml"], "ml")
 
+    if row["notes"] is not None:
+        _print_field("Notes:", row["notes"])
+
     # -- Results section --
     has_results = any(
-        row[f] is not None for f in ("tds", "rating", "notes")
+        row[f] is not None
+        for f in ("result_tds", "result_ey", "result_brix", "result_tasting_notes", "result_ratings")
     )
     if has_results:
         click.echo("")
         click.echo("Results")
-        if row["tds"] is not None:
-            _print_field("TDS:", row["tds"])
-        if row["rating"] is not None:
-            _print_field("Rating:", row["rating"])
-        if row["notes"] is not None:
-            _print_field("Notes:", row["notes"])
+        if row["result_tds"] is not None:
+            _print_field("TDS:", row["result_tds"])
+        if row["result_ey"] is not None:
+            _print_field("EY:", row["result_ey"])
+        if row["result_brix"] is not None:
+            _print_field("Brix:", row["result_brix"])
+        if row["result_tasting_notes"] is not None:
+            _print_field("Tasting notes:", row["result_tasting_notes"])
+        if row["result_ratings"] is not None:
+            ratings = json.loads(row["result_ratings"])
+            for dim, val in ratings.items():
+                _print_field(f"Rating ({dim}):", val)
 
     # -- Coffee section --
     has_coffee = any(
@@ -111,3 +121,16 @@ def show(id: int) -> None:
         click.echo("")
         click.echo("Water")
         _print_field("PPM:", row["water_ppm"])
+
+    # -- Equipment section --
+    has_equipment = any(
+        row[f] is not None
+        for f in ("equipment_grinder", "equipment_brewer")
+    )
+    if has_equipment:
+        click.echo("")
+        click.echo("Equipment")
+        if row["equipment_grinder"] is not None:
+            _print_field("Grinder:", row["equipment_grinder"])
+        if row["equipment_brewer"] is not None:
+            _print_field("Brewer:", row["equipment_brewer"])

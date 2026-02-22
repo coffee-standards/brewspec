@@ -3,15 +3,13 @@ End-to-end export/import round-trip tests.
 Tests map to AC-21, AC-22, AC-24, AC-28.
 """
 
-import json
 import yaml
-import pytest
 from pathlib import Path
 from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module, schema as schema_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput
+from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput
 
 
 def _insert_brew(db_path, brew: BrewInput):
@@ -51,7 +49,7 @@ def _three_brews():
             dose_g=18.0,
             water_weight_g=280.0,
             method="Hario V60",
-            rating=4,
+            result=ResultInput(tds=1.38, ey=20.5),
         ),
         BrewInput(
             date="2026-02-18T07:15:00Z",
@@ -70,9 +68,8 @@ def _three_brews():
             dose_g=18.0,
             water_weight_g=36.0,
             duration_s=28,
-            tds=8.5,
-            rating=5,
             water=WaterInput(ppm=100.0),
+            result=ResultInput(tds=8.5),
         ),
     ]
 
@@ -202,6 +199,7 @@ def test_roundtrip_optional_absent_fields_omitted(tmp_path, monkeypatch):
     assert "coffee" not in brew_dict
     assert "water" not in brew_dict
     assert "method" not in brew_dict
+    assert "result" not in brew_dict
 
 
 # ---------------------------------------------------------------------------

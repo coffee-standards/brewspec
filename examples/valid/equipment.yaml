@@ -1,4 +1,4 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-20T07:30:00Z"
     type: "pour_over"
@@ -6,11 +6,8 @@ brews:
     dose_g: 18
     water_weight_g: 288
     water_temp_c: 96
-    grind: "medium-fine, setting 20"
+    grind: "medium_fine"
     duration_s: 185
-    tds: 1.42
-    ey: 21.3
-    rating: 5
     notes: "Clean and bright, excellent clarity"
     coffee:
       roast_date: "2026-02-01"
@@ -23,3 +20,8 @@ brews:
     equipment:
       grinder: "Comandante C40 MK4"
       brewer: "Hario V60 02"
+    result:
+      tds: 1.42
+      ey: 21.3
+      ratings:
+        overall: 5

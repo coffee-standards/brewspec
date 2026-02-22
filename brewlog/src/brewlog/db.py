@@ -58,9 +58,6 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             water_temp_c        REAL,
             grind               TEXT,
             duration_s          INTEGER,
-            tds                 REAL,
-            ey                  REAL,
-            rating              INTEGER,
             notes               TEXT,
             coffee_roast_date   TEXT,
             coffee_type         TEXT,
@@ -69,7 +66,12 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             coffee_process      TEXT,
             water_ppm           REAL,
             equipment_grinder   TEXT,
-            equipment_brewer    TEXT
+            equipment_brewer    TEXT,
+            result_tds          REAL,
+            result_ey           REAL,
+            result_brix         REAL,
+            result_tasting_notes TEXT,
+            result_ratings      TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
     """)
@@ -89,23 +91,38 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
     coffee = brew.coffee
     water = brew.water
     equipment = brew.equipment
+    result = brew.result
+
+    # Serialise result.ratings to JSON if present
+    result_ratings_json = None
+    if result and result.ratings:
+        ratings_dict = {
+            k: v for k, v in result.ratings.model_dump().items()
+            if v is not None
+        }
+        if ratings_dict:
+            result_ratings_json = json.dumps(ratings_dict)
 
     sql = """
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
             water_volume_ml, water_temp_c, grind, duration_s,
-            tds, ey, rating, notes,
+            notes,
             coffee_roast_date, coffee_type, coffee_origin,
             coffee_varietal, coffee_process,
             water_ppm,
-            equipment_grinder, equipment_brewer
+            equipment_grinder, equipment_brewer,
+            result_tds, result_ey, result_brix,
+            result_tasting_notes, result_ratings
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?,
-            ?, ?, ?, ?,
+            ?,
             ?, ?, ?,
             ?, ?,
             ?,
+            ?, ?,
+            ?, ?, ?,
             ?, ?
         )
     """
@@ -119,9 +136,6 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         brew.water_temp_c,
         brew.grind,
         brew.duration_s,
-        brew.tds,
-        brew.ey,
-        brew.rating,
         brew.notes,
         coffee.roast_date if coffee else None,
         coffee.type if coffee else None,
@@ -131,6 +145,11 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         water.ppm if water else None,
         equipment.grinder if equipment else None,
         equipment.brewer if equipment else None,
+        result.tds if result else None,
+        result.ey if result else None,
+        result.brix if result else None,
+        result.tasting_notes if result else None,
+        result_ratings_json,
     )
     cursor = conn.execute(sql, params)
     conn.commit()
@@ -149,24 +168,33 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
     coffee = brew_dict.get("coffee") or {}
     water = brew_dict.get("water") or {}
     equipment = brew_dict.get("equipment") or {}
+    result = brew_dict.get("result") or {}
     origin = coffee.get("origin")
+
+    # Serialise result.ratings to JSON if present
+    ratings = result.get("ratings")
+    result_ratings_json = json.dumps(ratings) if ratings else None
 
     sql = """
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
             water_volume_ml, water_temp_c, grind, duration_s,
-            tds, ey, rating, notes,
+            notes,
             coffee_roast_date, coffee_type, coffee_origin,
             coffee_varietal, coffee_process,
             water_ppm,
-            equipment_grinder, equipment_brewer
+            equipment_grinder, equipment_brewer,
+            result_tds, result_ey, result_brix,
+            result_tasting_notes, result_ratings
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?,
-            ?, ?, ?, ?,
+            ?,
             ?, ?, ?,
             ?, ?,
             ?,
+            ?, ?,
+            ?, ?, ?,
             ?, ?
         )
     """
@@ -180,9 +208,6 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         brew_dict.get("water_temp_c"),
         brew_dict.get("grind"),
         brew_dict.get("duration_s"),
-        brew_dict.get("tds"),
-        brew_dict.get("ey"),
-        brew_dict.get("rating"),
         brew_dict.get("notes"),
         coffee.get("roast_date"),
         coffee.get("type"),
@@ -192,6 +217,11 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         water.get("ppm"),
         equipment.get("grinder"),
         equipment.get("brewer"),
+        result.get("tds"),
+        result.get("ey"),
+        result.get("brix"),
+        result.get("tasting_notes"),
+        result_ratings_json,
     )
     cursor = conn.execute(sql, params)
     return cursor.lastrowid
@@ -234,7 +264,6 @@ def list_brews_filtered(
     limit: int = 20,
     all_rows: bool = False,
     brew_type: str | None = None,
-    rating: int | None = None,
     since: str | None = None,
 ) -> list[sqlite3.Row]:
     """
@@ -245,8 +274,7 @@ def list_brews_filtered(
 
     Args:
         brew_type: exact match on the type column.
-        rating: exact match on the rating column.
-        since: lower bound (inclusive) on date, compared as 'YYYY-MM-DDT00:00:00Z'.
+        since: lower bound (inclusive) on date, compared as a date prefix string.
         limit: maximum rows to return (ignored when all_rows is True).
         all_rows: if True, return all matching rows.
     """
@@ -257,16 +285,10 @@ def list_brews_filtered(
         conditions.append("type = ?")
         params.append(brew_type)
 
-    if rating is not None:
-        conditions.append("rating = ?")
-        params.append(rating)
-
     if since is not None:
         # Compare at day granularity using a lower-bound ISO 8601 string.
-        # Stored dates are 'YYYY-MM-DDTHH:MM:SSZ'; 'YYYY-MM-DDT00:00:00Z'
-        # as the lower bound includes any time on the since date.
         conditions.append("date >= ?")
-        params.append(since + "T00:00:00Z")
+        params.append(since)
 
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 

@@ -15,7 +15,15 @@ import click
 from pydantic import ValidationError
 
 from brewlog import db
-from brewlog.models import BrewInput, CoffeeInput, WaterInput, EquipmentInput, DATE_PATTERN, BREW_TYPE_ENUM
+from brewlog.models import (
+    BrewInput,
+    CoffeeInput,
+    WaterInput,
+    EquipmentInput,
+    ResultInput,
+    DATE_PATTERN,
+    BREW_TYPE_ENUM,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -28,14 +36,17 @@ def _prompt_date() -> str:
     while True:
         value = click.prompt("Date", default=default)
         if DATE_PATTERN.match(value):
-            try:
-                datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if "T" in value:
+                try:
+                    datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                    return value
+                except ValueError:
+                    pass
+            else:
                 return value
-            except ValueError:
-                pass
         click.echo(
-            "  Error: date must be in format YYYY-MM-DDTHH:MM:SSZ "
-            "(e.g. 2026-02-19T08:30:00Z)"
+            "  Error: date must be in format YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DD "
+            "(e.g. 2026-02-19T08:30:00Z or 2026-02-19)"
         )
 
 
@@ -79,7 +90,7 @@ def _prompt_positive_float(label: str) -> float:
 
 @click.command("add")
 @click.option("--date",        "date",         type=str,   default=None,
-              help="ISO 8601 UTC datetime (YYYY-MM-DDTHH:MM:SSZ).")
+              help="Brew date: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DD.")
 @click.option("--type",        "brew_type",    type=str,   default=None,
               help="Brew type: immersion, pour_over, espresso, hybrid.")
 @click.option("--dose",        "dose",         type=float, default=None,
@@ -91,13 +102,14 @@ def _prompt_positive_float(label: str) -> float:
 @click.option("--temp",        "temp",         type=float, default=None,
               help="Water temperature in Celsius (0-100).")
 @click.option("--grind",       "grind",        type=str,   default=None,
-              help="Freeform grind description.")
+              help=(
+                  "Grind size: turkish, espresso, fine, medium_fine, "
+                  "medium, medium_coarse, coarse."
+              ))
 @click.option("--duration",    "duration",     type=int,   default=None,
               help="Brew duration in seconds (> 0).")
-@click.option("--rating",      "rating",       type=int,   default=None,
-              help="Rating 1-5.")
 @click.option("--notes",       "notes",        type=str,   default=None,
-              help="Freeform tasting notes.")
+              help="Brew process notes.")
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
@@ -115,15 +127,22 @@ def _prompt_positive_float(label: str) -> float:
               help="Brew TDS percentage (> 0).")
 @click.option("--ey",          "ey",           type=float, default=None,
               help="Extraction yield percentage (> 0).")
+@click.option("--brix",        "brix",         type=float, default=None,
+              help="Degrees Brix (>= 0).")
+@click.option("--tasting-notes", "tasting_notes", type=str, default=None,
+              help="Sensory tasting notes.")
+@click.option("--overall",     "overall",      type=int,   default=None,
+              help="Overall rating 1-5.")
 @click.option("--grinder",     "grinder",      type=str,   default=None,
               help="Grinder name or description.")
 @click.option("--brewer",      "brewer",       type=str,   default=None,
               help="Brewer/dripper name or description.")
 def add(
     date, brew_type, dose, water_weight,
-    method, temp, grind, duration, rating, notes,
+    method, temp, grind, duration, notes,
     roast_date, coffee_type, origin, varietal, process,
-    water_ppm, tds, ey, grinder, brewer,
+    water_ppm, tds, ey, brix, tasting_notes, overall,
+    grinder, brewer,
 ) -> None:
     """Log a new brew."""
 
@@ -131,7 +150,7 @@ def add(
 
     if date is None and brew_type is None and dose is None and water_weight is None:
         click.echo(
-            'Tip: add optional details with flags, e.g. --method "V60" --rating 4'
+            'Tip: add optional details with flags, e.g. --method "V60" --overall 4'
             "  (run --help for all options)"
         )
 
@@ -141,7 +160,7 @@ def add(
         date = _prompt_date()
     elif not DATE_PATTERN.match(date):
         click.echo(
-            "Error: date must be ISO 8601 UTC format: YYYY-MM-DDTHH:MM:SSZ",
+            "Error: date must be YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ",
             err=True,
         )
         sys.exit(1)
@@ -188,6 +207,29 @@ def add(
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
             sys.exit(1)
 
+    result_obj = None
+    has_result = any(v is not None for v in (tds, ey, brix, tasting_notes, overall))
+    if has_result:
+        from brewlog.models import RatingsInput
+        ratings_obj = None
+        if overall is not None:
+            try:
+                ratings_obj = RatingsInput(overall=overall)
+            except ValidationError as exc:
+                click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
+                sys.exit(1)
+        try:
+            result_obj = ResultInput(
+                tds=tds,
+                ey=ey,
+                brix=brix,
+                tasting_notes=tasting_notes,
+                ratings=ratings_obj,
+            )
+        except ValidationError as exc:
+            click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
+            sys.exit(1)
+
     try:
         brew = BrewInput(
             date=date,
@@ -199,13 +241,11 @@ def add(
             water_temp_c=temp,
             grind=grind,
             duration_s=duration,
-            tds=tds,
-            ey=ey,
-            rating=rating,
             notes=notes,
             coffee=coffee_obj,
             water=water_obj,
             equipment=equipment_obj,
+            result=result_obj,
         )
     except ValidationError as exc:
         click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)

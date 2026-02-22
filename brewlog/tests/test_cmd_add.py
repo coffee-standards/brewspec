@@ -119,15 +119,15 @@ def test_add_invalid_temp_out_of_range(runner_with_db):
     assert result.exit_code == 1
 
 
-def test_add_invalid_rating_out_of_range(runner_with_db):
-    """AC-9: --rating 6 -> error, exit 1."""
+def test_add_invalid_overall_out_of_range(runner_with_db):
+    """AC-9: --overall 6 -> error, exit 1."""
     result = runner_with_db.invoke(cli, [
         "add",
         "--date", "2026-02-19T08:30:00Z",
         "--type", "pour_over",
         "--dose", "18.0",
         "--water", "280.0",
-        "--rating", "6",
+        "--overall", "6",
     ])
     assert result.exit_code == 1
 
@@ -172,13 +172,39 @@ def test_add_invalid_coffee_type(runner_with_db):
 
 
 def test_add_invalid_date_format(runner_with_db):
-    """AC-9: --date in wrong format -> error, exit 1."""
+    """AC-9: --date in completely wrong format -> error, exit 1."""
     result = runner_with_db.invoke(cli, [
         "add",
-        "--date", "2026-02-19",  # missing time component
+        "--date", "not-a-date",
         "--type", "pour_over",
         "--dose", "18.0",
         "--water", "280.0",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_date_only_accepted(runner_with_db):
+    """AC-v0.4: date-only format YYYY-MM-DD is accepted."""
+    result = runner_with_db.invoke(cli, [
+        "add",
+        "--date", "2026-02-19",
+        "--type", "pour_over",
+        "--dose", "18.0",
+        "--water", "280.0",
+    ])
+    assert result.exit_code == 0
+    assert "Brew #1 logged." in result.output
+
+
+def test_add_invalid_grind_freeform(runner_with_db):
+    """AC-v0.4: freeform grind value rejected."""
+    result = runner_with_db.invoke(cli, [
+        "add",
+        "--date", "2026-02-19T08:30:00Z",
+        "--type", "pour_over",
+        "--dose", "18.0",
+        "--water", "280.0",
+        "--grind", "setting 15",
     ])
     assert result.exit_code == 1
 
@@ -227,9 +253,8 @@ def test_add_optional_fields_stored(runner_with_db, tmp_path, monkeypatch):
         "--water", "280.0",
         "--method", "Hario V60",
         "--temp", "96.0",
-        "--grind", "medium-fine",
+        "--grind", "medium_fine",
         "--duration", "180",
-        "--rating", "4",
         "--notes", "Bright acidity",
         "--roast-date", "2026-01-20",
         "--coffee-type", "single_origin",
@@ -246,16 +271,15 @@ def test_add_optional_fields_stored(runner_with_db, tmp_path, monkeypatch):
         row = db_mod.get_brew(1, conn)
         assert row["method"] == "Hario V60"
         assert row["water_temp_c"] == 96.0
-        assert row["grind"] == "medium-fine"
+        assert row["grind"] == "medium_fine"
         assert row["duration_s"] == 180
-        assert row["rating"] == 4
         assert row["notes"] == "Bright acidity"
         assert row["coffee_roast_date"] == "2026-01-20"
         assert row["coffee_type"] == "single_origin"
         assert row["coffee_varietal"] == "Heirloom"
         assert row["coffee_process"] == "Washed"
         assert row["water_ppm"] == 150.0
-        assert row["tds"] == 1.38
+        assert row["result_tds"] == 1.38
     finally:
         conn.close()
 
@@ -353,7 +377,7 @@ def test_add_interactive_shows_tip(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Tip:" in result.output
-    assert "--rating" in result.output
+    assert "--overall" in result.output
 
 
 def test_add_with_flags_no_tip(runner_with_db):
@@ -415,7 +439,7 @@ def test_add_interactive_invalid_choice_reprompts(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_add_ey_flag_stored(runner_with_db, tmp_path, monkeypatch):
-    """AC-14: --ey stored in DB."""
+    """AC-14: --ey stored in DB (as result_ey)."""
     import brewlog.db as db_mod
     db_path = tmp_path / "ey_test.db"
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
@@ -425,7 +449,7 @@ def test_add_ey_flag_stored(runner_with_db, tmp_path, monkeypatch):
     ])
     conn = db_mod.get_connection(db_path=db_path)
     try:
-        assert db_mod.get_brew(1, conn)["ey"] == 22.5
+        assert db_mod.get_brew(1, conn)["result_ey"] == 22.5
     finally:
         conn.close()
 
@@ -512,7 +536,7 @@ def test_add_ey_grinder_brewer_together(runner_with_db, tmp_path, monkeypatch):
     conn = db_mod.get_connection(db_path=db_path)
     try:
         row = db_mod.get_brew(1, conn)
-        assert row["ey"] == 21.0
+        assert row["result_ey"] == 21.0
         assert row["equipment_grinder"] == "Niche Zero"
         assert row["equipment_brewer"] == "Chemex"
     finally:

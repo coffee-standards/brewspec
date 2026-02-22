@@ -1,4 +1,4 @@
-brewspec_version: "0.3"
+brewspec_version: "0.4"
 brews:
   - date: "2026-02-18T07:15:00Z"
     type: "hybrid"
@@ -16,6 +16,8 @@ brews:
       ppm: 75
     grind: "medium"
     duration_s: 120
-    tds: 1.55
-    rating: 4
     notes: "Smooth and sweet, slightly fruity from the Ethiopian component"
+    result:
+      tds: 1.55
+      ratings:
+        overall: 4
