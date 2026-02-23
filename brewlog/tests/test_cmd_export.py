@@ -263,3 +263,102 @@ def test_export_valid_extension_json(runner_with_db, tmp_path):
     """AC-2: .json extension -> accepted."""
     result = runner_with_db.invoke(cli, ["export", str(tmp_path / "out.json")])
     assert result.exit_code == 0
+
+
+# ---------------------------------------------------------------------------
+# AC-11: Export warning for non-enum grind values
+# ---------------------------------------------------------------------------
+
+def _insert_with_invalid_grind(db_path, grind_value: str):
+    """Insert a row with an arbitrary grind value bypassing Pydantic validation."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        conn.execute(
+            "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+            "VALUES (?, ?, ?, ?, ?)",
+            ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, grind_value),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_export_invalid_grind_warns(runner_with_db, tmp_path):
+    """AC-11: brew with non-enum grind value triggers warning on export."""
+    _insert_with_invalid_grind(tmp_path / "test.db", "setting 15")
+    out_file = str(tmp_path / "export.yaml")
+    result = runner_with_db.invoke(cli, ["export", out_file])
+    assert result.exit_code == 0
+    assert "Warning" in result.output or "warning" in result.output.lower()
+
+
+def test_export_invalid_grind_omitted_from_output(runner_with_db, tmp_path):
+    """AC-11: brew with non-enum grind omits grind from exported record."""
+    import yaml as _yaml
+    _insert_with_invalid_grind(tmp_path / "test.db", "medium-fine")
+    out_file = str(tmp_path / "export.yaml")
+    runner_with_db.invoke(cli, ["export", out_file])
+    doc = _yaml.safe_load((tmp_path / "export.yaml").read_text())
+    brew = doc["brews"][0]
+    assert "grind" not in brew
+
+
+def test_export_invalid_grind_file_still_valid_schema(runner_with_db, tmp_path):
+    """AC-11: exported file with omitted grind still passes schema validation."""
+    import yaml as _yaml
+    _insert_with_invalid_grind(tmp_path / "test.db", "coarse grind")
+    out_file = str(tmp_path / "export.yaml")
+    runner_with_db.invoke(cli, ["export", out_file])
+    doc = _yaml.safe_load((tmp_path / "export.yaml").read_text())
+    errors = schema_module.validate_document(doc)
+    assert errors == []
+
+
+def test_export_invalid_grind_warning_names_brew(runner_with_db, tmp_path):
+    """AC-11: warning message identifies the brew by ID."""
+    _insert_with_invalid_grind(tmp_path / "test.db", "setting 15")
+    out_file = str(tmp_path / "export.yaml")
+    result = runner_with_db.invoke(cli, ["export", out_file])
+    # Warning should mention the brew ID or the grind value
+    assert "setting 15" in result.output or "Brew #" in result.output
+
+
+def test_export_valid_grind_no_warning(runner_with_db, tmp_path):
+    """AC-11: valid enum grind produces no warning."""
+    _insert_full(tmp_path / "test.db")  # uses "medium_fine" grind
+    out_file = str(tmp_path / "export.yaml")
+    result = runner_with_db.invoke(cli, ["export", out_file])
+    assert result.exit_code == 0
+    assert "Warning" not in result.output
+
+
+# ---------------------------------------------------------------------------
+# AC-12: Ratings exported under result sub-object from individual columns
+# ---------------------------------------------------------------------------
+
+def test_export_ratings_in_result_subobject(runner_with_db, tmp_path):
+    """AC-12: ratings serialised under result.ratings in exported file."""
+    import yaml as _yaml
+    from brewlog.models import BrewInput, ResultInput, RatingsInput
+    db_path = tmp_path / "test.db"
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-19T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            result=ResultInput(ratings=RatingsInput(overall=4, acidity=5)),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+    out_file = str(tmp_path / "export.yaml")
+    runner_with_db.invoke(cli, ["export", out_file])
+    doc = _yaml.safe_load((tmp_path / "export.yaml").read_text())
+    brew_dict = doc["brews"][0]
+    assert "result" in brew_dict
+    assert "ratings" in brew_dict["result"]
+    assert brew_dict["result"]["ratings"]["overall"] == 4
+    assert brew_dict["result"]["ratings"]["acidity"] == 5

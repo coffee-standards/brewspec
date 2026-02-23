@@ -120,14 +120,14 @@ def test_add_invalid_temp_out_of_range(runner_with_db):
 
 
 def test_add_invalid_overall_out_of_range(runner_with_db):
-    """AC-9: --overall 6 -> error, exit 1."""
+    """AC-9/AC-26: --rating-overall 6 -> error, exit 1."""
     result = runner_with_db.invoke(cli, [
         "add",
         "--date", "2026-02-19T08:30:00Z",
         "--type", "pour_over",
         "--dose", "18.0",
         "--water", "280.0",
-        "--overall", "6",
+        "--rating-overall", "6",
     ])
     assert result.exit_code == 1
 
@@ -368,7 +368,7 @@ def test_add_interactive_reprompts_invalid_dose(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_add_interactive_shows_tip(tmp_path, monkeypatch):
-    """v0.2: tip line printed when no required flags are supplied."""
+    """v0.3: tip line printed when no required flags are supplied."""
     import brewlog.db as db_mod
     db_path = tmp_path / "tip_test.db"
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
@@ -377,7 +377,8 @@ def test_add_interactive_shows_tip(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
     assert "Tip:" in result.output
-    assert "--overall" in result.output
+    # v0.3: tip now shows --rating-overall, not --overall
+    assert "--rating-overall" in result.output
 
 
 def test_add_with_flags_no_tip(runner_with_db):
@@ -541,3 +542,362 @@ def test_add_ey_grinder_brewer_together(runner_with_db, tmp_path, monkeypatch):
         assert row["equipment_brewer"] == "Chemex"
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-25, AC-30 — --rating flag retired; tip updated
+# ---------------------------------------------------------------------------
+
+def test_add_rating_retired_flag_exits_1(runner_with_db):
+    """AC-25: --rating N produces exit 1 (flag retired)."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating", "4",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_rating_retired_message(runner_with_db):
+    """AC-25: --rating N error message mentions --rating-overall."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating", "4",
+    ])
+    assert "--rating-overall" in result.output
+
+
+def test_add_tip_shows_rating_overall(tmp_path, monkeypatch):
+    """AC-30: interactive tip shows --rating-overall, not --rating."""
+    import brewlog.db as db_mod
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_path / "test.db")
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    assert "--rating-overall 4" in result.output
+
+
+def test_add_tip_does_not_show_bare_rating(tmp_path, monkeypatch):
+    """AC-30: interactive tip does not show bare '--rating 4' example."""
+    import brewlog.db as db_mod
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_path / "test.db")
+    runner = CliRunner()
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    # '--rating 4' should not appear (--rating-overall 4 is fine)
+    import re
+    assert not re.search(r"--rating\s+\d", result.output)
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-24, AC-26 — all 8 --rating-* flags on add
+# ---------------------------------------------------------------------------
+
+def test_add_rating_overall_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-24, AC-26: --rating-overall stored in result_rating_overall."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-overall", "4",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_rating_overall"] == 4
+    finally:
+        conn.close()
+
+
+def test_add_rating_fragrance_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-24: --rating-fragrance stored in result_rating_fragrance."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-fragrance", "3",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_rating_fragrance"] == 3
+    finally:
+        conn.close()
+
+
+def test_add_rating_aroma_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-24: --rating-aroma stored in result_rating_aroma."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-aroma", "4",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_rating_aroma"] == 4
+    finally:
+        conn.close()
+
+
+def test_add_all_8_rating_dimensions_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-24: all 8 --rating-* flags stored in individual DB columns."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+        "--rating-overall", "4",
+        "--rating-fragrance", "3",
+        "--rating-aroma", "4",
+        "--rating-flavour", "5",
+        "--rating-aftertaste", "4",
+        "--rating-acidity", "5",
+        "--rating-sweetness", "3",
+        "--rating-mouthfeel", "4",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        assert row["result_rating_overall"] == 4
+        assert row["result_rating_fragrance"] == 3
+        assert row["result_rating_aroma"] == 4
+        assert row["result_rating_flavour"] == 5
+        assert row["result_rating_aftertaste"] == 4
+        assert row["result_rating_acidity"] == 5
+        assert row["result_rating_sweetness"] == 3
+        assert row["result_rating_mouthfeel"] == 4
+    finally:
+        conn.close()
+
+
+def test_add_rating_overall_invalid_zero(runner_with_db):
+    """AC-26: --rating-overall 0 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-overall", "0",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_rating_overall_invalid_six(runner_with_db):
+    """AC-26: --rating-overall 6 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-overall", "6",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_rating_overall_invalid_string(runner_with_db):
+    """AC-26: --rating-overall abc -> Click rejects it (non-integer)."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--rating-overall", "abc",
+    ])
+    assert result.exit_code != 0
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-27 — --brix validation
+# ---------------------------------------------------------------------------
+
+def test_add_brix_valid_zero(runner_with_db, tmp_path, monkeypatch):
+    """AC-27: --brix 0 is valid (0 Brix is physically meaningful)."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--brix", "0",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_brix"] == 0.0
+    finally:
+        conn.close()
+
+
+def test_add_brix_valid_positive(runner_with_db, tmp_path, monkeypatch):
+    """AC-27: --brix 1.5 stored correctly."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--brix", "1.5",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_brix"] == 1.5
+    finally:
+        conn.close()
+
+
+def test_add_brix_invalid_negative(runner_with_db):
+    """AC-27: --brix -0.1 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--brix", "-0.1",
+    ])
+    assert result.exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-28 — --tasting-notes validation
+# ---------------------------------------------------------------------------
+
+def test_add_tasting_notes_stored(runner_with_db, tmp_path, monkeypatch):
+    """AC-28: --tasting-notes stored in result_tasting_notes."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+        "--tasting-notes", "Bright acidity",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["result_tasting_notes"] == "Bright acidity"
+    finally:
+        conn.close()
+
+
+def test_add_tasting_notes_empty_string_exits_1(runner_with_db):
+    """AC-28: --tasting-notes '' -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--tasting-notes", "",
+    ])
+    assert result.exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-29 — no result flags -> all result cols NULL
+# ---------------------------------------------------------------------------
+
+def test_add_no_result_flags_succeeds(runner_with_db, tmp_path, monkeypatch):
+    """AC-29: omitting all result flags -> exit 0, result cols are NULL."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        assert row["result_rating_overall"] is None
+        assert row["result_brix"] is None
+        assert row["result_tasting_notes"] is None
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-6, AC-7, AC-8, AC-9 — date format UX
+# ---------------------------------------------------------------------------
+
+def test_date_prompt_default_is_today_yyyy_mm_dd(tmp_path, monkeypatch):
+    """AC-6: interactive date prompt defaults to today in YYYY-MM-DD format."""
+    from datetime import date as _date
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner = CliRunner()
+    # Press Enter (accept default date), then type, dose, water
+    result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        today_str = _date.today().strftime("%Y-%m-%d")
+        assert row["date"] == today_str
+    finally:
+        conn.close()
+
+
+def test_date_flag_accepts_date_only(runner_with_db, tmp_path, monkeypatch):
+    """AC-8: --date YYYY-MM-DD accepted, exit 0."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+    ])
+    assert result.exit_code == 0
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["date"] == "2026-02-22"
+    finally:
+        conn.close()
+
+
+def test_date_stored_exactly_as_supplied_date_only(runner_with_db, tmp_path, monkeypatch):
+    """AC-9: date-only value stored without normalisation."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["date"] == "2026-02-22"
+    finally:
+        conn.close()
+
+
+def test_date_stored_exactly_as_supplied_datetime(runner_with_db, tmp_path, monkeypatch):
+    """AC-9: full datetime stored without normalisation."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22T09:00:00Z", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0",
+    ])
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        assert db_mod.get_brew(1, conn)["date"] == "2026-02-22T09:00:00Z"
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-16, AC-18 — grind enum on add
+# ---------------------------------------------------------------------------
+
+def test_grind_all_valid_values_accepted(runner_with_db):
+    """AC-16: all 7 grind enum values accepted."""
+    for grind in ("turkish", "espresso", "fine", "medium_fine", "medium", "medium_coarse", "coarse"):
+        result = runner_with_db.invoke(cli, [
+            "add", "--date", "2026-02-22", "--type", "pour_over",
+            "--dose", "18.0", "--water", "280.0", "--grind", grind,
+        ])
+        assert result.exit_code == 0, f"grind={grind} should be accepted"
+
+
+def test_grind_hyphenated_rejected(runner_with_db):
+    """AC-16: 'medium-fine' (hyphenated) is not a valid enum value."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-02-22", "--type", "pour_over",
+        "--dose", "18.0", "--water", "280.0", "--grind", "medium-fine",
+    ])
+    assert result.exit_code == 1
+
+
+def test_grind_help_lists_enum_values(runner_with_db):
+    """AC-18: --help lists grind enum values."""
+    result = runner_with_db.invoke(cli, ["add", "--help"])
+    assert "medium_fine" in result.output
+    assert "coarse" in result.output

@@ -26,8 +26,8 @@ from brewlog.models import (
               help="Brew method (e.g. 'V60').")
 @click.option("--grind",       "grind",        type=str,   default=None,
               help=(
-                  "Grind size: turkish, espresso, fine, medium_fine, "
-                  "medium, medium_coarse, coarse."
+                  "Grind size: turkish | espresso | fine | medium_fine | "
+                  "medium | medium_coarse | coarse."
               ))
 @click.option("--temp",        "temp",         type=float, default=None,
               help="Water temperature in Celsius (0-100).")
@@ -42,9 +42,27 @@ from brewlog.models import (
 @click.option("--brix",        "brix",         type=float, default=None,
               help="Degrees Brix (>= 0).")
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
-              help="Sensory tasting notes.")
-@click.option("--overall",     "overall",      type=int,   default=None,
-              help="Overall rating 1-5.")
+              help=(
+                  "Sensory tasting notes — impressions of the cup. "
+                  "For operational brew-process notes use --notes."
+              ))
+@click.option("--rating",         "rating_retired", type=int, default=None, hidden=True)
+@click.option("--rating-overall", "rating_overall",    type=int, default=None,
+              help="Overall impression, 1-5.")
+@click.option("--rating-fragrance", "rating_fragrance", type=int, default=None,
+              help="Fragrance rating, 1-5.")
+@click.option("--rating-aroma",    "rating_aroma",     type=int, default=None,
+              help="Aroma rating, 1-5.")
+@click.option("--rating-flavour",  "rating_flavour",   type=int, default=None,
+              help="Flavour rating, 1-5.")
+@click.option("--rating-aftertaste", "rating_aftertaste", type=int, default=None,
+              help="Aftertaste rating, 1-5.")
+@click.option("--rating-acidity",  "rating_acidity",   type=int, default=None,
+              help="Acidity rating, 1-5.")
+@click.option("--rating-sweetness", "rating_sweetness", type=int, default=None,
+              help="Sweetness rating, 1-5.")
+@click.option("--rating-mouthfeel", "rating_mouthfeel", type=int, default=None,
+              help="Mouthfeel rating, 1-5.")
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
@@ -64,17 +82,44 @@ from brewlog.models import (
               help="Brewer/dripper name.")
 def update(
     brew_id,
-    method, grind, temp, duration, notes, tds, ey, brix, tasting_notes, overall,
+    method, grind, temp, duration, notes, tds, ey, brix, tasting_notes,
+    rating_retired,
+    rating_overall, rating_fragrance, rating_aroma, rating_flavour,
+    rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
     roast_date, coffee_type, origin, varietal, process,
     water_ppm, grinder, brewer,
 ) -> None:
     """Update optional fields on an existing brew (defaults to the latest brew)."""
 
+    # -- Check for retired --rating flag first (AC-32) --
+    if rating_retired is not None:
+        click.echo(
+            "Error: --rating has been replaced by --rating-overall in BrewLog v0.3.\n"
+            "Use --rating-overall N to set your overall impression (1-5).\n"
+            "See --help for all available rating dimension flags.",
+            err=True,
+        )
+        sys.exit(1)
+
     # -- Validate flag values --
 
-    if overall is not None and not (1 <= overall <= 5):
-        click.echo("Error: overall rating must be between 1 and 5", err=True)
-        sys.exit(1)
+    _RATING_DIMS = {
+        "rating-overall":    rating_overall,
+        "rating-fragrance":  rating_fragrance,
+        "rating-aroma":      rating_aroma,
+        "rating-flavour":    rating_flavour,
+        "rating-aftertaste": rating_aftertaste,
+        "rating-acidity":    rating_acidity,
+        "rating-sweetness":  rating_sweetness,
+        "rating-mouthfeel":  rating_mouthfeel,
+    }
+    for flag_name, flag_val in _RATING_DIMS.items():
+        if flag_val is not None and not (1 <= flag_val <= 5):
+            click.echo(
+                f"Error: --{flag_name} must be an integer between 1 and 5.",
+                err=True,
+            )
+            sys.exit(1)
 
     if temp is not None and not (0 <= temp <= 100):
         click.echo("Error: temp must be between 0 and 100", err=True)
@@ -169,9 +214,23 @@ def update(
         updates["result_brix"] = brix
     if tasting_notes is not None:
         updates["result_tasting_notes"] = tasting_notes
-    if overall is not None:
-        # Merge into existing result_ratings JSON or create new
-        updates["_overall"] = overall  # sentinel; handled below
+    # AC-31: individual rating columns (no JSON sentinel pattern)
+    if rating_overall is not None:
+        updates["result_rating_overall"] = rating_overall
+    if rating_fragrance is not None:
+        updates["result_rating_fragrance"] = rating_fragrance
+    if rating_aroma is not None:
+        updates["result_rating_aroma"] = rating_aroma
+    if rating_flavour is not None:
+        updates["result_rating_flavour"] = rating_flavour
+    if rating_aftertaste is not None:
+        updates["result_rating_aftertaste"] = rating_aftertaste
+    if rating_acidity is not None:
+        updates["result_rating_acidity"] = rating_acidity
+    if rating_sweetness is not None:
+        updates["result_rating_sweetness"] = rating_sweetness
+    if rating_mouthfeel is not None:
+        updates["result_rating_mouthfeel"] = rating_mouthfeel
     if roast_date is not None:
         updates["coffee_roast_date"] = roast_date
     if coffee_type is not None:
@@ -195,27 +254,6 @@ def update(
             err=True,
         )
         sys.exit(1)
-
-    # -- Handle overall rating: merge into result_ratings JSON --
-    if "_overall" in updates:
-        overall_val = updates.pop("_overall")
-        # Fetch existing ratings to merge
-        conn_read = db.get_connection()
-        try:
-            existing_id = brew_id
-            if existing_id is None:
-                existing_id = db.get_latest_brew_id(conn_read)
-            if existing_id is not None:
-                existing_row = db.get_brew(existing_id, conn_read)
-                existing_ratings = {}
-                if existing_row and existing_row["result_ratings"]:
-                    existing_ratings = _json.loads(existing_row["result_ratings"])
-                existing_ratings["overall"] = overall_val
-                updates["result_ratings"] = _json.dumps(existing_ratings)
-            else:
-                updates["result_ratings"] = _json.dumps({"overall": overall_val})
-        finally:
-            conn_read.close()
 
     # -- Resolve brew ID --
 

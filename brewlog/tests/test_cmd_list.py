@@ -64,14 +64,25 @@ def test_list_shows_table_headers(runner_with_db, tmp_path):
     assert "Method" in result.output
     assert "Dose" in result.output
     assert "Water" in result.output
-    assert "TDS" in result.output
+    # v0.3: Rating column renamed to 'Overall Rating' (AC-38)
+    assert "Overall Rating" in result.output
+
+
+def test_list_header_does_not_show_tds(runner_with_db, tmp_path):
+    """AC-38: TDS column removed from list view in v0.3."""
+    _populate_brews(tmp_path / "test.db", 1)
+    result = runner_with_db.invoke(cli, ["list"])
+    # TDS column should not appear in header
+    lines = result.output.split("\n")
+    header_line = lines[0] if lines else ""
+    assert "TDS" not in header_line
 
 
 def test_list_optional_field_dash_when_absent(runner_with_db, tmp_path):
     """AC-13: missing optional field shows '-'."""
     _populate_brews(tmp_path / "test.db", 1)
     result = runner_with_db.invoke(cli, ["list"])
-    # Method and TDS are not set; should show '-'
+    # Method and rating are not set; should show '-'
     assert "-" in result.output
 
 

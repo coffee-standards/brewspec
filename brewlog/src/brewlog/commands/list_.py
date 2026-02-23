@@ -26,7 +26,7 @@ _COL_TYPE = 10
 _COL_METHOD = 15
 _COL_DOSE = 9
 _COL_WATER = 10
-_COL_TDS = 6
+_COL_RATING = 14  # "Overall Rating"
 
 
 def _format_header() -> str:
@@ -38,7 +38,7 @@ def _format_header() -> str:
         f"{'Method':<{_COL_METHOD}}  "
         f"{'Dose (g)':>{_COL_DOSE}}  "
         f"{'Water (g)':>{_COL_WATER}}  "
-        f"{'TDS':>{_COL_TDS}}"
+        f"{'Overall Rating':>{_COL_RATING}}"
     )
 
 
@@ -51,14 +51,14 @@ def _format_separator() -> str:
         f"{'':->{ _COL_METHOD}}  "
         f"{'':->{ _COL_DOSE}}  "
         f"{'':->{ _COL_WATER}}  "
-        f"{'':->{ _COL_TDS}}"
+        f"{'':->{ _COL_RATING}}"
     )
 
 
 def _format_row(row) -> str:
     """Format a single brew row for the table."""
     method = row["method"] if row["method"] is not None else "-"
-    tds = str(row["result_tds"]) if row["result_tds"] is not None else "-"
+    rating = str(row["result_rating_overall"]) if row["result_rating_overall"] is not None else "-"
 
     return (
         f"{row['id']:>{_COL_ID}}  "
@@ -67,7 +67,7 @@ def _format_row(row) -> str:
         f"{method:<{_COL_METHOD}}  "
         f"{row['dose_g']:>{_COL_DOSE}.1f}  "
         f"{row['water_weight_g']:>{_COL_WATER}.1f}  "
-        f"{tds:>{_COL_TDS}}"
+        f"{rating:>{_COL_RATING}}"
     )
 
 
@@ -92,7 +92,27 @@ def _format_row(row) -> str:
     "--since", type=str, default=None,
     help="Filter brews on or after this date (YYYY-MM-DD).",
 )
-def list_cmd(limit: int, show_all: bool, brew_type: str | None, since: str | None) -> None:
+@click.option(
+    "--until", type=str, default=None,
+    help="Filter brews on or before this date (YYYY-MM-DD).",
+)
+@click.option(
+    "--rating-min", "rating_min", type=int, default=None,
+    help="Filter brews with overall rating >= N (1-5).",
+)
+@click.option(
+    "--rating-max", "rating_max", type=int, default=None,
+    help="Filter brews with overall rating <= N (1-5).",
+)
+def list_cmd(
+    limit: int,
+    show_all: bool,
+    brew_type: str | None,
+    since: str | None,
+    until: str | None,
+    rating_min: int | None,
+    rating_max: int | None,
+) -> None:
     """List recent brews."""
 
     # Validate limit
@@ -120,20 +140,71 @@ def list_cmd(limit: int, show_all: bool, brew_type: str | None, since: str | Non
             )
             sys.exit(1)
 
-    has_filters = brew_type is not None or since is not None
+    # Validate --until
+    if until is not None:
+        try:
+            datetime.strptime(until, "%Y-%m-%d")
+        except ValueError:
+            click.echo(
+                f"Error: --until '{until}' is not a valid date. Use YYYY-MM-DD format.",
+                err=True,
+            )
+            sys.exit(1)
+
+    # Validate --since and --until ordering
+    if since is not None and until is not None:
+        if since > until:
+            click.echo(
+                f"Error: --since '{since}' cannot be later than --until '{until}'.",
+                err=True,
+            )
+            sys.exit(1)
+
+    # Validate --rating-min
+    if rating_min is not None and not (1 <= rating_min <= 5):
+        click.echo(
+            "Error: --rating-min must be an integer between 1 and 5.",
+            err=True,
+        )
+        sys.exit(1)
+
+    # Validate --rating-max
+    if rating_max is not None and not (1 <= rating_max <= 5):
+        click.echo(
+            "Error: --rating-max must be an integer between 1 and 5.",
+            err=True,
+        )
+        sys.exit(1)
+
+    # Validate --rating-min <= --rating-max
+    if rating_min is not None and rating_max is not None:
+        if rating_min > rating_max:
+            click.echo(
+                f"Error: --rating-min {rating_min} cannot exceed --rating-max {rating_max}.",
+                err=True,
+            )
+            sys.exit(1)
+
+    has_filters = (
+        brew_type is not None
+        or since is not None
+        or until is not None
+        or rating_min is not None
+        or rating_max is not None
+    )
 
     conn = db.get_connection()
     try:
-        if has_filters:
-            rows = db.list_brews_filtered(
-                conn,
-                limit=limit,
-                all_rows=show_all,
-                brew_type=brew_type,
-                since=since,
-            )
-        else:
-            rows = db.list_brews(conn, limit=limit, all_rows=show_all)
+        rows = db.list_brews_filtered(
+            conn,
+            limit=limit,
+            all_rows=show_all,
+            brew_type=brew_type,
+            since=since,
+            until=until,
+            rating_min=rating_min,
+            rating_max=rating_max,
+        )
     finally:
         conn.close()
 

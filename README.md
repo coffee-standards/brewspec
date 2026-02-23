@@ -235,6 +235,8 @@ Copyright 2026 Scott Luengen. See [NOTICE](./NOTICE) for details.
 
 **BrewLog** is the reference CLI implementation for BrewSpec — a local command-line tool for logging and tracking coffee brews using the BrewSpec format.
 
+Current version: **0.3.0** (targets BrewSpec v0.4)
+
 ### Install
 
 ```bash
@@ -242,26 +244,141 @@ cd brewlog
 pip install -e .
 ```
 
-### Usage
+### Commands
+
+#### `brewlog add` — Log a new brew
+
+Required fields (date, type, dose, water) are prompted interactively if not supplied as flags. All optional fields can be supplied as flags.
 
 ```bash
-# Add a brew interactively
+# Fully interactive
 brewlog add
 
-# List all logged brews
-brewlog list
+# Non-interactive with flags
+brewlog add --date 2026-02-23 --type pour_over --dose 20 --water 320
 
-# Show details for brew #3
+# With result fields
+brewlog add --date 2026-02-23 --type pour_over --dose 20 --water 320 \
+  --method "V60" --grind medium_fine --temp 95 --duration 180 \
+  --tds 1.38 --ey 21.5 --brix 1.4 \
+  --tasting-notes "Bright acidity, floral" \
+  --rating-overall 4 --rating-aroma 4 --rating-flavour 5
+```
+
+**Flags:**
+
+| Flag | Type | Description |
+|---|---|---|
+| `--date` | string | Brew date: `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SSZ` (defaults to today) |
+| `--type` | enum | Brew type: `espresso`, `hybrid`, `immersion`, `pour_over` |
+| `--dose` | float | Coffee dose in grams (> 0) |
+| `--water` | float | Water weight in grams (> 0) |
+| `--method` | string | Brewer description, e.g. `"Hario V60"` |
+| `--grind` | enum | Grind size: `turkish`, `espresso`, `fine`, `medium_fine`, `medium`, `medium_coarse`, `coarse` |
+| `--temp` | float | Water temperature in Celsius (0–100) |
+| `--duration` | int | Brew duration in seconds (> 0) |
+| `--notes` | string | Brew process notes (up to 2000 chars) |
+| `--tds` | float | TDS percentage (> 0) |
+| `--ey` | float | Extraction yield percentage (> 0) |
+| `--brix` | float | Degrees Brix (>= 0) |
+| `--tasting-notes` | string | Sensory tasting notes — cup impressions (up to 2000 chars) |
+| `--rating-overall` | int | Overall impression, 1–5 |
+| `--rating-fragrance` | int | Fragrance rating, 1–5 |
+| `--rating-aroma` | int | Aroma rating, 1–5 |
+| `--rating-flavour` | int | Flavour rating, 1–5 |
+| `--rating-aftertaste` | int | Aftertaste rating, 1–5 |
+| `--rating-acidity` | int | Acidity rating, 1–5 |
+| `--rating-sweetness` | int | Sweetness rating, 1–5 |
+| `--rating-mouthfeel` | int | Mouthfeel rating, 1–5 |
+| `--roast-date` | string | Coffee roast date (YYYY-MM-DD) |
+| `--coffee-type` | enum | `single_origin` or `blend` |
+| `--origin` | string | Coffee origin (repeatable: `--origin Ethiopia --origin Colombia`) |
+| `--varietal` | string | Coffee varietal (freeform) |
+| `--process` | string | Coffee processing method (freeform) |
+| `--water-ppm` | float | Water mineral content in ppm (>= 0) |
+| `--grinder` | string | Grinder name or description |
+| `--brewer` | string | Brewer/dripper name or description |
+
+#### `brewlog list` — List recent brews
+
+Displays a table of recent brews ordered by date descending. Filters are combinable (logical AND) and the limit applies to the filtered result set.
+
+```bash
+brewlog list                              # last 20 brews
+brewlog list --limit 50                   # last 50 brews
+brewlog list --all                        # all brews
+brewlog list --type pour_over             # filter by type
+brewlog list --since 2026-01-01           # on or after date
+brewlog list --until 2026-02-01           # on or before date
+brewlog list --since 2026-01-01 --until 2026-02-01  # date range
+brewlog list --rating-min 4               # overall rating >= 4
+brewlog list --rating-max 3               # overall rating <= 3
+brewlog list --rating-min 3 --rating-max 4 --type espresso  # combined
+```
+
+**Flags:**
+
+| Flag | Type | Description |
+|---|---|---|
+| `--limit` | int | Number of brews to show (default: 20) |
+| `--all` | flag | Show all brews (overrides `--limit`) |
+| `--type` | enum | Filter by brew type: `espresso`, `hybrid`, `immersion`, `pour_over` |
+| `--since` | string | Filter brews on or after this date (YYYY-MM-DD) |
+| `--until` | string | Filter brews on or before this date (YYYY-MM-DD) |
+| `--rating-min` | int | Filter brews with overall rating >= N (1–5) |
+| `--rating-max` | int | Filter brews with overall rating <= N (1–5) |
+
+#### `brewlog show` — Show brew details
+
+Displays all stored fields for a brew by ID. Sections with no data (Results, Coffee, Water, Equipment) are omitted.
+
+```bash
 brewlog show 3
+```
 
-# Export brews to a BrewSpec YAML file
+Output includes a Results section (TDS, EY, Brix, tasting notes, ratings dimensions) when result data is present.
+
+#### `brewlog update` — Update an existing brew
+
+Updates optional fields on an existing brew by ID. Omit the ID to update the most recently dated brew. At least one flag must be provided.
+
+```bash
+brewlog update 3 --rating-overall 4 --tasting-notes "Bright, floral"
+brewlog update --tds 1.40 --ey 22.1   # updates the latest brew
+```
+
+Supports all optional flags from `brewlog add` except the required fields (date, type, dose, water).
+
+#### `brewlog delete` — Delete a brew
+
+Deletes a brew by ID with a confirmation prompt. The `--force` flag skips confirmation. ID is required (no default-to-latest behaviour).
+
+```bash
+brewlog delete 3           # prompts for confirmation
+brewlog delete 3 --force   # skips confirmation
+```
+
+#### `brewlog export` — Export to BrewSpec file
+
+Exports all brews to a BrewSpec v0.4 YAML or JSON file. File format is determined by extension (`.yaml`, `.yml`, or `.json`).
+
+```bash
 brewlog export my_brews.yaml
+brewlog export my_brews.json
+```
 
-# Import brews from a BrewSpec file
+#### `brewlog import` — Import from BrewSpec file
+
+Imports brews from a BrewSpec file. Requires BrewSpec v0.4 — v0.3 and earlier files are rejected with an actionable error message.
+
+```bash
 brewlog import my_brews.yaml
 ```
 
-BrewLog stores brews in a local SQLite database and validates all input against the BrewSpec schema.
+### Storage
+
+BrewLog stores brews in a local SQLite database (`~/.brewlog/brews.db`). All input is validated against the BrewSpec v0.4 schema via Pydantic before writing.
+
 See [`brewlog/`](./brewlog/) for the full source code and tests.
 
 ---

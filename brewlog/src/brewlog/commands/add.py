@@ -9,6 +9,7 @@ models before any DB write.
 from __future__ import annotations
 
 import sys
+from datetime import date as _date_cls
 from datetime import datetime, timezone
 
 import click
@@ -21,6 +22,7 @@ from brewlog.models import (
     WaterInput,
     EquipmentInput,
     ResultInput,
+    RatingsInput,
     DATE_PATTERN,
     BREW_TYPE_ENUM,
 )
@@ -31,8 +33,8 @@ from brewlog.models import (
 # ---------------------------------------------------------------------------
 
 def _prompt_date() -> str:
-    """Prompt for a date with the current UTC time as default. Re-prompts on invalid input."""
-    default = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    """Prompt for a date with today's local date as default. Re-prompts on invalid input."""
+    default = _date_cls.today().strftime("%Y-%m-%d")
     while True:
         value = click.prompt("Date", default=default)
         if DATE_PATTERN.match(value):
@@ -45,8 +47,8 @@ def _prompt_date() -> str:
             else:
                 return value
         click.echo(
-            "  Error: date must be in format YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DD "
-            "(e.g. 2026-02-19T08:30:00Z or 2026-02-19)"
+            "  Error: date must be YYYY-MM-DD (e.g. 2026-02-22) "
+            "or YYYY-MM-DDTHH:MM:SSZ (e.g. 2026-02-22T09:15:00Z)"
         )
 
 
@@ -103,8 +105,8 @@ def _prompt_positive_float(label: str) -> float:
               help="Water temperature in Celsius (0-100).")
 @click.option("--grind",       "grind",        type=str,   default=None,
               help=(
-                  "Grind size: turkish, espresso, fine, medium_fine, "
-                  "medium, medium_coarse, coarse."
+                  "Grind size: turkish | espresso | fine | medium_fine | "
+                  "medium | medium_coarse | coarse."
               ))
 @click.option("--duration",    "duration",     type=int,   default=None,
               help="Brew duration in seconds (> 0).")
@@ -130,9 +132,27 @@ def _prompt_positive_float(label: str) -> float:
 @click.option("--brix",        "brix",         type=float, default=None,
               help="Degrees Brix (>= 0).")
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
-              help="Sensory tasting notes.")
-@click.option("--overall",     "overall",      type=int,   default=None,
-              help="Overall rating 1-5.")
+              help=(
+                  "Sensory tasting notes — impressions of the cup. "
+                  "For operational brew-process notes use --notes."
+              ))
+@click.option("--rating",         "rating_retired",    type=int, default=None, hidden=True)
+@click.option("--rating-overall", "rating_overall",    type=int, default=None,
+              help="Overall impression, 1-5.")
+@click.option("--rating-fragrance", "rating_fragrance", type=int, default=None,
+              help="Fragrance rating, 1-5.")
+@click.option("--rating-aroma",    "rating_aroma",     type=int, default=None,
+              help="Aroma rating, 1-5.")
+@click.option("--rating-flavour",  "rating_flavour",   type=int, default=None,
+              help="Flavour rating, 1-5.")
+@click.option("--rating-aftertaste", "rating_aftertaste", type=int, default=None,
+              help="Aftertaste rating, 1-5.")
+@click.option("--rating-acidity",  "rating_acidity",   type=int, default=None,
+              help="Acidity rating, 1-5.")
+@click.option("--rating-sweetness", "rating_sweetness", type=int, default=None,
+              help="Sweetness rating, 1-5.")
+@click.option("--rating-mouthfeel", "rating_mouthfeel", type=int, default=None,
+              help="Mouthfeel rating, 1-5.")
 @click.option("--grinder",     "grinder",      type=str,   default=None,
               help="Grinder name or description.")
 @click.option("--brewer",      "brewer",       type=str,   default=None,
@@ -141,17 +161,30 @@ def add(
     date, brew_type, dose, water_weight,
     method, temp, grind, duration, notes,
     roast_date, coffee_type, origin, varietal, process,
-    water_ppm, tds, ey, brix, tasting_notes, overall,
+    water_ppm, tds, ey, brix, tasting_notes,
+    rating_retired,
+    rating_overall, rating_fragrance, rating_aroma, rating_flavour,
+    rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
     grinder, brewer,
 ) -> None:
     """Log a new brew."""
+
+    # -- Check for retired --rating flag first --
+    if rating_retired is not None:
+        click.echo(
+            "Error: --rating has been replaced by --rating-overall in BrewLog v0.3.\n"
+            "Use --rating-overall N to set your overall impression (1-5).\n"
+            "See --help for all available rating dimension flags.",
+            err=True,
+        )
+        sys.exit(1)
 
     # -- Tip: shown only in fully interactive mode (no required flags given) --
 
     if date is None and brew_type is None and dose is None and water_weight is None:
         click.echo(
-            'Tip: add optional details with flags, e.g. --method "V60" --overall 4'
-            "  (run --help for all options)"
+            'Tip: add optional details with flags, e.g. --method "V60" --rating-overall 4'
+            ' --tasting-notes "Bright acidity"  (run --help for all options)'
         )
 
     # -- Resolve required fields (prompt if not supplied as flags) --
@@ -173,6 +206,25 @@ def add(
 
     if water_weight is None:
         water_weight = _prompt_positive_float("Water weight in grams")
+
+    # -- Validate rating dimensions (1-5) --
+    _RATING_DIMS = {
+        "rating-overall":    rating_overall,
+        "rating-fragrance":  rating_fragrance,
+        "rating-aroma":      rating_aroma,
+        "rating-flavour":    rating_flavour,
+        "rating-aftertaste": rating_aftertaste,
+        "rating-acidity":    rating_acidity,
+        "rating-sweetness":  rating_sweetness,
+        "rating-mouthfeel":  rating_mouthfeel,
+    }
+    for flag_name, flag_val in _RATING_DIMS.items():
+        if flag_val is not None and not (1 <= flag_val <= 5):
+            click.echo(
+                f"Error: --{flag_name} must be an integer between 1 and 5.",
+                err=True,
+            )
+            sys.exit(1)
 
     # -- Build Pydantic model (validates all fields) --
 
@@ -208,13 +260,22 @@ def add(
             sys.exit(1)
 
     result_obj = None
-    has_result = any(v is not None for v in (tds, ey, brix, tasting_notes, overall))
+    has_any_rating = any(v is not None for v in _RATING_DIMS.values())
+    has_result = any(v is not None for v in (tds, ey, brix, tasting_notes)) or has_any_rating
     if has_result:
-        from brewlog.models import RatingsInput
         ratings_obj = None
-        if overall is not None:
+        if has_any_rating:
             try:
-                ratings_obj = RatingsInput(overall=overall)
+                ratings_obj = RatingsInput(
+                    overall=rating_overall,
+                    fragrance=rating_fragrance,
+                    aroma=rating_aroma,
+                    flavour=rating_flavour,
+                    aftertaste=rating_aftertaste,
+                    acidity=rating_acidity,
+                    sweetness=rating_sweetness,
+                    mouthfeel=rating_mouthfeel,
+                )
             except ValidationError as exc:
                 click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
                 sys.exit(1)

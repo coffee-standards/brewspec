@@ -175,3 +175,153 @@ def test_show_not_found_goes_to_stderr(tmp_path, monkeypatch):
     result = runner.invoke(cli, ["show", "999"])
     assert result.exit_code == 1
     assert "No brew found with ID 999" in result.output
+
+
+# ---------------------------------------------------------------------------
+# v0.3: AC-35, AC-36, AC-37 — Results section with individual rating columns
+# ---------------------------------------------------------------------------
+
+def _insert_brew_with_ratings(db_path, **result_kwargs):
+    """Insert a brew with specified result fields."""
+    from brewlog.models import ResultInput, RatingsInput
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        ratings_data = {k: v for k, v in result_kwargs.items() if k.startswith("rating_")}
+        result_data = {k: v for k, v in result_kwargs.items() if not k.startswith("rating_")}
+        ratings_obj = RatingsInput(**{k[len("rating_"):]: v for k, v in ratings_data.items()}) if ratings_data else None
+        result_obj = ResultInput(**result_data, ratings=ratings_obj) if (result_data or ratings_obj) else None
+        from brewlog.models import BrewInput
+        brew = BrewInput(
+            date="2026-02-22",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            result=result_obj,
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def test_show_results_section_present_when_any_result_set(runner_with_db, tmp_path):
+    """AC-35: Results section shows when any result field is populated."""
+    _insert_brew_with_ratings(tmp_path / "test.db", rating_overall=4)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert result.exit_code == 0
+    assert "Results" in result.output
+
+
+def test_show_results_section_absent_when_no_results(runner_with_db, tmp_path):
+    """AC-35: Results section omitted when no result fields have values."""
+    _insert_minimal(tmp_path / "test.db")
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert result.exit_code == 0
+    assert "Results" not in result.output
+
+
+def test_show_tds_displayed_in_results(runner_with_db, tmp_path):
+    """AC-36: TDS shown under Results section."""
+    _insert_brew_with_ratings(tmp_path / "test.db", tds=1.38)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "1.38" in result.output
+
+
+def test_show_ey_displayed_in_results(runner_with_db, tmp_path):
+    """AC-36: EY shown under Results section."""
+    _insert_brew_with_ratings(tmp_path / "test.db", ey=20.1)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "20.1" in result.output
+
+
+def test_show_brix_displayed_in_results(runner_with_db, tmp_path):
+    """AC-36: Brix shown under Results section."""
+    _insert_brew_with_ratings(tmp_path / "test.db", brix=1.5)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "1.5" in result.output
+
+
+def test_show_tasting_notes_displayed_in_results(runner_with_db, tmp_path):
+    """AC-36: Tasting notes shown under Results section."""
+    _insert_brew_with_ratings(tmp_path / "test.db", tasting_notes="Bright citrus")
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "Bright citrus" in result.output
+
+
+def test_show_ratings_subsection_present_when_any_rating_set(runner_with_db, tmp_path):
+    """AC-36, AC-37: Ratings sub-section shows when any rating is set."""
+    _insert_brew_with_ratings(tmp_path / "test.db", rating_overall=4)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "Ratings" in result.output
+
+
+def test_show_ratings_subsection_absent_when_no_ratings(runner_with_db, tmp_path):
+    """AC-37: Ratings sub-section omitted if no rating dimensions have values."""
+    _insert_brew_with_ratings(tmp_path / "test.db", tds=1.38)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "Ratings" not in result.output
+
+
+def test_show_displays_each_rating_dimension(runner_with_db, tmp_path):
+    """AC-36: all 8 rating dimensions shown when set."""
+    _insert_brew_with_ratings(
+        tmp_path / "test.db",
+        rating_overall=4, rating_fragrance=3, rating_aroma=4,
+        rating_flavour=5, rating_aftertaste=4, rating_acidity=5,
+        rating_sweetness=3, rating_mouthfeel=4,
+    )
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "Overall" in result.output
+    assert "Fragrance" in result.output
+    assert "Aroma" in result.output
+    assert "Flavour" in result.output
+    assert "Aftertaste" in result.output
+    assert "Acidity" in result.output
+    assert "Sweetness" in result.output
+    assert "Mouthfeel" in result.output
+
+
+def test_show_omits_unset_rating_dimensions(runner_with_db, tmp_path):
+    """AC-36: only set dimensions appear in Ratings sub-section."""
+    _insert_brew_with_ratings(tmp_path / "test.db", rating_overall=4)
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "Overall" in result.output
+    assert "Fragrance" not in result.output
+
+
+def test_show_legacy_ratings_json_displayed(runner_with_db, tmp_path):
+    """AC-35: v0.2 row with result_ratings JSON still shows ratings in output."""
+    # Simulate a v0.2 row: write directly to result_ratings column
+    conn = db_module.get_connection(db_path=tmp_path / "test.db")
+    try:
+        import json
+        conn.execute(
+            "INSERT INTO brews (date, type, dose_g, water_weight_g, result_ratings) "
+            "VALUES (?, ?, ?, ?, ?)",
+            ("2026-02-22", "pour_over", 18.0, 280.0, json.dumps({"overall": 3})),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    # Should display Overall rating from legacy JSON
+    assert "3" in result.output
+    assert "Results" in result.output
+
+
+def test_show_displays_grind_as_raw_enum(runner_with_db, tmp_path):
+    """AC-19: grind displayed as raw enum string."""
+    conn = db_module.get_connection(db_path=tmp_path / "test.db")
+    try:
+        from brewlog.models import BrewInput
+        brew = BrewInput(
+            date="2026-02-22",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            grind="medium_fine",
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+    result = runner_with_db.invoke(cli, ["show", "1"])
+    assert "medium_fine" in result.output
