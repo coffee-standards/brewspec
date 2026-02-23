@@ -24,6 +24,55 @@ DB_PATH = DB_DIR / "brews.db"
 
 
 # ---------------------------------------------------------------------------
+# Column allowlist for update_brew() — AC-1, AC-34
+# ---------------------------------------------------------------------------
+
+UPDATABLE_COLUMNS: frozenset[str] = frozenset({
+    "method",
+    "grind",
+    "water_temp_c",
+    "duration_s",
+    "notes",
+    "result_tds",
+    "result_ey",
+    "result_brix",
+    "result_tasting_notes",
+    "result_rating_overall",
+    "result_rating_fragrance",
+    "result_rating_aroma",
+    "result_rating_flavour",
+    "result_rating_aftertaste",
+    "result_rating_acidity",
+    "result_rating_sweetness",
+    "result_rating_mouthfeel",
+    "coffee_roast_date",
+    "coffee_type",
+    "coffee_origin",
+    "coffee_varietal",
+    "coffee_process",
+    "water_ppm",
+    "equipment_grinder",
+    "equipment_brewer",
+})
+
+
+# ---------------------------------------------------------------------------
+# Migration constants — AC-20, AC-23
+# ---------------------------------------------------------------------------
+
+_V3_MIGRATION_COLUMNS: dict[str, str] = {
+    "result_rating_overall":    "INTEGER",
+    "result_rating_fragrance":  "INTEGER",
+    "result_rating_aroma":      "INTEGER",
+    "result_rating_flavour":    "INTEGER",
+    "result_rating_aftertaste": "INTEGER",
+    "result_rating_acidity":    "INTEGER",
+    "result_rating_sweetness":  "INTEGER",
+    "result_rating_mouthfeel":  "INTEGER",
+}
+
+
+# ---------------------------------------------------------------------------
 # Connection management
 # ---------------------------------------------------------------------------
 
@@ -41,6 +90,7 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row  # rows accessible as dicts
     _init_schema(conn)
+    _apply_migrations(conn)
     return conn
 
 
@@ -48,33 +98,53 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     """Create tables and indexes if they do not exist."""
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS brews (
-            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-            date                TEXT    NOT NULL,
-            type                TEXT    NOT NULL,
-            method              TEXT,
-            dose_g              REAL    NOT NULL,
-            water_weight_g      REAL    NOT NULL,
-            water_volume_ml     REAL,
-            water_temp_c        REAL,
-            grind               TEXT,
-            duration_s          INTEGER,
-            notes               TEXT,
-            coffee_roast_date   TEXT,
-            coffee_type         TEXT,
-            coffee_origin       TEXT,
-            coffee_varietal     TEXT,
-            coffee_process      TEXT,
-            water_ppm           REAL,
-            equipment_grinder   TEXT,
-            equipment_brewer    TEXT,
-            result_tds          REAL,
-            result_ey           REAL,
-            result_brix         REAL,
-            result_tasting_notes TEXT,
-            result_ratings      TEXT
+            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+            date                    TEXT    NOT NULL,
+            type                    TEXT    NOT NULL,
+            method                  TEXT,
+            dose_g                  REAL    NOT NULL,
+            water_weight_g          REAL    NOT NULL,
+            water_volume_ml         REAL,
+            water_temp_c            REAL,
+            grind                   TEXT,
+            duration_s              INTEGER,
+            notes                   TEXT,
+            coffee_roast_date       TEXT,
+            coffee_type             TEXT,
+            coffee_origin           TEXT,
+            coffee_varietal         TEXT,
+            coffee_process          TEXT,
+            water_ppm               REAL,
+            equipment_grinder       TEXT,
+            equipment_brewer        TEXT,
+            result_tds              REAL,
+            result_ey               REAL,
+            result_brix             REAL,
+            result_tasting_notes    TEXT,
+            result_ratings          TEXT,
+            result_rating_overall   INTEGER,
+            result_rating_fragrance INTEGER,
+            result_rating_aroma     INTEGER,
+            result_rating_flavour   INTEGER,
+            result_rating_aftertaste INTEGER,
+            result_rating_acidity   INTEGER,
+            result_rating_sweetness INTEGER,
+            result_rating_mouthfeel INTEGER
         );
         CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
     """)
+    conn.commit()
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    """Add any missing v0.3 columns without modifying existing data. AC-23."""
+    existing = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(brews)").fetchall()
+    }
+    for col, col_type in _V3_MIGRATION_COLUMNS.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
     conn.commit()
 
 
@@ -92,16 +162,7 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
     water = brew.water
     equipment = brew.equipment
     result = brew.result
-
-    # Serialise result.ratings to JSON if present
-    result_ratings_json = None
-    if result and result.ratings:
-        ratings_dict = {
-            k: v for k, v in result.ratings.model_dump().items()
-            if v is not None
-        }
-        if ratings_dict:
-            result_ratings_json = json.dumps(ratings_dict)
+    ratings = result.ratings if result else None
 
     sql = """
         INSERT INTO brews (
@@ -113,7 +174,10 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             water_ppm,
             equipment_grinder, equipment_brewer,
             result_tds, result_ey, result_brix,
-            result_tasting_notes, result_ratings
+            result_tasting_notes,
+            result_rating_overall, result_rating_fragrance, result_rating_aroma,
+            result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
+            result_rating_sweetness, result_rating_mouthfeel
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?,
@@ -122,6 +186,9 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             ?, ?,
             ?,
             ?, ?,
+            ?, ?, ?,
+            ?,
+            ?, ?, ?,
             ?, ?, ?,
             ?, ?
         )
@@ -149,7 +216,14 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         result.ey if result else None,
         result.brix if result else None,
         result.tasting_notes if result else None,
-        result_ratings_json,
+        ratings.overall if ratings else None,
+        ratings.fragrance if ratings else None,
+        ratings.aroma if ratings else None,
+        ratings.flavour if ratings else None,
+        ratings.aftertaste if ratings else None,
+        ratings.acidity if ratings else None,
+        ratings.sweetness if ratings else None,
+        ratings.mouthfeel if ratings else None,
     )
     cursor = conn.execute(sql, params)
     conn.commit()
@@ -170,10 +244,7 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
     equipment = brew_dict.get("equipment") or {}
     result = brew_dict.get("result") or {}
     origin = coffee.get("origin")
-
-    # Serialise result.ratings to JSON if present
-    ratings = result.get("ratings")
-    result_ratings_json = json.dumps(ratings) if ratings else None
+    ratings = result.get("ratings") or {}
 
     sql = """
         INSERT INTO brews (
@@ -185,7 +256,10 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             water_ppm,
             equipment_grinder, equipment_brewer,
             result_tds, result_ey, result_brix,
-            result_tasting_notes, result_ratings
+            result_tasting_notes,
+            result_rating_overall, result_rating_fragrance, result_rating_aroma,
+            result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
+            result_rating_sweetness, result_rating_mouthfeel
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?,
@@ -194,6 +268,9 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             ?, ?,
             ?,
             ?, ?,
+            ?, ?, ?,
+            ?,
+            ?, ?, ?,
             ?, ?, ?,
             ?, ?
         )
@@ -221,7 +298,14 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         result.get("ey"),
         result.get("brix"),
         result.get("tasting_notes"),
-        result_ratings_json,
+        ratings.get("overall"),
+        ratings.get("fragrance"),
+        ratings.get("aroma"),
+        ratings.get("flavour"),
+        ratings.get("aftertaste"),
+        ratings.get("acidity"),
+        ratings.get("sweetness"),
+        ratings.get("mouthfeel"),
     )
     cursor = conn.execute(sql, params)
     return cursor.lastrowid
@@ -265,6 +349,9 @@ def list_brews_filtered(
     all_rows: bool = False,
     brew_type: str | None = None,
     since: str | None = None,
+    until: str | None = None,
+    rating_min: int | None = None,
+    rating_max: int | None = None,
 ) -> list[sqlite3.Row]:
     """
     Return brews ordered by date descending with optional filters.
@@ -274,7 +361,10 @@ def list_brews_filtered(
 
     Args:
         brew_type: exact match on the type column.
-        since: lower bound (inclusive) on date, compared as a date prefix string.
+        since: lower bound (inclusive) on date, compared at day granularity.
+        until: upper bound (inclusive) on date, compared at day granularity.
+        rating_min: minimum result_rating_overall (inclusive).
+        rating_max: maximum result_rating_overall (inclusive).
         limit: maximum rows to return (ignored when all_rows is True).
         all_rows: if True, return all matching rows.
     """
@@ -286,17 +376,30 @@ def list_brews_filtered(
         params.append(brew_type)
 
     if since is not None:
-        # Compare at day granularity using a lower-bound ISO 8601 string.
-        conditions.append("date >= ?")
+        # Use substr to compare at day granularity for both stored formats.
+        conditions.append("substr(date, 1, 10) >= ?")
         params.append(since)
+
+    if until is not None:
+        # Use substr to compare at day granularity for both stored formats.
+        conditions.append("substr(date, 1, 10) <= ?")
+        params.append(until)
+
+    if rating_min is not None:
+        conditions.append("result_rating_overall >= ?")
+        params.append(rating_min)
+
+    if rating_max is not None:
+        conditions.append("result_rating_overall <= ?")
+        params.append(rating_max)
 
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
     if all_rows:
-        sql = f"SELECT * FROM brews {where} ORDER BY date DESC"
+        sql = f"SELECT * FROM brews {where} ORDER BY date DESC"  # noqa: S608
         cursor = conn.execute(sql, params)
     else:
-        sql = f"SELECT * FROM brews {where} ORDER BY date DESC LIMIT ?"
+        sql = f"SELECT * FROM brews {where} ORDER BY date DESC LIMIT ?"  # noqa: S608
         cursor = conn.execute(sql, params + [limit])
 
     return cursor.fetchall()
@@ -328,9 +431,13 @@ def update_brew(brew_id: int, updates: dict, conn: sqlite3.Connection) -> bool:
     """
     SET only the columns in `updates` for the row with brew_id.
     Returns True if the row was found and updated, False otherwise.
-    All column names in `updates` must be valid brews table columns.
+    Column names must be in UPDATABLE_COLUMNS — assertion enforces this. AC-1.
     Uses parameterised ? placeholders — no string interpolation of values.
     """
+    assert set(updates.keys()).issubset(UPDATABLE_COLUMNS), (
+        f"Unexpected column names in update dict: "
+        f"{set(updates.keys()) - UPDATABLE_COLUMNS}"
+    )
     set_clauses = ", ".join(f"{col} = ?" for col in updates)
     values = list(updates.values()) + [brew_id]
     cursor = conn.execute(

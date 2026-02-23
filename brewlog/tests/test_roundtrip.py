@@ -222,3 +222,126 @@ def test_roundtrip_schema_valid_at_midpoint(tmp_path, monkeypatch):
     doc = yaml.safe_load(Path(export_file).read_text())
     errors = schema_module.validate_document(doc)
     assert errors == [], f"Schema validation errors: {errors}"
+
+
+# ---------------------------------------------------------------------------
+# AC-9/AC-10: date-only format round-trip
+# ---------------------------------------------------------------------------
+
+def test_roundtrip_date_only_format_preserved(tmp_path, monkeypatch):
+    """AC-9: YYYY-MM-DD date stored and exported as-is (no normalisation)."""
+    import brewlog.db as db_mod
+
+    src_db = tmp_path / "source.db"
+    brew = BrewInput(
+        date="2026-02-22",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    _insert_brew(src_db, brew)
+
+    monkeypatch.setattr(db_mod, "DB_PATH", src_db)
+    runner = CliRunner()
+    export_file = str(tmp_path / "export.yaml")
+    result = runner.invoke(cli, ["export", export_file])
+    assert result.exit_code == 0
+
+    doc = yaml.safe_load(Path(export_file).read_text())
+    brew_dict = doc["brews"][0]
+    assert brew_dict["date"] == "2026-02-22"
+
+
+def test_roundtrip_date_only_import_roundtrip(tmp_path, monkeypatch):
+    """AC-9: YYYY-MM-DD date survives export->import cycle unchanged."""
+    import brewlog.db as db_mod
+
+    src_db = tmp_path / "source.db"
+    brew = BrewInput(
+        date="2026-02-22",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+    )
+    _insert_brew(src_db, brew)
+
+    monkeypatch.setattr(db_mod, "DB_PATH", src_db)
+    runner = CliRunner()
+    export_file = str(tmp_path / "export.yaml")
+    runner.invoke(cli, ["export", export_file])
+
+    dest_db = tmp_path / "dest.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", dest_db)
+    runner.invoke(cli, ["import", export_file])
+
+    conn = db_mod.get_connection(db_path=dest_db)
+    try:
+        rows = db_mod.list_brews(conn, all_rows=True)
+        assert rows[0]["date"] == "2026-02-22"
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# AC-12: all 8 rating dimensions round-trip
+# ---------------------------------------------------------------------------
+
+def test_roundtrip_all_rating_dimensions(tmp_path, monkeypatch):
+    """AC-12: all 8 SCA rating dimensions survive export->import unchanged."""
+    import brewlog.db as db_mod
+    from brewlog.models import RatingsInput
+
+    src_db = tmp_path / "source.db"
+    brew = BrewInput(
+        date="2026-02-19T08:30:00Z",
+        type="pour_over",
+        dose_g=18.0,
+        water_weight_g=280.0,
+        result=ResultInput(
+            ratings=RatingsInput(
+                overall=4,
+                fragrance=3,
+                aroma=5,
+                flavour=4,
+                aftertaste=3,
+                acidity=5,
+                sweetness=4,
+                mouthfeel=3,
+            )
+        ),
+    )
+    _insert_brew(src_db, brew)
+
+    monkeypatch.setattr(db_mod, "DB_PATH", src_db)
+    runner = CliRunner()
+    export_file = str(tmp_path / "export.yaml")
+    result = runner.invoke(cli, ["export", export_file])
+    assert result.exit_code == 0
+
+    # Schema validation at midpoint
+    doc = yaml.safe_load(Path(export_file).read_text())
+    errors = schema_module.validate_document(doc)
+    assert errors == [], f"Schema errors at midpoint: {errors}"
+
+    # Import into fresh DB
+    dest_db = tmp_path / "dest.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", dest_db)
+    result = runner.invoke(cli, ["import", export_file])
+    assert result.exit_code == 0
+
+    # Verify all 8 dimensions survived
+    conn = db_mod.get_connection(db_path=dest_db)
+    try:
+        rows = db_mod.list_brews(conn, all_rows=True)
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["result_rating_overall"] == 4
+        assert row["result_rating_fragrance"] == 3
+        assert row["result_rating_aroma"] == 5
+        assert row["result_rating_flavour"] == 4
+        assert row["result_rating_aftertaste"] == 3
+        assert row["result_rating_acidity"] == 5
+        assert row["result_rating_sweetness"] == 4
+        assert row["result_rating_mouthfeel"] == 3
+    finally:
+        conn.close()

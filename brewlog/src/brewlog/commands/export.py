@@ -1,7 +1,7 @@
 """
 `brewlog export` command.
 
-Exports all brews to a BrewSpec v0.2-compliant YAML or JSON file.
+Exports all brews to a BrewSpec v0.4-compliant YAML or JSON file.
 Path is validated before any DB access. File is validated against the
 JSON Schema before writing to disk.
 """
@@ -33,7 +33,7 @@ from brewlog import db, schema, serialise
     help="Overwrite existing file without prompting.",
 )
 def export(path: str, fmt: str, force: bool) -> None:
-    """Export all brews to a BrewSpec v0.2 file."""
+    """Export all brews to a BrewSpec v0.4 file."""
 
     # -- Path validation (before any DB access) --
     out_path = serialise.validate_export_path(path)
@@ -49,8 +49,25 @@ def export(path: str, fmt: str, force: bool) -> None:
         click.echo("No brews to export.")
         return
 
-    # -- Build document dict --
-    document = serialise.rows_to_brewspec_document(rows)
+    # -- Build document dict; handle invalid grind values (AC-11) --
+    brews_dicts = []
+    warned_grind = []
+    for row in rows:
+        brew_dict = serialise.row_to_brew_dict(row)
+        if "_invalid_grind" in brew_dict:
+            warned_grind.append((row["id"], brew_dict.pop("_invalid_grind")))
+        brews_dicts.append(brew_dict)
+
+    if warned_grind:
+        click.echo(
+            "Warning: the following brews have non-standard grind values that are "
+            "not valid in BrewSpec v0.4 and were omitted from the export:",
+            err=True,
+        )
+        for brew_id, grind_val in warned_grind:
+            click.echo(f"  Brew #{brew_id}: grind = '{grind_val}'", err=True)
+
+    document = {"brewspec_version": "0.4", "brews": brews_dicts}
 
     # -- Schema validation (safety net) --
     errors = schema.validate_document(document)

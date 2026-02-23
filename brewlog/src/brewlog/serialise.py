@@ -16,6 +16,30 @@ import click
 
 
 # ---------------------------------------------------------------------------
+# Constants — AC-11, AC-15
+# ---------------------------------------------------------------------------
+
+# v0.4 grind enum values. Any stored grind not in this set is a legacy
+# freeform value that must be omitted from exports (and triggers a warning).
+GRIND_ENUM: frozenset[str] = frozenset({
+    "turkish", "espresso", "fine", "medium_fine",
+    "medium", "medium_coarse", "coarse",
+})
+
+# Ordered list of (db_column, export_key) pairs for the 8 SCA rating dimensions.
+_RATING_DIMS = [
+    ("result_rating_overall",    "overall"),
+    ("result_rating_fragrance",  "fragrance"),
+    ("result_rating_aroma",      "aroma"),
+    ("result_rating_flavour",    "flavour"),
+    ("result_rating_aftertaste", "aftertaste"),
+    ("result_rating_acidity",    "acidity"),
+    ("result_rating_sweetness",  "sweetness"),
+    ("result_rating_mouthfeel",  "mouthfeel"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Row to BrewSpec dict (for export)
 # ---------------------------------------------------------------------------
 
@@ -30,7 +54,9 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     - water sub-object is only included if water_ppm is present.
     - equipment sub-object is only included if grinder or brewer is present.
     - result sub-object is only included if at least one result field is present.
-    - result_ratings is deserialised from JSON string to dict.
+    - Ratings are read from individual result_rating_* columns (not JSON).
+    - grind is validated against GRIND_ENUM; invalid values set _invalid_grind
+      sentinel and are omitted from the main output so the caller can warn.
     """
     r = dict(row)  # sqlite3.Row to plain dict
 
@@ -42,13 +68,17 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     brew["dose_g"] = r["dose_g"]
     brew["water_weight_g"] = r["water_weight_g"]
 
-    # Optional brew-level fields — include only if not NULL
-    for field in (
-        "method", "water_volume_ml", "water_temp_c", "grind",
-        "duration_s", "notes"
-    ):
+    # Optional brew-level fields (not grind — handled separately below)
+    for field in ("method", "water_volume_ml", "water_temp_c", "duration_s", "notes"):
         if r.get(field) is not None:
             brew[field] = r[field]
+
+    # grind: validate against v0.4 enum; omit and set sentinel if invalid (AC-11)
+    if r.get("grind") is not None:
+        if r["grind"] in GRIND_ENUM:
+            brew["grind"] = r["grind"]
+        else:
+            brew["_invalid_grind"] = r["grind"]
 
     # Coffee sub-object
     coffee: dict = {}
@@ -62,7 +92,7 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         coffee["varietal"] = r["coffee_varietal"]
     if r.get("coffee_process") is not None:
         coffee["process"] = r["coffee_process"]
-    if coffee:  # only include if at least one field is present
+    if coffee:
         brew["coffee"] = coffee
 
     # Water sub-object
@@ -75,10 +105,10 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         equipment["grinder"] = r["equipment_grinder"]
     if r.get("equipment_brewer") is not None:
         equipment["brewer"] = r["equipment_brewer"]
-    if equipment:  # only include if at least one field is present
+    if equipment:
         brew["equipment"] = equipment
 
-    # Result sub-object
+    # Result sub-object — read from individual columns (AC-12)
     result: dict = {}
     if r.get("result_tds") is not None:
         result["tds"] = r["result_tds"]
@@ -88,9 +118,16 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         result["brix"] = r["result_brix"]
     if r.get("result_tasting_notes") is not None:
         result["tasting_notes"] = r["result_tasting_notes"]
-    if r.get("result_ratings") is not None:
-        result["ratings"] = json.loads(r["result_ratings"])
-    if result:  # only include if at least one result field is present
+
+    # Ratings: read from individual result_rating_* columns (not JSON)
+    ratings: dict = {}
+    for col, key in _RATING_DIMS:
+        if r.get(col) is not None:
+            ratings[key] = r[col]
+    if ratings:
+        result["ratings"] = ratings
+
+    if result:
         brew["result"] = result
 
     return brew
@@ -99,11 +136,19 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
     Convert a list of DB rows to a full BrewSpec v0.4 document dict.
-    Returns {"brewspec_version": "0.4", "brews": [...]}
+    Returns {"brewspec_version": "0.4", "brews": [...]}.
+
+    Note: any _invalid_grind sentinels are stripped here. Use the export
+    command's inline construction if you need to emit per-brew warnings.
     """
+    brews = []
+    for row in rows:
+        brew_dict = row_to_brew_dict(row)
+        brew_dict.pop("_invalid_grind", None)
+        brews.append(brew_dict)
     return {
         "brewspec_version": "0.4",
-        "brews": [row_to_brew_dict(row) for row in rows],
+        "brews": brews,
     }
 
 

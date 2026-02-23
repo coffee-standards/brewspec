@@ -246,3 +246,164 @@ def test_validate_import_path_accepts_valid(tmp_path):
     valid_file.write_text("brewspec_version: '0.4'\n")
     result = serialise.validate_import_path(str(valid_file))
     assert result is not None
+
+
+# ---------------------------------------------------------------------------
+# AC-15: SCHEMA_RESOURCE_NAME constant in schema.py
+# ---------------------------------------------------------------------------
+
+def test_schema_resource_name_constant_exists():
+    """AC-15: SCHEMA_RESOURCE_NAME constant is defined in schema module."""
+    from brewlog import schema as schema_module
+    assert hasattr(schema_module, "SCHEMA_RESOURCE_NAME")
+
+
+def test_schema_resource_name_value():
+    """AC-15: SCHEMA_RESOURCE_NAME equals 'brewspec.schema.json'."""
+    from brewlog import schema as schema_module
+    assert schema_module.SCHEMA_RESOURCE_NAME == "brewspec.schema.json"
+
+
+# ---------------------------------------------------------------------------
+# AC-11/AC-12: serialise reads from individual rating columns, not JSON
+# ---------------------------------------------------------------------------
+
+def test_row_to_brew_dict_ratings_from_individual_columns(tmp_db):
+    """AC-12: ratings serialised from individual result_rating_* columns."""
+    brew_dict = {
+        **_minimal_dict(),
+        "result": {
+            "ratings": {
+                "overall": 4,
+                "fragrance": 3,
+                "aroma": 5,
+            },
+        },
+    }
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    assert "result" in result
+    assert "ratings" in result["result"]
+    assert result["result"]["ratings"]["overall"] == 4
+    assert result["result"]["ratings"]["fragrance"] == 3
+    assert result["result"]["ratings"]["aroma"] == 5
+
+
+def test_row_to_brew_dict_ratings_omits_null_dimensions(tmp_db):
+    """AC-12: rating dimensions not set are absent from exported ratings dict."""
+    brew_dict = {
+        **_minimal_dict(),
+        "result": {"ratings": {"overall": 4}},
+    }
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    ratings = result["result"]["ratings"]
+    # Only 'overall' was set; others should be absent
+    assert "overall" in ratings
+    assert "fragrance" not in ratings
+    assert "aroma" not in ratings
+
+
+def test_row_to_brew_dict_no_ratings_key_when_all_null(tmp_db):
+    """AC-12: ratings key absent from result when no rating dimensions set."""
+    brew_dict = {**_minimal_dict(), "result": {"tds": 1.38}}
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    # result present (tds set) but ratings absent
+    assert "result" in result
+    assert "ratings" not in result["result"]
+
+
+def test_row_to_brew_dict_all_eight_rating_dims(tmp_db):
+    """AC-12: all 8 SCA dimensions round-trip correctly."""
+    brew_dict = {
+        **_minimal_dict(),
+        "result": {
+            "ratings": {
+                "overall": 4,
+                "fragrance": 3,
+                "aroma": 5,
+                "flavour": 4,
+                "aftertaste": 3,
+                "acidity": 5,
+                "sweetness": 4,
+                "mouthfeel": 3,
+            }
+        },
+    }
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    ratings = result["result"]["ratings"]
+    assert ratings["overall"] == 4
+    assert ratings["fragrance"] == 3
+    assert ratings["aroma"] == 5
+    assert ratings["flavour"] == 4
+    assert ratings["aftertaste"] == 3
+    assert ratings["acidity"] == 5
+    assert ratings["sweetness"] == 4
+    assert ratings["mouthfeel"] == 3
+
+
+# ---------------------------------------------------------------------------
+# AC-11: GRIND_ENUM constant and invalid grind sentinel
+# ---------------------------------------------------------------------------
+
+def test_grind_enum_constant_exists():
+    """AC-11: GRIND_ENUM constant defined in serialise module."""
+    assert hasattr(serialise, "GRIND_ENUM")
+
+
+def test_grind_enum_has_seven_values():
+    """AC-11: GRIND_ENUM has exactly 7 values."""
+    assert len(serialise.GRIND_ENUM) == 7
+
+
+def test_grind_enum_contains_all_values():
+    """AC-11: GRIND_ENUM contains all 7 v0.4 enum members."""
+    expected = {"turkish", "espresso", "fine", "medium_fine", "medium", "medium_coarse", "coarse"}
+    assert serialise.GRIND_ENUM == expected
+
+
+def test_row_to_brew_dict_valid_grind_included(tmp_db):
+    """AC-11: valid enum grind value included in output."""
+    brew_dict = {**_minimal_dict(), "grind": "medium_fine"}
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    assert result.get("grind") == "medium_fine"
+
+
+def test_row_to_brew_dict_invalid_grind_omitted(tmp_db):
+    """AC-11: freeform grind not in enum is omitted from main output."""
+    # Directly insert a row with a non-enum grind value via raw SQL
+    tmp_db.execute(
+        "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+        "VALUES (?, ?, ?, ?, ?)",
+        ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, "setting 15"),
+    )
+    tmp_db.commit()
+    row = tmp_db.execute("SELECT * FROM brews ORDER BY id DESC LIMIT 1").fetchone()
+    result = serialise.row_to_brew_dict(row)
+    # grind should not be in main output
+    assert "grind" not in result
+
+
+def test_row_to_brew_dict_invalid_grind_sentinel_set(tmp_db):
+    """AC-11: _invalid_grind sentinel key set when grind is non-enum."""
+    tmp_db.execute(
+        "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+        "VALUES (?, ?, ?, ?, ?)",
+        ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, "medium-fine"),
+    )
+    tmp_db.commit()
+    row = tmp_db.execute("SELECT * FROM brews ORDER BY id DESC LIMIT 1").fetchone()
+    result = serialise.row_to_brew_dict(row)
+    assert "_invalid_grind" in result
+    assert result["_invalid_grind"] == "medium-fine"
+
+
+def test_row_to_brew_dict_valid_grind_no_sentinel(tmp_db):
+    """AC-11: no _invalid_grind sentinel when grind is valid enum member."""
+    brew_dict = {**_minimal_dict(), "grind": "coarse"}
+    row = _make_row(tmp_db, brew_dict)
+    result = serialise.row_to_brew_dict(row)
+    assert "_invalid_grind" not in result

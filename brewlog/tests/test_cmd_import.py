@@ -175,3 +175,99 @@ def test_import_appends_not_replaces(runner_with_db, tmp_path, monkeypatch):
         assert len(rows) == 2
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# AC-13: v0.3 (and non-v0.4) file rejection with actionable error message
+# ---------------------------------------------------------------------------
+
+def test_import_v03_file_rejected(runner_with_db):
+    """AC-13: brewspec_version: '0.3' -> exit 1."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    assert result.exit_code == 1
+
+
+def test_import_v03_file_states_version_found(runner_with_db):
+    """AC-13: error message states the version found in the file."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    assert "0.3" in result.output
+
+
+def test_import_v03_file_mentions_not_supported(runner_with_db):
+    """AC-13: error message says the version is not supported."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    output_lower = result.output.lower()
+    assert "not supported" in output_lower or "unsupported" in output_lower
+
+
+def test_import_v03_file_lists_migration_changes(runner_with_db):
+    """AC-13: error message lists required structural changes."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    # Must mention tds/ey moving to result sub-object
+    assert "result" in result.output.lower()
+
+
+def test_import_v03_file_points_to_migration_guide(runner_with_db):
+    """AC-13: error message points to migration guide URL."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    assert "github.com/coffee-standards/brewspec" in result.output
+
+
+def test_import_v03_no_rows_written(runner_with_db, tmp_path, monkeypatch):
+    """AC-13: v0.3 file rejected -> no rows written to DB."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    runner = CliRunner()
+    runner.invoke(cli, ["import", fixture])
+
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        rows = db_mod.list_brews(conn, all_rows=True)
+        assert len(rows) == 0
+    finally:
+        conn.close()
+
+
+def test_import_v02_file_rejected(runner_with_db, tmp_path):
+    """AC-13: brewspec_version: '0.2' -> exit 1 (any non-0.4 version rejected)."""
+    v02_file = tmp_path / "v02_brew.yaml"
+    v02_file.write_text(
+        "brewspec_version: '0.2'\n"
+        "brews:\n"
+        "  - date: '2026-02-19T08:30:00Z'\n"
+        "    type: pour_over\n"
+        "    dose_g: 18.0\n"
+        "    water_weight_g: 280.0\n"
+    )
+    result = runner_with_db.invoke(cli, ["import", str(v02_file)])
+    assert result.exit_code == 1
+
+
+def test_import_v03_exact_error_message(runner_with_db):
+    """AC-13: v0.3 file rejection produces the exact verbatim error message from the spec."""
+    fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
+    result = runner_with_db.invoke(cli, ["import", fixture])
+    expected = (
+        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.3.\n'
+        'BrewLog v0.3 requires BrewSpec v0.4.\n'
+        '\n'
+        'To migrate your file from v0.3 to v0.4, make the following changes:\n'
+        '  1. Change \'brewspec_version\' from "0.3" to "0.4"\n'
+        '  2. Move \'tds\' (if present) from the brew level to \'result.tds\'\n'
+        '  3. Move \'ey\' (if present) from the brew level to \'result.ey\'\n'
+        '  4. Move \'rating\' (if present) from the brew level to \'result.ratings.overall\'\n'
+        '  5. Replace any freeform \'grind\' values with one of:\n'
+        '     turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse\n'
+        '     (or remove the \'grind\' field if no match applies)\n'
+        '\n'
+        'Full migration guide: https://github.com/coffee-standards/brewspec'
+    )
+    assert result.output.strip() == expected.strip()

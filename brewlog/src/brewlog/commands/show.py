@@ -21,6 +21,27 @@ def _print_field(label: str, value, unit: str = "") -> None:
     click.echo(f"  {label:<20}{display}")
 
 
+# All result columns used for has_results detection (AC-35)
+_RESULT_COLS = (
+    "result_tds", "result_ey", "result_brix", "result_tasting_notes",
+    "result_rating_overall", "result_rating_fragrance", "result_rating_aroma",
+    "result_rating_flavour", "result_rating_aftertaste", "result_rating_acidity",
+    "result_rating_sweetness", "result_rating_mouthfeel",
+)
+
+# Rating dimensions for display (AC-36)
+_RATING_SHOW = [
+    ("result_rating_overall",    "Overall"),
+    ("result_rating_fragrance",  "Fragrance"),
+    ("result_rating_aroma",      "Aroma"),
+    ("result_rating_flavour",    "Flavour"),
+    ("result_rating_aftertaste", "Aftertaste"),
+    ("result_rating_acidity",    "Acidity"),
+    ("result_rating_sweetness",  "Sweetness"),
+    ("result_rating_mouthfeel",  "Mouthfeel"),
+]
+
+
 @click.command("show")
 @click.argument("id", type=int)
 def show(id: int) -> None:
@@ -39,17 +60,9 @@ def show(id: int) -> None:
     click.echo(f"Brew #{id}")
     click.echo("-" * (len(f"Brew #{id}") + 1))
 
-    # -- Brew parameters section --
-    brew_params_printed = False
-
-    def _start_brew_params():
-        nonlocal brew_params_printed
-        if not brew_params_printed:
-            click.echo("Brew parameters")
-            brew_params_printed = True
+    # -- Brew parameters section (no header, fields directly after Brew #N) --
 
     # Required fields always present
-    _start_brew_params()
     _print_field("Date:", row["date"])
     _print_field("Type:", row["type"])
 
@@ -74,26 +87,40 @@ def show(id: int) -> None:
     if row["notes"] is not None:
         _print_field("Notes:", row["notes"])
 
-    # -- Results section --
-    has_results = any(
-        row[f] is not None
-        for f in ("result_tds", "result_ey", "result_brix", "result_tasting_notes", "result_ratings")
+    # -- Results section (AC-35) --
+    # Include legacy result_ratings JSON in has_results check for backward compat
+    has_results = (
+        any(row[f] is not None for f in _RESULT_COLS)
+        or row["result_ratings"] is not None
     )
     if has_results:
         click.echo("")
         click.echo("Results")
+        click.echo("-------")
         if row["result_tds"] is not None:
-            _print_field("TDS:", row["result_tds"])
+            _print_field("TDS (%):", row["result_tds"])
         if row["result_ey"] is not None:
-            _print_field("EY:", row["result_ey"])
+            _print_field("EY (%):", row["result_ey"])
         if row["result_brix"] is not None:
             _print_field("Brix:", row["result_brix"])
         if row["result_tasting_notes"] is not None:
-            _print_field("Tasting notes:", row["result_tasting_notes"])
-        if row["result_ratings"] is not None:
-            ratings = json.loads(row["result_ratings"])
-            for dim, val in ratings.items():
-                _print_field(f"Rating ({dim}):", val)
+            _print_field("Tasting Notes:", row["result_tasting_notes"])
+
+        # AC-36, AC-37: Ratings sub-section
+        has_any_rating = any(row[col] is not None for col, _ in _RATING_SHOW)
+        if has_any_rating:
+            click.echo(f"  {'Ratings:'}")
+            for col, label in _RATING_SHOW:
+                if row[col] is not None:
+                    click.echo(f"    {label:<14}{row[col]}")
+        elif row["result_ratings"] is not None:
+            # Backward-compat: v0.2 rows with JSON-encoded ratings
+            legacy_ratings = json.loads(row["result_ratings"])
+            if legacy_ratings:
+                click.echo(f"  {'Ratings:'}")
+                for dim, val in legacy_ratings.items():
+                    label = dim.capitalize()
+                    click.echo(f"    {label:<14}{val}")
 
     # -- Coffee section --
     has_coffee = any(
@@ -104,6 +131,7 @@ def show(id: int) -> None:
     if has_coffee:
         click.echo("")
         click.echo("Coffee")
+        click.echo("------")
         if row["coffee_roast_date"] is not None:
             _print_field("Roast date:", row["coffee_roast_date"])
         if row["coffee_type"] is not None:
@@ -120,6 +148,7 @@ def show(id: int) -> None:
     if row["water_ppm"] is not None:
         click.echo("")
         click.echo("Water")
+        click.echo("-----")
         _print_field("PPM:", row["water_ppm"])
 
     # -- Equipment section --
@@ -130,6 +159,7 @@ def show(id: int) -> None:
     if has_equipment:
         click.echo("")
         click.echo("Equipment")
+        click.echo("---------")
         if row["equipment_grinder"] is not None:
             _print_field("Grinder:", row["equipment_grinder"])
         if row["equipment_brewer"] is not None:
