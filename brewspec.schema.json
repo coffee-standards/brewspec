@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://brewspec.org/schema/v0.4.json",
+  "$id": "https://brewspec.coffee/schema/v0.4.json",
   "title": "BrewSpec v0.4",
   "description": "An open standard for describing coffee brews.",
   "type": "object",

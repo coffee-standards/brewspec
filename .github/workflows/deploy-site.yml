@@ -37,7 +37,7 @@ jobs:
       - name: Patch schema $id and copy to public
         run: |
           mkdir -p site/public/schema
-          jq '."$id" = "https://brewspec.org/schema/v0.4.json"' \
+          jq '."$id" = "https://brewspec.coffee/schema/v0.4.json"' \
             brewspec.schema.json > site/public/schema/v0.4.json
 
       - name: Install dependencies
