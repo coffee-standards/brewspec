@@ -1,0 +1,116 @@
+---
+// WhatItCovers.astro — Section 2: five field groups
+---
+<section id="what-it-covers">
+  <div class="content-width">
+    <h2>Everything you need to describe a brew.</h2>
+    <p class="section-intro">
+      BrewSpec covers the full record — what went in, what the setup was, and what came out.
+    </p>
+
+    <div class="field-groups">
+      <div class="field-group">
+        <h3>Brew</h3>
+        <ul>
+          <li>Brew date (date-only or full datetime)</li>
+          <li>Brew type (espresso, pour over, immersion, hybrid)</li>
+          <li>Dose (g)</li>
+          <li>Water weight (g) and temperature (°C)</li>
+          <li>Brew method (freeform — "Hario V60", "AeroPress")</li>
+          <li>Grind setting (espresso through coarse)</li>
+          <li>Duration (seconds)</li>
+          <li>Brew-process notes</li>
+        </ul>
+      </div>
+
+      <div class="field-group">
+        <h3>Coffee</h3>
+        <ul>
+          <li>Origin</li>
+          <li>Roast date</li>
+          <li>Type (single origin, blend)</li>
+          <li>Varietal</li>
+          <li>Process (washed, natural, honey, etc.)</li>
+        </ul>
+      </div>
+
+      <div class="field-group">
+        <h3>Water</h3>
+        <ul>
+          <li>Dissolved solids (ppm)</li>
+        </ul>
+      </div>
+
+      <div class="field-group">
+        <h3>Equipment</h3>
+        <ul>
+          <li>Grinder model</li>
+          <li>Brewer model</li>
+        </ul>
+      </div>
+
+      <div class="field-group">
+        <h3>Result</h3>
+        <ul>
+          <li>TDS and extraction yield</li>
+          <li>Brix</li>
+          <li>Tasting notes (sensory description — kept separate from process notes)</li>
+          <li>Ratings: overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel — aligned to SCA cupping dimensions</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="closing-line">
+      All fields optional except date, type, dose, and water weight. Record what you measure. Leave the rest blank.
+    </p>
+  </div>
+</section>
+
+<style>
+  .section-intro {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .field-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+
+  .field-group {
+    border-left: 3px solid var(--color-border);
+    padding-left: var(--space-md);
+  }
+
+  .field-group h3 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+  }
+
+  .field-group ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .field-group li {
+    font-size: var(--text-base);
+    color: var(--color-text);
+    padding: 0.2rem 0;
+    margin: 0;
+  }
+
+  .closing-line {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    font-style: italic;
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-md);
+  }
+</style>

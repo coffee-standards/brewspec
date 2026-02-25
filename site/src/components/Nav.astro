@@ -1,0 +1,172 @@
+---
+// Nav.astro — Navigation bar
+// Mobile: hamburger toggle at <640px. Only JS on the page (~5 lines inline).
+---
+<header class="site-header">
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner content-width">
+      <a href="/" class="nav-wordmark" aria-label="BrewSpec home">BrewSpec</a>
+
+      <button
+        class="nav-toggle"
+        aria-expanded="false"
+        aria-controls="nav-links"
+        aria-label="Toggle navigation menu"
+      >
+        <span class="nav-toggle-open" aria-hidden="true">&#9776;</span>
+        <span class="nav-toggle-close" aria-hidden="true">&#10005;</span>
+      </button>
+
+      <ul id="nav-links" class="nav-links" role="list">
+        <li>
+          <a
+            href="/schema/v0.4.json"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link"
+          >Schema</a>
+        </li>
+        <li>
+          <!-- TODO: update to brewspec-v0.5.md when v0.5 ships -->
+          <a
+            href="https://github.com/coffee-standards/brewspec/blob/main/brewspec-v0.4.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link"
+          >Spec</a>
+        </li>
+        <li>
+          <a href="#examples" class="nav-link">Examples</a>
+        </li>
+        <li>
+          <a
+            href="https://github.com/coffee-standards/brewspec"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link"
+          >GitHub</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.5rem;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 var(--space-sm);
+  }
+
+  .nav-wordmark {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+  }
+
+  .nav-wordmark:hover {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-link {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    font-size: var(--text-xl);
+    line-height: 1;
+    padding: var(--space-xs);
+  }
+
+  .nav-toggle-close {
+    display: none;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 639px) {
+    .nav-inner {
+      flex-wrap: wrap;
+      height: auto;
+      padding: var(--space-xs) var(--space-sm);
+    }
+
+    .nav-toggle {
+      display: block;
+    }
+
+    .nav-links {
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-xs);
+      width: 100%;
+      padding: var(--space-xs) 0 var(--space-sm) 0;
+    }
+
+    .nav--open .nav-links {
+      display: flex;
+    }
+
+    .nav--open .nav-toggle-open {
+      display: none;
+    }
+
+    .nav--open .nav-toggle-close {
+      display: inline;
+    }
+
+    .nav-link {
+      font-size: var(--text-lg);
+      padding: var(--space-xs) 0;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector('.nav-toggle');
+  const nav = document.querySelector('.nav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('nav--open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+  }
+</script>

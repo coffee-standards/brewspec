@@ -1,0 +1,209 @@
+/* BrewSpec Landing Page — Global Styles */
+
+/* ============================================================
+   Design Tokens — CSS Custom Properties
+   ============================================================ */
+:root {
+  /* Colours */
+  --color-bg:           #F7F5F2;   /* Off-white warm background */
+  --color-text:         #1A1814;   /* Near-black warm text */
+  --color-text-muted:   #6B6560;   /* Secondary text — labels, captions */
+  --color-accent:       #C47B2B;   /* Warm ochre — borders, large text, non-text decorative elements */
+  --color-accent-hover: #A3651F;   /* Darkened ochre for hover state */
+  --color-border:       #E2DED9;   /* Subtle border — card outlines, dividers */
+  --color-code-bg:      #1E1E1E;   /* Dark code block background */
+  --color-code-text:    #D4D4D4;   /* Default code text */
+
+  /* Typography */
+  --font-sans:   "Inter", "DM Sans", system-ui, sans-serif;
+  --font-mono:   "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+
+  --text-base:   1rem;       /* 16px */
+  --text-lg:     1.125rem;   /* 18px */
+  --text-xl:     1.25rem;    /* 20px */
+  --text-2xl:    1.5rem;     /* 24px */
+  --text-3xl:    2rem;       /* 32px */
+  --text-4xl:    2.75rem;    /* 44px */
+  --text-hero:   3.5rem;     /* 56px — headline only */
+
+  --line-height-body:    1.7;
+  --line-height-heading: 1.2;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold:   700;
+
+  /* Spacing */
+  --space-xs:   0.5rem;
+  --space-sm:   1rem;
+  --space-md:   1.5rem;
+  --space-lg:   2.5rem;
+  --space-xl:   4rem;
+  --space-2xl:  6rem;
+
+  /* Layout */
+  --content-width: 720px;    /* Max width for text content */
+  --wide-width:    1100px;   /* Max width for code example columns */
+}
+
+/* ============================================================
+   Base Reset
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Typography Base
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-md);
+}
+
+h3 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-xs);
+}
+
+p {
+  margin-bottom: var(--space-sm);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  transition: text-decoration-color 0.15s ease;
+}
+
+a:hover {
+  text-decoration-color: var(--color-text);
+}
+
+ul, ol {
+  padding-left: 1.25rem;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* ============================================================
+   Layout Utilities
+   ============================================================ */
+.content-width {
+  max-width: var(--content-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+.wide-width {
+  max-width: var(--wide-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-sm);
+  padding-right: var(--space-sm);
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+section {
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+}
+
+section + section {
+  border-top: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-sans);
+  line-height: 1;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--color-text);
+  color: var(--color-bg);
+  border: 2px solid var(--color-text);
+}
+
+.btn-primary:hover {
+  background-color: #2d2a26;
+  border-color: #2d2a26;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-text);
+  text-decoration: none;
+}
+
+/* ============================================================
+   Responsive breakpoints (referenced in components)
+   ============================================================ */
+@media (max-width: 639px) {
+  h2 {
+    font-size: var(--text-2xl);
+  }
+
+  section {
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-xl);
+  }
+}

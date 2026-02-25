@@ -1,0 +1,95 @@
+---
+// Examples.astro — Section 3: two code blocks side-by-side
+// NOTE: The espresso example uses the corrected version from design doc Section 1.3
+// (all 8 SCA rating dimensions). Do NOT revert to the copy doc version which omits
+// fragrance, aroma, and sweetness.
+import CodeBlock from './CodeBlock.astro';
+
+const pourOverYaml = `brewspec_version: "0.4"
+brews:
+  - date: "2026-02-25"
+    type: "pour_over"
+    dose_g: 18
+    water_weight_g: 280`;
+
+// Corrected full espresso example — all 8 SCA rating dimensions present:
+// overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel
+const espressoYaml = `brewspec_version: "0.4"
+brews:
+  - date: "2026-02-25T08:30:00Z"
+    type: "espresso"
+    dose_g: 18
+    water_weight_g: 36
+    water_temp_c: 94
+    grind: "espresso"
+    duration_s: 28
+    method: "La Marzocco Linea Mini"
+    notes: "Re-calibrated grinder after three weeks"
+    coffee:
+      origin: ["Colombia"]
+      roast_date: "2026-02-10"
+      type: "single_origin"
+      varietal: "Castillo"
+      process: "Washed"
+    water:
+      ppm: 120
+    equipment:
+      grinder: "Niche Zero"
+      brewer: "La Marzocco Linea Mini"
+    result:
+      tds: 9.2
+      ey: 19.8
+      brix: 4.6
+      tasting_notes: "Dark chocolate, orange peel, long clean finish"
+      ratings:
+        overall: 4
+        fragrance: 4
+        aroma: 4
+        flavour: 5
+        acidity: 4
+        aftertaste: 4
+        sweetness: 3
+        mouthfeel: 3`;
+---
+<section id="examples">
+  <div class="wide-width">
+    <h2>See what a brew looks like.</h2>
+    <p class="section-intro">
+      A minimal record with just the required fields. A full record with everything populated.
+    </p>
+
+    <div class="examples-grid">
+      <CodeBlock
+        label="Pour over — required fields only"
+        code={pourOverYaml}
+        language="yaml"
+      />
+      <CodeBlock
+        label="Espresso — full record"
+        code={espressoYaml}
+        language="yaml"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .section-intro {
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  @media (max-width: 767px) {
+    .examples-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

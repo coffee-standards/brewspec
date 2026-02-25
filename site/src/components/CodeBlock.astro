@@ -1,0 +1,56 @@
+---
+// CodeBlock.astro — Reusable syntax-highlighted code block
+// Uses Astro's built-in <Code> component (Shiki) — zero additional dependencies.
+// Highlighting happens at build time; no JavaScript is shipped for this.
+import { Code } from 'astro:components';
+
+interface Props {
+  label: string;
+  code: string;
+  language: string;
+}
+
+const { label, code, language } = Astro.props;
+---
+<figure class="code-block">
+  <figcaption class="code-label">{label}</figcaption>
+  <div class="code-wrapper">
+    <Code code={code} lang={language} theme="dark-plus" />
+  </div>
+</figure>
+
+<style>
+  .code-block {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .code-label {
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+  }
+
+  .code-wrapper {
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .code-wrapper :global(pre) {
+    margin: 0;
+    padding: var(--space-md);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    background-color: var(--color-code-bg) !important;
+  }
+
+  .code-wrapper :global(code) {
+    font-family: var(--font-mono);
+  }
+</style>

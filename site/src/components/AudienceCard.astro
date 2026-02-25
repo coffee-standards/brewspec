@@ -1,0 +1,57 @@
+---
+// AudienceCard.astro — Reusable audience card
+// body prop accepts HTML string for inline links, rendered via set:html
+
+interface Props {
+  headline: string;
+  body: string;
+}
+
+const { headline, body } = Astro.props;
+---
+<article class="audience-card">
+  <h3>{headline}</h3>
+  <div class="card-body">
+    <Fragment set:html={body} />
+  </div>
+</article>
+
+<style>
+  .audience-card {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: var(--space-lg);
+    background-color: var(--color-bg);
+  }
+
+  .audience-card h3 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-sm);
+    color: var(--color-text);
+  }
+
+  .card-body {
+    font-size: var(--text-base);
+    color: var(--color-text);
+    line-height: var(--line-height-body);
+  }
+
+  .card-body :global(p) {
+    margin-bottom: var(--space-sm);
+  }
+
+  .card-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .card-body :global(a) {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border);
+  }
+
+  .card-body :global(a:hover) {
+    text-decoration-color: var(--color-text);
+  }
+</style>

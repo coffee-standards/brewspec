@@ -1,0 +1,42 @@
+---
+// WhoItsFor.astro — Section 4: two audience cards
+import AudienceCard from './AudienceCard.astro';
+
+const toolBuilderBody = `<p>Building a brew logger, a roasting app, or a recipe platform? BrewSpec is a shared format you can build against instead of defining your own. JSON Schema-validated. Version-controlled with documented migration paths between versions. Apache 2.0 — use it in anything.</p>
+<p>The schema lives at <a href="https://brewspec.org/schema/v0.4.json" target="_blank" rel="noopener noreferrer">brewspec.org/schema/v0.4.json</a>. The spec document covers every field, validation rules, and the expected validation pipeline.</p>`;
+
+const coffeeProBody = `<p>If you log brews — on paper, in a spreadsheet, in an app — BrewSpec is the format your data can travel in. Export from one tool, import into another. No locked-in proprietary format.</p>
+<p>BrewLog is the reference CLI implementation. Free, local, no account required. Log a brew in under a minute. Your data is yours.</p>`;
+---
+<section id="who-its-for">
+  <div class="wide-width">
+    <h2>Built for the people who handle brew data.</h2>
+
+    <div class="cards-grid">
+      <AudienceCard
+        headline="For tool builders"
+        body={toolBuilderBody}
+      />
+      <AudienceCard
+        headline="For coffee professionals and home brewers"
+        body={coffeeProBody}
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    margin-top: var(--space-lg);
+    align-items: start;
+  }
+
+  @media (max-width: 767px) {
+    .cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

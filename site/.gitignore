@@ -1,0 +1,4 @@
+node_modules
+dist
+.astro
+public/schema/v0.4.json
