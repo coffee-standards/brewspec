@@ -1,0 +1,65 @@
+name: Deploy BrewSpec Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'brewspec.schema.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Patch schema $id and copy to public
+        run: |
+          mkdir -p site/public/schema
+          jq '."$id" = "https://brewspec.coffee/schema/v0.4.json"' \
+            brewspec.schema.json > site/public/schema/v0.4.json
+
+      - name: Install dependencies
+        working-directory: site
+        run: npm ci
+
+      - name: Build site
+        working-directory: site
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

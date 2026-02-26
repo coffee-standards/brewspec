@@ -1,0 +1,54 @@
+---
+// TheStandard.astro — Section 5: stability / license copy
+---
+<section id="the-standard">
+  <div class="content-width">
+    <h2>Open, versioned, and maintained.</h2>
+
+    <p>
+      BrewSpec is Apache 2.0. Free to use in commercial and open source projects.
+      The schema is JSON Schema (Draft 2020-12), hosted at a stable URL, and versioned
+      with a <code>brewspec_version</code> const inside every brew file.
+    </p>
+
+    <p>
+      Breaking changes follow a documented migration path. Every schema version is archived.
+      A brew file tells you exactly which version of the spec it was written against —
+      there's no guessing.
+    </p>
+
+    <p class="github-link">
+      <a
+        href="https://github.com/coffee-standards/brewspec"
+        target="_blank"
+        rel="noopener noreferrer"
+      >github.com/coffee-standards/brewspec</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  p {
+    font-size: var(--text-lg);
+    color: var(--color-text);
+    max-width: 600px;
+  }
+
+  p + p {
+    margin-top: var(--space-sm);
+  }
+
+  .github-link {
+    margin-top: var(--space-md);
+  }
+
+  .github-link a {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+  }
+
+  .github-link a:hover {
+    color: var(--color-text);
+  }
+</style>

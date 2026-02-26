@@ -1,0 +1,101 @@
+---
+// Footer.astro — Section 6: footer CTAs and attribution
+---
+<footer class="site-footer">
+  <div class="content-width footer-inner">
+    <h2 class="footer-headline">Start using BrewSpec.</h2>
+
+    <div class="footer-ctas">
+      <div class="footer-cta-item">
+        <a href="/schema/v0.4.json" class="btn btn-primary">View the schema</a>
+        <p class="cta-subtext">brewspec.coffee/schema/v0.4.json</p>
+      </div>
+
+      <div class="footer-cta-item">
+        <a
+          href="https://github.com/coffee-standards/brewspec"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-secondary"
+        >Try BrewLog</a>
+        <p class="cta-subtext">github.com/coffee-standards/brewspec</p>
+      </div>
+    </div>
+
+    <p class="footer-attribution">
+      BrewSpec is open source software released under the Apache 2.0 License.
+      Schema and spec maintained at
+      <a
+        href="https://github.com/coffee-standards/brewspec"
+        target="_blank"
+        rel="noopener noreferrer"
+      >github.com/coffee-standards/brewspec</a>.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-2xl);
+    padding-bottom: var(--space-2xl);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .footer-headline {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+  }
+
+  .footer-ctas {
+    display: flex;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .footer-cta-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .cta-subtext {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    font-family: var(--font-mono);
+  }
+
+  .footer-attribution {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-md);
+    margin: 0;
+  }
+
+  .footer-attribution a {
+    color: var(--color-text-muted);
+  }
+
+  .footer-attribution a:hover {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 639px) {
+    .footer-ctas {
+      flex-direction: column;
+    }
+
+    .footer-headline {
+      font-size: var(--text-2xl);
+    }
+  }
+</style>
