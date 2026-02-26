@@ -4,7 +4,7 @@
 
 BrewSpec repository: https://github.com/coffee-standards/brewspec
 
-BrewSpec is to coffee what BeerXML is to beer: a common data format that makes brew data portable and interoperable across tools. Track your brews in one app, export the data, and import it into another — no vendor lock-in, no proprietary formats.
+BrewSpec is a common data format that makes brew data portable and interoperable across tools. Track your brews in one app, export the data, and import it into another — no vendor lock-in, no proprietary formats.
 
 ---
 
