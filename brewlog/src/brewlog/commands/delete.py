@@ -19,7 +19,11 @@ from brewlog import db
 @click.option("--force", is_flag=True, default=False,
               help="Skip confirmation prompt and delete immediately.")
 def delete(brew_id: int, force: bool) -> None:
-    """Delete a brew by ID."""
+    """Delete a brew by ID.
+
+    Note: brew IDs are permanent and are not reassigned after deletion.
+    Gaps in the ID sequence are expected and normal behaviour.
+    """
 
     if brew_id <= 0:
         click.echo("Error: brew ID must be a positive integer.", err=True)

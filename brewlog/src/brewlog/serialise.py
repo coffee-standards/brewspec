@@ -156,12 +156,14 @@ def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
 # Path validation
 # ---------------------------------------------------------------------------
 
-def validate_export_path(path_str: str) -> Path:
+def validate_export_path(path_str: str, fmt: str = "yaml") -> Path:
     """
     Validate an export path string.
 
     Rejects paths containing '..' components (directory traversal).
     Rejects paths whose parent directory does not exist.
+    When fmt is 'csv', also accepts paths ending in '.csv'.
+    Without fmt='csv', only '.yaml', '.yml', and '.json' are accepted.
     Returns a Path on success.
     Calls sys.exit(1) with error message on failure.
     """
@@ -171,11 +173,20 @@ def validate_export_path(path_str: str) -> Path:
         click.echo("Error: path must not contain '..' components.", err=True)
         sys.exit(1)
     # Reject paths without a recognised extension
-    if p.suffix.lower() not in (".yaml", ".yml", ".json"):
-        click.echo(
-            "Error: output path must end with .yaml, .yml, or .json.",
-            err=True,
-        )
+    allowed_extensions = {".yaml", ".yml", ".json"}
+    if fmt == "csv":
+        allowed_extensions.add(".csv")
+    if p.suffix.lower() not in allowed_extensions:
+        if fmt == "csv":
+            click.echo(
+                "Error: output path must end with .yaml, .yml, .json, or .csv.",
+                err=True,
+            )
+        else:
+            click.echo(
+                "Error: output path must end with .yaml, .yml, or .json.",
+                err=True,
+            )
         sys.exit(1)
     # Reject if parent directory does not exist
     if not p.parent.exists():
