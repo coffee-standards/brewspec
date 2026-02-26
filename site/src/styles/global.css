@@ -8,6 +8,8 @@
   --color-bg:           #F7F5F2;   /* Off-white warm background */
   --color-text:         #1A1814;   /* Near-black warm text */
   --color-text-muted:   #6B6560;   /* Secondary text — labels, captions */
+  /* Accent: defined for future use. #C47B2B on #F7F5F2 contrast ratio is ~3.1:1.
+     Safe for large text (>= 18px), icons, and borders. Do not use for small body text. */
   --color-accent:       #C47B2B;   /* Warm ochre — borders, large text, non-text decorative elements */
   --color-accent-hover: #A3651F;   /* Darkened ochre for hover state */
   --color-border:       #E2DED9;   /* Subtle border — card outlines, dividers */
