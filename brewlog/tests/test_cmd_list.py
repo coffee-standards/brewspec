@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module
-from brewlog.models import BrewInput
+from brewlog.models import BrewInput, ResultInput, RatingsInput
 
 
 @pytest.fixture
@@ -28,6 +28,24 @@ def _populate_brews(db_path, n: int):
                 type="pour_over",
                 dose_g=18.0,
                 water_weight_g=280.0,
+            )
+            db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def _populate_brews_with_method_and_rating(db_path, n: int):
+    """Insert n brews with distinct dates, method, and rating into the DB at db_path."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        for i in range(n):
+            brew = BrewInput(
+                date=f"2026-02-{i + 1:02d}T08:30:00Z",
+                type="pour_over",
+                dose_g=18.0,
+                water_weight_g=280.0,
+                method="V60",
+                result=ResultInput(ratings=RatingsInput(overall=4)),
             )
             db_module.insert_brew(brew, conn)
     finally:
@@ -55,8 +73,9 @@ def test_list_empty_db_exit_zero(runner_with_db):
 # ---------------------------------------------------------------------------
 
 def test_list_shows_table_headers(runner_with_db, tmp_path):
-    """AC-13: column headers in output."""
-    _populate_brews(tmp_path / "test.db", 1)
+    """AC-13: column headers in output (v0.4: optional columns shown when data present)."""
+    # Use brews that have method and rating so all columns are visible
+    _populate_brews_with_method_and_rating(tmp_path / "test.db", 1)
     result = runner_with_db.invoke(cli, ["list"])
     assert "ID" in result.output
     assert "Date" in result.output
@@ -65,6 +84,7 @@ def test_list_shows_table_headers(runner_with_db, tmp_path):
     assert "Dose" in result.output
     assert "Water" in result.output
     # v0.3: Rating column renamed to 'Overall Rating' (AC-38)
+    # v0.4: only visible when at least one brew has a rating
     assert "Overall Rating" in result.output
 
 
@@ -79,10 +99,14 @@ def test_list_header_does_not_show_tds(runner_with_db, tmp_path):
 
 
 def test_list_optional_field_dash_when_absent(runner_with_db, tmp_path):
-    """AC-13: missing optional field shows '-'."""
+    """AC-13: table renders without error even when optional fields are absent.
+
+    v0.4: optional columns (Method, Overall Rating) are hidden when no brew in
+    the result set has that field. The separator line still contains dashes.
+    """
     _populate_brews(tmp_path / "test.db", 1)
     result = runner_with_db.invoke(cli, ["list"])
-    # Method and rating are not set; should show '-'
+    # Separator line always present and contains '-'
     assert "-" in result.output
 
 

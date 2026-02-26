@@ -2,10 +2,19 @@
 `brewlog list` command.
 
 Displays a formatted table of recent brews, ordered by date descending.
+
+v0.4 changes:
+- Column visibility: optional columns (Method, Overall Rating) are only
+  rendered when at least one row in the result set has a non-null value
+  for that column.
+- Legacy fallback: Overall Rating falls back to the `overall` key inside
+  the `result_ratings` JSON column for v0.2 rows where
+  `result_rating_overall` is NULL.
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from datetime import datetime
 
@@ -16,59 +25,138 @@ from brewlog.models import BREW_TYPE_ENUM
 
 
 # ---------------------------------------------------------------------------
-# Table formatting helpers
+# Legacy rating helper — Item 1 (MED-1)
 # ---------------------------------------------------------------------------
 
-# Column widths (characters)
-_COL_ID = 4
-_COL_DATE = 20
-_COL_TYPE = 10
-_COL_METHOD = 15
-_COL_DOSE = 9
-_COL_WATER = 10
-_COL_RATING = 14  # "Overall Rating"
+
+def _get_overall_rating(row) -> int | None:
+    """
+    Return the overall rating for a row, falling back to the legacy
+    result_ratings JSON column for v0.2 rows.
+
+    Priority:
+      1. result_rating_overall (v0.3+ column)
+      2. result_ratings JSON 'overall' key (v0.2 legacy)
+      3. None
+    """
+    if row["result_rating_overall"] is not None:
+        return row["result_rating_overall"]
+    if row["result_ratings"] is not None:
+        try:
+            legacy = json.loads(row["result_ratings"])
+            return legacy.get("overall")
+        except (json.JSONDecodeError, AttributeError):
+            pass
+    return None
 
 
-def _format_header() -> str:
-    """Return the table header line."""
-    return (
-        f"{'ID':>{_COL_ID}}  "
-        f"{'Date':<{_COL_DATE}}  "
-        f"{'Type':<{_COL_TYPE}}  "
-        f"{'Method':<{_COL_METHOD}}  "
-        f"{'Dose (g)':>{_COL_DOSE}}  "
-        f"{'Water (g)':>{_COL_WATER}}  "
-        f"{'Overall Rating':>{_COL_RATING}}"
-    )
+# ---------------------------------------------------------------------------
+# Column definitions
+# ---------------------------------------------------------------------------
+
+# Always-visible columns: (header_label, right_align, width)
+# right_align True means right-pad with spaces on left; False means left-pad.
+_ALWAYS_COLS = [
+    ("ID",     True,  4),
+    ("Date",   False, 20),
+    ("Type",   False, 10),
+]
+
+# Optional columns — only rendered when any row has a value.
+# Each entry: (key_fn, header_label, right_align, width)
+# key_fn receives a row and returns a display string or None.
+_OPTIONAL_COLS = [
+    ("method",   "Method",         False, 15),
+]
+
+# Fixed always-visible trailing numeric columns
+_NUMERIC_COLS = [
+    ("dose_g",         "Dose (g)",   True, 9),
+    ("water_weight_g", "Water (g)",  True, 10),
+]
+
+# Rating column — optional, uses legacy fallback
+_RATING_LABEL = "Overall Rating"
+_RATING_WIDTH = 14
 
 
-def _format_separator() -> str:
-    """Return the separator line under the header."""
-    return (
-        f"{'':->{ _COL_ID}}  "
-        f"{'':->{ _COL_DATE}}  "
-        f"{'':->{ _COL_TYPE}}  "
-        f"{'':->{ _COL_METHOD}}  "
-        f"{'':->{ _COL_DOSE}}  "
-        f"{'':->{ _COL_WATER}}  "
-        f"{'':->{ _COL_RATING}}"
-    )
+# ---------------------------------------------------------------------------
+# Column visibility detection — Item 4
+# ---------------------------------------------------------------------------
 
 
-def _format_row(row) -> str:
-    """Format a single brew row for the table."""
-    method = row["method"] if row["method"] is not None else "-"
-    rating = str(row["result_rating_overall"]) if row["result_rating_overall"] is not None else "-"
+def _has_any_method(rows) -> bool:
+    """Return True if any row has a non-null method."""
+    return any(row["method"] is not None for row in rows)
 
-    return (
-        f"{row['id']:>{_COL_ID}}  "
-        f"{row['date']:<{_COL_DATE}}  "
-        f"{row['type']:<{_COL_TYPE}}  "
-        f"{method:<{_COL_METHOD}}  "
-        f"{row['dose_g']:>{_COL_DOSE}.1f}  "
-        f"{row['water_weight_g']:>{_COL_WATER}.1f}  "
-        f"{rating:>{_COL_RATING}}"
-    )
+
+def _has_any_rating(rows) -> bool:
+    """
+    Return True if any row has an overall rating (modern or legacy).
+    Implements Item 1 and Item 4 together.
+    """
+    return any(_get_overall_rating(row) is not None for row in rows)
+
+
+# ---------------------------------------------------------------------------
+# Table rendering
+# ---------------------------------------------------------------------------
+
+
+def _render_table(rows) -> None:
+    """Render the brew table, showing only columns that have data."""
+    show_method = _has_any_method(rows)
+    show_rating = _has_any_rating(rows)
+
+    # Build header
+    header_parts = [
+        f"{'ID':>{4}}",
+        f"{'Date':<{20}}",
+        f"{'Type':<{10}}",
+    ]
+    sep_parts = [
+        f"{'':->{ 4}}",
+        f"{'':->{ 20}}",
+        f"{'':->{ 10}}",
+    ]
+
+    if show_method:
+        header_parts.append(f"{'Method':<{15}}")
+        sep_parts.append(f"{'':->{ 15}}")
+
+    header_parts.append(f"{'Dose (g)':>{9}}")
+    sep_parts.append(f"{'':->{ 9}}")
+
+    header_parts.append(f"{'Water (g)':>{10}}")
+    sep_parts.append(f"{'':->{ 10}}")
+
+    if show_rating:
+        header_parts.append(f"{'Overall Rating':>{_RATING_WIDTH}}")
+        sep_parts.append(f"{'':->{ _RATING_WIDTH}}")
+
+    click.echo("  ".join(header_parts))
+    click.echo("  ".join(sep_parts))
+
+    for row in rows:
+        parts = [
+            f"{row['id']:>{4}}",
+            f"{row['date']:<{20}}",
+            f"{row['type']:<{10}}",
+        ]
+
+        if show_method:
+            method = row["method"] if row["method"] is not None else "-"
+            parts.append(f"{method:<{15}}")
+
+        parts.append(f"{row['dose_g']:>{9}.1f}")
+        parts.append(f"{row['water_weight_g']:>{10}.1f}")
+
+        if show_rating:
+            rating_val = _get_overall_rating(row)
+            rating = str(rating_val) if rating_val is not None else "-"
+            parts.append(f"{rating:>{_RATING_WIDTH}}")
+
+        click.echo("  ".join(parts))
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +303,4 @@ def list_cmd(
             click.echo("No brews logged yet. Run 'brewlog add' to get started.")
         return
 
-    click.echo(_format_header())
-    click.echo(_format_separator())
-    for row in rows:
-        click.echo(_format_row(row))
+    _render_table(rows)

@@ -89,7 +89,10 @@ def update(
     roast_date, coffee_type, origin, varietal, process,
     water_ppm, grinder, brewer,
 ) -> None:
-    """Update optional fields on an existing brew (defaults to the latest brew)."""
+    """Update optional fields on an existing brew.
+
+    BREW_ID is optional; defaults to the last brew when omitted.
+    """
 
     # -- Check for retired --rating flag first (AC-32) --
     if rating_retired is not None:
