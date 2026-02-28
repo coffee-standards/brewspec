@@ -133,7 +133,7 @@ See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, const
 │       ├── v0.1_format.yaml
 │       └── zero_duration.yaml
 ├── versions/
-│   ├── v0.1.md              # Archived spec (v0.1)
+│   ├── brewspec-v0.1.md              # Archived spec (v0.1)
 │   ├── brewspec-v0.2.md     # Archived spec (v0.2)
 │   └── brewspec-v0.3.md     # Archived spec (v0.3)
 ├── tests/
