@@ -47,17 +47,19 @@ UPDATABLE_COLUMNS: frozenset[str] = frozenset({
     "result_rating_mouthfeel",
     "coffee_roast_date",
     "coffee_type",
-    "coffee_origin",
+    "coffee_origins",
     "coffee_varietal",
     "coffee_process",
     "water_ppm",
     "equipment_grinder",
     "equipment_brewer",
+    "equipment_grinder_setting",
+    "equipment_notes",
 })
 
 
 # ---------------------------------------------------------------------------
-# Migration constants — AC-20, AC-23
+# Migration constants — AC-20, AC-23, v0.5
 # ---------------------------------------------------------------------------
 
 _V3_MIGRATION_COLUMNS: dict[str, str] = {
@@ -69,6 +71,13 @@ _V3_MIGRATION_COLUMNS: dict[str, str] = {
     "result_rating_acidity":    "INTEGER",
     "result_rating_sweetness":  "INTEGER",
     "result_rating_mouthfeel":  "INTEGER",
+}
+
+_V5_MIGRATION_COLUMNS: dict[str, str] = {
+    "coffee_origins":           "TEXT",
+    "equipment_grinder_setting": "TEXT",
+    "equipment_notes":          "TEXT",
+    "brew_ratio":               "REAL",
 }
 
 
@@ -98,38 +107,41 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     """Create tables and indexes if they do not exist."""
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS brews (
-            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-            date                    TEXT    NOT NULL,
-            type                    TEXT    NOT NULL,
-            method                  TEXT,
-            dose_g                  REAL    NOT NULL,
-            water_weight_g          REAL    NOT NULL,
-            water_volume_ml         REAL,
-            water_temp_c            REAL,
-            grind                   TEXT,
-            duration_s              INTEGER,
-            notes                   TEXT,
-            coffee_roast_date       TEXT,
-            coffee_type             TEXT,
-            coffee_origin           TEXT,
-            coffee_varietal         TEXT,
-            coffee_process          TEXT,
-            water_ppm               REAL,
-            equipment_grinder       TEXT,
-            equipment_brewer        TEXT,
-            result_tds              REAL,
-            result_ey               REAL,
-            result_brix             REAL,
-            result_tasting_notes    TEXT,
-            result_ratings          TEXT,
-            result_rating_overall   INTEGER,
-            result_rating_fragrance INTEGER,
-            result_rating_aroma     INTEGER,
-            result_rating_flavour   INTEGER,
-            result_rating_aftertaste INTEGER,
-            result_rating_acidity   INTEGER,
-            result_rating_sweetness INTEGER,
-            result_rating_mouthfeel INTEGER
+            id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+            date                      TEXT    NOT NULL,
+            type                      TEXT    NOT NULL,
+            method                    TEXT,
+            dose_g                    REAL    NOT NULL,
+            water_weight_g            REAL    NOT NULL,
+            brew_ratio                REAL,
+            water_volume_ml           REAL,
+            water_temp_c              REAL,
+            grind                     TEXT,
+            duration_s                INTEGER,
+            notes                     TEXT,
+            coffee_roast_date         TEXT,
+            coffee_type               TEXT,
+            coffee_origins            TEXT,
+            coffee_varietal           TEXT,
+            coffee_process            TEXT,
+            water_ppm                 REAL,
+            equipment_grinder         TEXT,
+            equipment_brewer          TEXT,
+            equipment_grinder_setting TEXT,
+            equipment_notes           TEXT,
+            result_tds                REAL,
+            result_ey                 REAL,
+            result_brix               REAL,
+            result_tasting_notes      TEXT,
+            result_ratings            TEXT,
+            result_rating_overall     INTEGER,
+            result_rating_fragrance   INTEGER,
+            result_rating_aroma       INTEGER,
+            result_rating_flavour     INTEGER,
+            result_rating_aftertaste  INTEGER,
+            result_rating_acidity     INTEGER,
+            result_rating_sweetness   INTEGER,
+            result_rating_mouthfeel   INTEGER
         );
         CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
     """)
@@ -137,12 +149,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
 
 def _apply_migrations(conn: sqlite3.Connection) -> None:
-    """Add any missing v0.3 columns without modifying existing data. AC-23."""
+    """Add any missing v0.3 and v0.5 columns without modifying existing data."""
     existing = {
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
     }
-    for col, col_type in _V3_MIGRATION_COLUMNS.items():
+    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS}
+    for col, col_type in all_migration_columns.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
     conn.commit()
@@ -164,15 +177,22 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
     result = brew.result
     ratings = result.ratings if result else None
 
+    # Serialise coffee.origins list of OriginInput objects to JSON
+    origins_json = None
+    if coffee and coffee.origins:
+        origins_json = json.dumps([o.model_dump(exclude_none=True) for o in coffee.origins])
+
     sql = """
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
+            brew_ratio,
             water_volume_ml, water_temp_c, grind, duration_s,
             notes,
-            coffee_roast_date, coffee_type, coffee_origin,
+            coffee_roast_date, coffee_type, coffee_origins,
             coffee_varietal, coffee_process,
             water_ppm,
             equipment_grinder, equipment_brewer,
+            equipment_grinder_setting, equipment_notes,
             result_tds, result_ey, result_brix,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
@@ -180,11 +200,13 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             result_rating_sweetness, result_rating_mouthfeel
         ) VALUES (
             ?, ?, ?, ?, ?,
+            ?,
             ?, ?, ?, ?,
             ?,
             ?, ?, ?,
             ?, ?,
             ?,
+            ?, ?,
             ?, ?,
             ?, ?, ?,
             ?,
@@ -199,6 +221,7 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         brew.method,
         brew.dose_g,
         brew.water_weight_g,
+        brew.brew_ratio,
         brew.water_volume_ml,
         brew.water_temp_c,
         brew.grind,
@@ -206,12 +229,14 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         brew.notes,
         coffee.roast_date if coffee else None,
         coffee.type if coffee else None,
-        json.dumps(coffee.origin) if (coffee and coffee.origin) else None,
+        origins_json,
         coffee.varietal if coffee else None,
         coffee.process if coffee else None,
         water.ppm if water else None,
         equipment.grinder if equipment else None,
         equipment.brewer if equipment else None,
+        equipment.grinder_setting if equipment else None,
+        equipment.notes if equipment else None,
         result.tds if result else None,
         result.ey if result else None,
         result.brix if result else None,
@@ -243,18 +268,20 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
     water = brew_dict.get("water") or {}
     equipment = brew_dict.get("equipment") or {}
     result = brew_dict.get("result") or {}
-    origin = coffee.get("origin")
+    origins = coffee.get("origins")
     ratings = result.get("ratings") or {}
 
     sql = """
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
+            brew_ratio,
             water_volume_ml, water_temp_c, grind, duration_s,
             notes,
-            coffee_roast_date, coffee_type, coffee_origin,
+            coffee_roast_date, coffee_type, coffee_origins,
             coffee_varietal, coffee_process,
             water_ppm,
             equipment_grinder, equipment_brewer,
+            equipment_grinder_setting, equipment_notes,
             result_tds, result_ey, result_brix,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
@@ -262,11 +289,13 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             result_rating_sweetness, result_rating_mouthfeel
         ) VALUES (
             ?, ?, ?, ?, ?,
+            ?,
             ?, ?, ?, ?,
             ?,
             ?, ?, ?,
             ?, ?,
             ?,
+            ?, ?,
             ?, ?,
             ?, ?, ?,
             ?,
@@ -281,6 +310,7 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         brew_dict.get("method"),
         brew_dict.get("dose_g"),
         brew_dict.get("water_weight_g"),
+        brew_dict.get("brew_ratio"),
         brew_dict.get("water_volume_ml"),
         brew_dict.get("water_temp_c"),
         brew_dict.get("grind"),
@@ -288,12 +318,14 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         brew_dict.get("notes"),
         coffee.get("roast_date"),
         coffee.get("type"),
-        json.dumps(origin) if origin else None,
+        json.dumps(origins) if origins else None,
         coffee.get("varietal"),
         coffee.get("process"),
         water.get("ppm"),
         equipment.get("grinder"),
         equipment.get("brewer"),
+        equipment.get("grinder_setting"),
+        equipment.get("notes"),
         result.get("tds"),
         result.get("ey"),
         result.get("brix"),

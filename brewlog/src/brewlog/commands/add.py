@@ -19,6 +19,7 @@ from brewlog import db
 from brewlog.models import (
     BrewInput,
     CoffeeInput,
+    OriginInput,
     WaterInput,
     EquipmentInput,
     ResultInput,
@@ -232,10 +233,14 @@ def add(
     coffee_obj = None
     if has_coffee:
         try:
+            # Convert plain string origins (from --origin flag) to OriginInput objects
+            origins_list = None
+            if origin:
+                origins_list = [OriginInput(country=o) for o in origin]
             coffee_obj = CoffeeInput(
                 roast_date=roast_date,
                 type=coffee_type,
-                origin=list(origin) if origin else None,
+                origins=origins_list,
                 varietal=varietal,
                 process=process,
             )

@@ -1,0 +1,35 @@
+brewspec_version: "0.5"
+brews:
+  - date: "2026-02-28"
+    type: "pour_over"
+    dose_g: 18.0
+    water_weight_g: 280.0
+    brew_ratio: 15.56
+    method: "Hario V60"
+    grind: "medium_fine"
+    duration_s: 195
+    coffee:
+      type: "single_origin"
+      origins:
+        - name: "Ethiopia Yirgacheffe Natural"
+          country: "Ethiopia"
+          region: "Yirgacheffe"
+          subregion: "Kochere"
+          producer: "Daye Bensa Washing Station"
+          process: "Natural"
+          lot: "Lot 42 Export Grade 1"
+          harvest_year: 2025
+      varietal: "Heirloom"
+    equipment:
+      grinder: "Comandante C40 MK4"
+      brewer: "Hario V60 02"
+      grinder_setting: "21 clicks"
+      notes: "Burrs 3 months old"
+    result:
+      tds: 1.38
+      ey: 20.1
+      tasting_notes: "Bright citrus, blueberry jam, clean finish"
+      ratings:
+        overall: 5
+        flavour: 5
+        acidity: 4

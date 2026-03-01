@@ -44,7 +44,7 @@ def _full_dict():
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
-            "origin": ["Ethiopia"],
+            "origins": [{"country": "Ethiopia"}],
             "varietal": "Heirloom",
             "process": "Washed",
         },
@@ -133,20 +133,26 @@ def test_row_to_brew_dict_result_object_omitted(tmp_db):
 
 
 def test_row_to_brew_dict_origin_deserialised(tmp_db):
-    """Section 6.1: JSON string '["Ethiopia"]' becomes ["Ethiopia"]."""
-    brew_dict = {**_minimal_dict(), "coffee": {"origin": ["Ethiopia"]}}
+    """Section 6.1: JSON string of origin objects becomes list of dicts."""
+    brew_dict = {**_minimal_dict(), "coffee": {"origins": [{"country": "Ethiopia"}]}}
     row = _make_row(tmp_db, brew_dict)
     result = serialise.row_to_brew_dict(row)
-    assert result["coffee"]["origin"] == ["Ethiopia"]
-    assert isinstance(result["coffee"]["origin"], list)
+    assert result["coffee"]["origins"] == [{"country": "Ethiopia"}]
+    assert isinstance(result["coffee"]["origins"], list)
 
 
 def test_row_to_brew_dict_origin_multi(tmp_db):
     """AC-8: multi-origin blend round-trips correctly."""
-    brew_dict = {**_minimal_dict(), "coffee": {"origin": ["Ethiopia", "Colombia"]}}
+    brew_dict = {**_minimal_dict(), "coffee": {"origins": [
+        {"country": "Ethiopia"},
+        {"country": "Colombia"},
+    ]}}
     row = _make_row(tmp_db, brew_dict)
     result = serialise.row_to_brew_dict(row)
-    assert result["coffee"]["origin"] == ["Ethiopia", "Colombia"]
+    assert result["coffee"]["origins"] == [
+        {"country": "Ethiopia"},
+        {"country": "Colombia"},
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +166,7 @@ def test_rows_to_brewspec_document_structure(tmp_db):
     rows = db_module.get_all_brews(tmp_db)
     doc = serialise.rows_to_brewspec_document(rows)
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.4"
+    assert doc["brewspec_version"] == "0.5"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
     assert len(doc["brews"]) == 1

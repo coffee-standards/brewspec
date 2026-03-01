@@ -1,0 +1,15 @@
+# Invalid: coffee.origin string array format is not valid in BrewSpec v0.5.
+# The coffee.origin field was removed in v0.5 and replaced by coffee.origins
+# (structured object array). Because the coffee object enforces
+# additionalProperties: false, any key not in the v0.5 coffee property list
+# causes validation failure. To migrate, rename 'origin' to 'origins' and
+# wrap each string in an object: { country: "Ethiopia" }.
+brewspec_version: "0.5"
+brews:
+  - date: "2026-02-28"
+    type: "pour_over"
+    dose_g: 18.0
+    water_weight_g: 280.0
+    coffee:
+      origin:
+        - "Ethiopia"

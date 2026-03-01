@@ -1,4 +1,4 @@
-brewspec_version: "0.4"
+brewspec_version: "0.5"
 brews:
   - date: "2026-02-21"
     type: "pour_over"
@@ -9,7 +9,8 @@ brews:
     coffee:
       roast_date: "2026-01-20"
       type: "single_origin"
-      origin: ["Ethiopia"]
+      origins:
+        - country: "Ethiopia"
     result:
       ratings:
         overall: 4
@@ -20,7 +21,9 @@ brews:
     water_weight_g: 500
     coffee:
       type: "blend"
-      origin: ["Ethiopia", "Colombia"]
+      origins:
+        - country: "Ethiopia"
+        - country: "Colombia"
     result:
       ratings:
         overall: 3

@@ -175,6 +175,9 @@ BrewSpec v0.4 uses **JSON Schema Draft 2020-12**.
 - [`examples/invalid/empty_brews_array.yaml`](./examples/invalid/empty_brews_array.yaml)
 - [`examples/invalid/v0.1_format.yaml`](./examples/invalid/v0.1_format.yaml) — v0.1 structure with nested dose_g
 - [`examples/invalid/zero_duration.yaml`](./examples/invalid/zero_duration.yaml) — duration_s: 0
+- [`examples/invalid/invalid_date_no_z.yaml`](./examples/invalid/invalid_date_no_z.yaml) — datetime string without Z suffix (`YYYY-MM-DDTHH:MM:SS` without the required UTC marker)
+- [`examples/invalid/invalid_grind_freeform.yaml`](./examples/invalid/invalid_grind_freeform.yaml) — freeform grind value not in the 7-value enum
+- [`examples/invalid/invalid_tds_at_brew_level.yaml`](./examples/invalid/invalid_tds_at_brew_level.yaml) — `tds` placed at the brew level (moved to `result.tds` in v0.4)
 
 ---
 

@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput, RatingsInput
+from brewlog.models import BrewInput, CoffeeInput, OriginInput, WaterInput, ResultInput, RatingsInput
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def _insert_full(db_path):
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
                 type="single_origin",
-                origin=["Ethiopia"],
+                origins=[OriginInput(country="Ethiopia")],
                 varietal="Heirloom",
                 process="Washed",
             ),

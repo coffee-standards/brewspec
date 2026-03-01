@@ -9,7 +9,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module, schema as schema_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput
+from brewlog.models import BrewInput, CoffeeInput, OriginInput, WaterInput, ResultInput
 
 
 def _insert_brew(db_path, brew: BrewInput):
@@ -58,7 +58,10 @@ def _three_brews():
             water_weight_g=300.0,
             duration_s=240,
             coffee=CoffeeInput(
-                origin=["Ethiopia", "Colombia"],
+                origins=[
+                    OriginInput(country="Ethiopia"),
+                    OriginInput(country="Colombia"),
+                ],
                 type="blend",
             ),
         ),
@@ -141,7 +144,11 @@ def test_roundtrip_origin_array_preserved(tmp_path, monkeypatch):
         dose_g=20.0,
         water_weight_g=300.0,
         coffee=CoffeeInput(
-            origin=["Ethiopia", "Colombia", "Guatemala"],
+            origins=[
+                OriginInput(country="Ethiopia"),
+                OriginInput(country="Colombia"),
+                OriginInput(country="Guatemala"),
+            ],
             type="blend",
         ),
     )
@@ -161,8 +168,12 @@ def test_roundtrip_origin_array_preserved(tmp_path, monkeypatch):
         rows = db_mod.list_brews(conn, all_rows=True)
         assert len(rows) == 1
         import json as json_mod
-        origin = json_mod.loads(rows[0]["coffee_origin"])
-        assert origin == ["Ethiopia", "Colombia", "Guatemala"]
+        origins = json_mod.loads(rows[0]["coffee_origins"])
+        assert origins == [
+            {"country": "Ethiopia"},
+            {"country": "Colombia"},
+            {"country": "Guatemala"},
+        ]
     finally:
         conn.close()
 

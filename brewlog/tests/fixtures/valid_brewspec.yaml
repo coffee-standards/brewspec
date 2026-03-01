@@ -1,4 +1,4 @@
-brewspec_version: "0.4"
+brewspec_version: "0.5"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
@@ -12,8 +12,8 @@ brews:
     coffee:
       roast_date: "2026-01-20"
       type: single_origin
-      origin:
-        - Ethiopia
+      origins:
+        - country: Ethiopia
       varietal: Heirloom
       process: Washed
     water:

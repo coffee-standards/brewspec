@@ -8,7 +8,7 @@ and the Security parameterised-query requirement.
 import json
 
 from brewlog import db as db_module
-from brewlog.models import BrewInput, CoffeeInput, WaterInput, ResultInput, RatingsInput
+from brewlog.models import BrewInput, CoffeeInput, OriginInput, WaterInput, ResultInput, RatingsInput
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ def _full_brew():
         coffee=CoffeeInput(
             roast_date="2026-01-20",
             type="single_origin",
-            origin=["Ethiopia"],
+            origins=[OriginInput(country="Ethiopia")],
             varietal="Heirloom",
             process="Washed",
         ),
@@ -133,26 +133,32 @@ def test_insert_brew_all_fields(tmp_db):
 
 
 def test_insert_brew_origin_serialised(tmp_db):
-    """Section 3.1: coffee_origin stored as JSON string."""
+    """Section 3.1: coffee_origins stored as JSON string of origin objects."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
         water_weight_g=280.0,
-        coffee=CoffeeInput(origin=["Ethiopia", "Colombia"]),
+        coffee=CoffeeInput(origins=[
+            OriginInput(country="Ethiopia"),
+            OriginInput(country="Colombia"),
+        ]),
     )
     brew_id = db_module.insert_brew(brew, tmp_db)
     row = db_module.get_brew(brew_id, tmp_db)
-    stored_origin = row["coffee_origin"]
-    assert isinstance(stored_origin, str)
-    assert json.loads(stored_origin) == ["Ethiopia", "Colombia"]
+    stored_origins = row["coffee_origins"]
+    assert isinstance(stored_origins, str)
+    assert json.loads(stored_origins) == [
+        {"country": "Ethiopia"},
+        {"country": "Colombia"},
+    ]
 
 
 def test_insert_brew_no_coffee_origin_is_null(tmp_db):
-    """Section 3.1: NULL stored when no origin provided."""
+    """Section 3.1: NULL stored when no origins provided."""
     brew_id = db_module.insert_brew(_minimal_brew(), tmp_db)
     row = db_module.get_brew(brew_id, tmp_db)
-    assert row["coffee_origin"] is None
+    assert row["coffee_origins"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +266,7 @@ def test_insert_brew_dict_full(tmp_db):
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
-            "origin": ["Ethiopia"],
+            "origins": [{"country": "Ethiopia"}],
             "varietal": "Heirloom",
             "process": "Washed",
         },
@@ -275,7 +281,7 @@ def test_insert_brew_dict_full(tmp_db):
     row = db_module.get_brew(brew_id, tmp_db)
     assert row["method"] == "Hario V60"
     assert row["coffee_type"] == "single_origin"
-    assert json.loads(row["coffee_origin"]) == ["Ethiopia"]
+    assert json.loads(row["coffee_origins"]) == [{"country": "Ethiopia"}]
     assert row["water_ppm"] == 150.0
     assert row["result_tds"] == 1.38
     assert row["result_ey"] == 20.5

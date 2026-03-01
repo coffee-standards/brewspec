@@ -1,4 +1,4 @@
-brewspec_version: "0.4"
+brewspec_version: "0.5"
 brews:
   - date: "2026-02-18T07:15:00Z"
     type: "hybrid"
@@ -9,7 +9,9 @@ brews:
     coffee:
       roast_date: "2026-02-01"
       type: "blend"
-      origin: ["Ethiopia", "Colombia"]
+      origins:
+        - country: "Ethiopia"
+        - country: "Colombia"
       varietal: "Mixed"
       process: "Natural"
     water:

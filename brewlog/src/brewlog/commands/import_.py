@@ -1,7 +1,7 @@
 """
 `brewlog import` command.
 
-Imports brews from a BrewSpec v0.4 YAML or JSON file.
+Imports brews from a BrewSpec v0.5 YAML or JSON file.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
@@ -17,9 +17,9 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v0.4 BrewSpec files. AC-13.
+# Verbatim error message for non-v0.5 BrewSpec files. AC-13.
 # The {version} placeholder is replaced with the version string found in the file.
-_V04_REQUIRED_MSG = """\
+_V05_REQUIRED_MSG = """\
 Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.3.
 BrewLog v0.3 requires BrewSpec v0.4.
 
@@ -38,7 +38,7 @@ Full migration guide: https://github.com/coffee-standards/brewspec"""
 @click.command("import")
 @click.argument("path", type=str)
 def import_cmd(path: str) -> None:
-    """Import brews from a BrewSpec v0.4 YAML or JSON file."""
+    """Import brews from a BrewSpec v0.5 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
     in_path = serialise.validate_import_path(path)
@@ -76,11 +76,11 @@ def import_cmd(path: str) -> None:
         click.echo("Error: file content is not a valid BrewSpec document.", err=True)
         sys.exit(1)
 
-    # -- AC-13: Check for non-v0.4 BrewSpec version before schema validation --
+    # -- AC-13: Check for non-v0.5 BrewSpec version before schema validation --
     file_version = str(doc.get("brewspec_version", ""))
-    if file_version != "0.4":
+    if file_version != "0.5":
         version_label = file_version if file_version else "(unknown)"
-        click.echo(_V04_REQUIRED_MSG.format(version=version_label), err=True)
+        click.echo(_V05_REQUIRED_MSG.format(version=version_label), err=True)
         sys.exit(1)
 
     # -- Schema validation (before any DB writes) --

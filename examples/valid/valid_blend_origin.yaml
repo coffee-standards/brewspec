@@ -1,0 +1,21 @@
+brewspec_version: "0.5"
+brews:
+  - date: "2026-02-28"
+    type: "pour_over"
+    dose_g: 18.0
+    water_weight_g: 270.0
+    brew_ratio: 15.0
+    method: "Hario V60"
+    grind: "medium_fine"
+    coffee:
+      type: "blend"
+      origins:
+        - name: "Ethiopia component"
+          country: "Ethiopia"
+          region: "Yirgacheffe"
+          process: "Washed"
+        - name: "Colombia component"
+          country: "Colombia"
+          region: "Huila"
+          process: "Natural"
+          producer: "El Paraiso"

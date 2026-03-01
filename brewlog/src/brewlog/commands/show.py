@@ -125,7 +125,7 @@ def show(id: int) -> None:
     # -- Coffee section --
     has_coffee = any(
         row[f] is not None
-        for f in ("coffee_roast_date", "coffee_type", "coffee_origin",
+        for f in ("coffee_roast_date", "coffee_type", "coffee_origins",
                   "coffee_varietal", "coffee_process")
     )
     if has_coffee:
@@ -136,9 +136,16 @@ def show(id: int) -> None:
             _print_field("Roast date:", row["coffee_roast_date"])
         if row["coffee_type"] is not None:
             _print_field("Type:", row["coffee_type"])
-        if row["coffee_origin"] is not None:
-            origins = json.loads(row["coffee_origin"])
-            _print_field("Origin:", ", ".join(origins))
+        if row["coffee_origins"] is not None:
+            origins_data = json.loads(row["coffee_origins"])
+            # Display each origin: prefer name, then country, then raw dict
+            parts = []
+            for o in origins_data:
+                if isinstance(o, dict):
+                    parts.append(o.get("name") or o.get("country") or str(o))
+                else:
+                    parts.append(str(o))
+            _print_field("Origins:", ", ".join(parts))
         if row["coffee_varietal"] is not None:
             _print_field("Varietal:", row["coffee_varietal"])
         if row["coffee_process"] is not None:

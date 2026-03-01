@@ -1,4 +1,4 @@
-brewspec_version: "0.4"
+brewspec_version: "0.5"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
@@ -16,9 +16,9 @@ brews:
     method: French Press
     duration_s: 240
     coffee:
-      origin:
-        - Ethiopia
-        - Colombia
+      origins:
+        - country: Ethiopia
+        - country: Colombia
       type: blend
     result:
       ratings:

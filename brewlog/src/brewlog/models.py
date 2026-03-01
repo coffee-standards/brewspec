@@ -7,7 +7,7 @@ These models serve two purposes:
   2. Secondary validation layer — after JSON Schema validation on import, each
      brew can optionally be run through BrewInput for additional checks.
 
-Field names mirror BrewSpec v0.4 snake_case names exactly.
+Field names mirror BrewSpec v0.5 snake_case names exactly.
 """
 
 from __future__ import annotations
@@ -35,6 +35,40 @@ DATE_PATTERN = re.compile(
 
 
 # ---------------------------------------------------------------------------
+# OriginInput
+# ---------------------------------------------------------------------------
+
+class OriginInput(BaseModel):
+    """A single origin record within a coffee.origins array. All fields optional."""
+
+    name: Optional[str] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
+    subregion: Optional[str] = None
+    producer: Optional[str] = None
+    process: Optional[str] = None
+    lot: Optional[str] = None
+    harvest_year: Optional[int] = None
+
+    @field_validator("name", "country", "region", "subregion", "producer", "process", "lot")
+    @classmethod
+    def validate_origin_string(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            if len(v.strip()) == 0:
+                raise ValueError("value must not be empty when provided")
+            if len(v) > 100:
+                raise ValueError("value must not exceed 100 characters")
+        return v
+
+    @field_validator("harvest_year")
+    @classmethod
+    def validate_harvest_year(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and not (1900 <= v <= 2100):
+            raise ValueError("harvest_year must be between 1900 and 2100 inclusive")
+        return v
+
+
+# ---------------------------------------------------------------------------
 # CoffeeInput
 # ---------------------------------------------------------------------------
 
@@ -43,7 +77,7 @@ class CoffeeInput(BaseModel):
 
     roast_date: Optional[str] = None
     type: Optional[str] = None          # "single_origin" | "blend"
-    origin: Optional[list[str]] = None
+    origins: Optional[list[OriginInput]] = None
     varietal: Optional[str] = None
     process: Optional[str] = None
 
@@ -63,17 +97,14 @@ class CoffeeInput(BaseModel):
             )
         return v
 
-    @field_validator("origin")
+    @field_validator("origins")
     @classmethod
-    def validate_origin(cls, v: Optional[list[str]]) -> Optional[list[str]]:
-        if v is not None:
-            if len(v) == 0:
-                raise ValueError("origin must have at least one entry")
-            for item in v:
-                if not isinstance(item, str) or len(item.strip()) == 0:
-                    raise ValueError("each origin entry must be a non-empty string")
-                if len(item) > 100:
-                    raise ValueError("each origin entry must not exceed 100 characters")
+    def validate_origins(cls, v: Optional[list[OriginInput]]) -> Optional[list[OriginInput]]:
+        if v is not None and len(v) == 0:
+            raise ValueError(
+                "origins must have at least one entry when present; "
+                "omit the field to record no origin data"
+            )
         return v
 
     @field_validator("varietal", "process")
@@ -113,15 +144,27 @@ class EquipmentInput(BaseModel):
 
     grinder: Optional[str] = None
     brewer: Optional[str] = None
+    grinder_setting: Optional[str] = None
+    notes: Optional[str] = None
 
-    @field_validator("grinder", "brewer")
+    @field_validator("grinder", "brewer", "grinder_setting")
     @classmethod
-    def validate_equipment_strings(cls, v: Optional[str]) -> Optional[str]:
+    def validate_equipment_short_text(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             if len(v.strip()) == 0:
                 raise ValueError("value must not be empty when provided")
             if len(v) > 100:
                 raise ValueError("value must not exceed 100 characters")
+        return v
+
+    @field_validator("notes")
+    @classmethod
+    def validate_equipment_notes(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            if len(v.strip()) == 0:
+                raise ValueError("notes must not be empty when provided")
+            if len(v) > 2000:
+                raise ValueError("notes must not exceed 2000 characters")
         return v
 
 
@@ -195,7 +238,7 @@ class ResultInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 class BrewInput(BaseModel):
-    """Primary model for a brew log entry. Validates all BrewSpec v0.4 constraints."""
+    """Primary model for a brew log entry. Validates all BrewSpec v0.5 constraints."""
 
     # Required fields (no default)
     date: str
@@ -204,6 +247,7 @@ class BrewInput(BaseModel):
     water_weight_g: float
 
     # Optional brew parameters
+    brew_ratio: Optional[float] = None
     method: Optional[str] = None
     water_volume_ml: Optional[float] = None
     water_temp_c: Optional[float] = None
@@ -258,6 +302,13 @@ class BrewInput(BaseModel):
     # ------------------------------------------------------------------
     # Optional numeric field validators
     # ------------------------------------------------------------------
+
+    @field_validator("brew_ratio")
+    @classmethod
+    def validate_brew_ratio(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v <= 0:
+            raise ValueError("brew_ratio must be greater than 0")
+        return v
 
     @field_validator("water_volume_ml")
     @classmethod

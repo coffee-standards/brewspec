@@ -1,4 +1,4 @@
-brewspec_version: "0.4"
+brewspec_version: "0.5"
 brews:
   - date: "2026-02-20T07:30:00Z"
     type: "pour_over"
@@ -12,7 +12,9 @@ brews:
     coffee:
       roast_date: "2026-02-01"
       type: "single_origin"
-      origin: ["Ethiopia", "Yirgacheffe"]
+      origins:
+        - country: "Ethiopia"
+        - country: "Yirgacheffe"
       varietal: "Heirloom"
       process: "Washed"
     water:

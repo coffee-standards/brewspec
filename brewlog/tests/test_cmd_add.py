@@ -234,7 +234,9 @@ def test_add_origin_multiple(runner_with_db, tmp_path, monkeypatch):
     try:
         row = db_mod.get_brew(1, conn)
         import json
-        assert json.loads(row["coffee_origin"]) == ["Ethiopia", "Colombia"]
+        origins = json.loads(row["coffee_origins"])
+        # --origin flag maps each string to an OriginInput with country set
+        assert origins == [{"country": "Ethiopia"}, {"country": "Colombia"}]
     finally:
         conn.close()
 

@@ -1,12 +1,12 @@
 """
 Unit tests for Pydantic models in brewlog.models.
-Tests map to input validation requirements for BrewSpec v0.4.
+Tests map to input validation requirements for BrewSpec v0.5.
 """
 
 import pytest
 from pydantic import ValidationError
 
-from brewlog.models import BrewInput, CoffeeInput, EquipmentInput, WaterInput
+from brewlog.models import BrewInput, CoffeeInput, EquipmentInput, OriginInput, WaterInput
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ def test_brew_input_valid_minimal():
 
 
 def test_brew_input_valid_all_fields():
-    """All optional fields accepted (v0.4: result replaces tds/ey/rating)."""
+    """All optional fields accepted (v0.5: origins, brew_ratio, equipment fields)."""
     from brewlog.models import ResultInput, RatingsInput
 
     brew = BrewInput(
@@ -39,6 +39,7 @@ def test_brew_input_valid_all_fields():
         type="immersion",
         dose_g=20.0,
         water_weight_g=300.0,
+        brew_ratio=15.0,
         method="French Press",
         water_volume_ml=300.0,
         water_temp_c=95.0,
@@ -48,7 +49,10 @@ def test_brew_input_valid_all_fields():
         coffee=CoffeeInput(
             roast_date="2026-01-15",
             type="blend",
-            origin=["Ethiopia", "Colombia"],
+            origins=[
+                OriginInput(country="Ethiopia"),
+                OriginInput(country="Colombia"),
+            ],
             varietal="Bourbon",
             process="Natural",
         ),
@@ -62,13 +66,15 @@ def test_brew_input_valid_all_fields():
         ),
     )
     assert brew.method == "French Press"
+    assert brew.brew_ratio == 15.0
     assert brew.water_volume_ml == 300.0
     assert brew.water_temp_c == 95.0
     assert brew.grind == "coarse"
     assert brew.duration_s == 240
     assert brew.notes == "Smooth and balanced"
     assert brew.coffee is not None
-    assert brew.coffee.origin == ["Ethiopia", "Colombia"]
+    assert len(brew.coffee.origins) == 2
+    assert brew.coffee.origins[0].country == "Ethiopia"
     assert brew.water is not None
     assert brew.water.ppm == 120.0
     assert brew.result is not None
@@ -514,31 +520,36 @@ def test_coffee_input_type_invalid():
 
 
 # ---------------------------------------------------------------------------
-# CoffeeInput — origin validation
+# CoffeeInput — origins validation (v0.5: structured objects replace string array)
 # ---------------------------------------------------------------------------
 
-def test_coffee_input_origin_empty_list():
-    """origin=[] rejected (minItems 1)."""
+def test_coffee_input_origins_empty_list():
+    """origins=[] rejected (minItems 1)."""
     with pytest.raises(ValidationError):
-        CoffeeInput(origin=[])
+        CoffeeInput(origins=[])
 
 
-def test_coffee_input_origin_empty_item():
-    """origin=[''] rejected (each item must be non-empty string)."""
-    with pytest.raises(ValidationError):
-        CoffeeInput(origin=[""])
+def test_coffee_input_origins_empty_origin_object():
+    """origins=[{}] accepted (all fields optional on each entry)."""
+    coffee = CoffeeInput(origins=[OriginInput()])
+    assert len(coffee.origins) == 1
 
 
-def test_coffee_input_origin_multiple():
-    """origin=['Ethiopia', 'Colombia'] accepted."""
-    coffee = CoffeeInput(origin=["Ethiopia", "Colombia"])
-    assert coffee.origin == ["Ethiopia", "Colombia"]
+def test_coffee_input_origins_multiple():
+    """origins with multiple entries accepted."""
+    coffee = CoffeeInput(origins=[
+        OriginInput(country="Ethiopia"),
+        OriginInput(country="Colombia"),
+    ])
+    assert len(coffee.origins) == 2
+    assert coffee.origins[0].country == "Ethiopia"
+    assert coffee.origins[1].country == "Colombia"
 
 
-def test_coffee_input_origin_single():
-    """origin=['Ethiopia'] accepted."""
-    coffee = CoffeeInput(origin=["Ethiopia"])
-    assert coffee.origin == ["Ethiopia"]
+def test_coffee_input_origins_single():
+    """origins with a single entry accepted."""
+    coffee = CoffeeInput(origins=[OriginInput(country="Ethiopia")])
+    assert coffee.origins[0].country == "Ethiopia"
 
 
 # ---------------------------------------------------------------------------
@@ -562,7 +573,7 @@ def test_coffee_input_all_none_valid():
     coffee = CoffeeInput()
     assert coffee.roast_date is None
     assert coffee.type is None
-    assert coffee.origin is None
+    assert coffee.origins is None
 
 
 # ---------------------------------------------------------------------------
@@ -593,16 +604,16 @@ def test_coffee_input_process_maxlength_exceeded():
         CoffeeInput(process="x" * 101)
 
 
-def test_coffee_input_origin_item_maxlength_accepted():
-    """origin item of exactly 100 chars is accepted."""
-    coffee = CoffeeInput(origin=["x" * 100])
-    assert len(coffee.origin[0]) == 100
+def test_coffee_input_origins_country_maxlength_accepted():
+    """origins country of exactly 100 chars is accepted."""
+    coffee = CoffeeInput(origins=[OriginInput(country="x" * 100)])
+    assert len(coffee.origins[0].country) == 100
 
 
-def test_coffee_input_origin_item_maxlength_exceeded():
-    """origin item of 101 chars is rejected."""
+def test_coffee_input_origins_country_maxlength_exceeded():
+    """origins country of 101 chars is rejected."""
     with pytest.raises(ValidationError):
-        CoffeeInput(origin=["x" * 101])
+        CoffeeInput(origins=[OriginInput(country="x" * 101)])
 
 
 # ---------------------------------------------------------------------------

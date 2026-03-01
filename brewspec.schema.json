@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://brewspec.coffee/schema/v0.4.json",
-  "title": "BrewSpec v0.4",
+  "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
+  "title": "BrewSpec v0.5",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.4",
-      "description": "The BrewSpec version. Must be \"0.4\"."
+      "const": "0.5",
+      "description": "The BrewSpec version. Must be \"0.5\"."
     },
     "brews": {
       "type": "array",
@@ -62,6 +62,11 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "description": "Water weight in grams. Must be > 0."
+        },
+        "brew_ratio": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Water-to-coffee ratio expressed as a single float (grams of water per gram of coffee). e.g. 15.5 represents 15.5:1 or approximately 64g/L. Can be computed from water_weight_g / dose_g. When both are present, tools should validate consistency; mismatches should be surfaced as a warning, not a schema error."
         },
         "water_volume_ml": {
           "type": "number",
@@ -120,16 +125,13 @@
           "enum": ["single_origin", "blend"],
           "description": "Whether the coffee is a single origin or a blend."
         },
-        "origin": {
+        "origins": {
           "type": "array",
           "minItems": 1,
           "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100
+            "$ref": "#/$defs/origin"
           },
-          "description": "Origin country or region(s). Array supports blends with multiple origins.",
-          "examples": [["Ethiopia"], ["Ethiopia", "Colombia"]]
+          "description": "Structured origin records. Array to support blends. Each entry is an origin object with all fields optional. minItems: 1 — omit the field entirely to record no origin data."
         },
         "varietal": {
           "type": "string",
@@ -142,8 +144,71 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 100,
-          "description": "Processing method. Freeform.",
+          "description": "Processing method. Freeform. Records the green coffee processing method at the coffee object level. For per-origin process in blends, use origins[].process.",
           "examples": ["Washed", "Natural", "Honey"]
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A single origin record within a coffee.origins array. All fields optional. Supports single-origin and blend records.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Human-readable label for this origin entry.",
+          "examples": ["Ethiopia Yirgacheffe Natural", "Brazil Fazenda Santa Ines"]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Country of production.",
+          "examples": ["Ethiopia", "Colombia", "Brazil"]
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "State, province, or named growing region within the country.",
+          "examples": ["Yirgacheffe", "Huila", "Minas Gerais"]
+        },
+        "subregion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "District, zone, or sub-area within the region.",
+          "examples": ["Kochere", "Pitalito"]
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Farm, estate, cooperative, or washing station name.",
+          "examples": ["Daye Bensa Washing Station", "Fazenda Santa Ines"]
+        },
+        "process": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Green coffee processing method at origin. Distinct from the brew-level coffee.process field.",
+          "examples": ["Washed", "Natural", "Honey"]
+        },
+        "lot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Lot or batch identifier from the producer.",
+          "examples": ["Lot 42", "Export Grade 1"]
+        },
+        "harvest_year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100,
+          "description": "Year the crop was harvested. Four-digit integer.",
+          "examples": [2025, 2024]
         }
       }
     },
@@ -177,6 +242,20 @@
           "maxLength": 100,
           "description": "Brewer or brewing vessel. Freeform.",
           "examples": ["Hario V60 02", "AeroPress Original", "Moka Pot"]
+        },
+        "grinder_setting": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Grinder dial position or click setting used for this brew. Freeform; grinder setting systems are incompatible across brands.",
+          "examples": ["21", "21 clicks", "3.2.1", "setting 21"]
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Equipment state notes — observations about maintenance, calibration, filter type, or burr age. Distinct from brew-level notes, which record preparation observations.",
+          "examples": ["Burrs replaced 2026-01", "AeroPress rubber seal replaced"]
         }
       }
     },
