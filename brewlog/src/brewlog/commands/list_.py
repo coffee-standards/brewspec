@@ -10,6 +10,11 @@ v0.4 changes:
 - Legacy fallback: Overall Rating falls back to the `overall` key inside
   the `result_ratings` JSON column for v0.2 rows where
   `result_rating_overall` is NULL.
+
+fix(brewlog-fix-list-hide-empty-cols):
+- Extended column visibility to all optional columns: EY, Brix, Tasting Notes,
+  Grinder, and Brewer are now hidden when every row in the result set has a
+  null value for that column.
 """
 
 from __future__ import annotations
@@ -81,7 +86,7 @@ _RATING_WIDTH = 14
 
 
 # ---------------------------------------------------------------------------
-# Column visibility detection — Item 4
+# Column visibility detection — Item 4 + brewlog-fix-list-hide-empty-cols
 # ---------------------------------------------------------------------------
 
 
@@ -98,6 +103,15 @@ def _has_any_rating(rows) -> bool:
     return any(_get_overall_rating(row) is not None for row in rows)
 
 
+def _has_any_col(rows, col: str) -> bool:
+    """Return True if any row has a non-null, non-empty value for the given column."""
+    for row in rows:
+        val = row[col]
+        if val is not None and val != "":
+            return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Table rendering
 # ---------------------------------------------------------------------------
@@ -107,6 +121,11 @@ def _render_table(rows) -> None:
     """Render the brew table, showing only columns that have data."""
     show_method = _has_any_method(rows)
     show_rating = _has_any_rating(rows)
+    show_ey = _has_any_col(rows, "result_ey")
+    show_brix = _has_any_col(rows, "result_brix")
+    show_tasting_notes = _has_any_col(rows, "result_tasting_notes")
+    show_grinder = _has_any_col(rows, "equipment_grinder")
+    show_brewer = _has_any_col(rows, "equipment_brewer")
 
     # Build header
     header_parts = [
@@ -130,6 +149,26 @@ def _render_table(rows) -> None:
     header_parts.append(f"{'Water (g)':>{10}}")
     sep_parts.append(f"{'':->{ 10}}")
 
+    if show_ey:
+        header_parts.append(f"{'EY (%)':>{8}}")
+        sep_parts.append(f"{'':->{ 8}}")
+
+    if show_brix:
+        header_parts.append(f"{'Brix':>{6}}")
+        sep_parts.append(f"{'':->{ 6}}")
+
+    if show_tasting_notes:
+        header_parts.append(f"{'Tasting Notes':<{30}}")
+        sep_parts.append(f"{'':->{ 30}}")
+
+    if show_grinder:
+        header_parts.append(f"{'Grinder':<{20}}")
+        sep_parts.append(f"{'':->{ 20}}")
+
+    if show_brewer:
+        header_parts.append(f"{'Brewer':<{20}}")
+        sep_parts.append(f"{'':->{ 20}}")
+
     if show_rating:
         header_parts.append(f"{'Overall Rating':>{_RATING_WIDTH}}")
         sep_parts.append(f"{'':->{ _RATING_WIDTH}}")
@@ -150,6 +189,33 @@ def _render_table(rows) -> None:
 
         parts.append(f"{row['dose_g']:>{9}.1f}")
         parts.append(f"{row['water_weight_g']:>{10}.1f}")
+
+        if show_ey:
+            ey = row["result_ey"]
+            parts.append(f"{ey:>{8}.1f}" if ey is not None else f"{'—':>{8}}")
+
+        if show_brix:
+            brix = row["result_brix"]
+            parts.append(f"{brix:>{6}.2f}" if brix is not None else f"{'—':>{6}}")
+
+        if show_tasting_notes:
+            tn = row["result_tasting_notes"] or "—"
+            # Truncate long tasting notes to fit the column
+            if len(tn) > 28:
+                tn = tn[:25] + "..."
+            parts.append(f"{tn:<{30}}")
+
+        if show_grinder:
+            grinder = row["equipment_grinder"] or "—"
+            if len(grinder) > 18:
+                grinder = grinder[:15] + "..."
+            parts.append(f"{grinder:<{20}}")
+
+        if show_brewer:
+            brewer = row["equipment_brewer"] or "—"
+            if len(brewer) > 18:
+                brewer = brewer[:15] + "..."
+            parts.append(f"{brewer:<{20}}")
 
         if show_rating:
             rating_val = _get_overall_rating(row)

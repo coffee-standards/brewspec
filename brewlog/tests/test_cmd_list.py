@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from brewlog.cli import cli
 from brewlog import db as db_module
-from brewlog.models import BrewInput, ResultInput, RatingsInput
+from brewlog.models import BrewInput, EquipmentInput, ResultInput, RatingsInput
 
 
 @pytest.fixture
@@ -175,3 +175,231 @@ def test_list_all(runner_with_db, tmp_path):
     lines = result.output.strip().split("\n")
     data_lines = [ln for ln in lines if "2026-" in ln]
     assert len(data_lines) == 25
+
+
+# ---------------------------------------------------------------------------
+# Hide empty optional columns (brewlog-fix-list-hide-empty-cols)
+# ---------------------------------------------------------------------------
+
+
+def _insert_brew_with_ey(db_path, ey: float) -> None:
+    """Insert a brew with an EY value."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-01T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            result=ResultInput(ey=ey),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def _insert_brew_with_brix(db_path, brix: float) -> None:
+    """Insert a brew with a Brix value."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-01T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            result=ResultInput(brix=brix),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def _insert_brew_with_tasting_notes(db_path, notes: str) -> None:
+    """Insert a brew with tasting notes."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-01T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            result=ResultInput(tasting_notes=notes),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def _insert_brew_with_grinder(db_path, grinder: str) -> None:
+    """Insert a brew with a grinder value."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-01T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            equipment=EquipmentInput(grinder=grinder),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+def _insert_brew_with_brewer(db_path, brewer: str) -> None:
+    """Insert a brew with a brewer value."""
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        brew = BrewInput(
+            date="2026-02-01T08:30:00Z",
+            type="pour_over",
+            dose_g=18.0,
+            water_weight_g=280.0,
+            equipment=EquipmentInput(brewer=brewer),
+        )
+        db_module.insert_brew(brew, conn)
+    finally:
+        conn.close()
+
+
+class TestListHideEmptyOptionalColumns:
+    """Optional columns are hidden when every row in the result set has null for that column."""
+
+    # EY column ---
+
+    def test_ey_column_hidden_when_all_null(self, runner_with_db, tmp_path):
+        """EY column does not appear when no brew has an EY value."""
+        _populate_brews(tmp_path / "test.db", 2)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "EY" not in header
+
+    def test_ey_column_shown_when_at_least_one_brew_has_value(
+        self, runner_with_db, tmp_path
+    ):
+        """EY column appears when at least one brew has a non-null EY."""
+        _populate_brews(tmp_path / "test.db", 1)
+        _insert_brew_with_ey(tmp_path / "test.db", ey=20.5)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "EY" in header
+
+    # Brix column ---
+
+    def test_brix_column_hidden_when_all_null(self, runner_with_db, tmp_path):
+        """Brix column does not appear when no brew has a Brix value."""
+        _populate_brews(tmp_path / "test.db", 2)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Brix" not in header
+
+    def test_brix_column_shown_when_at_least_one_brew_has_value(
+        self, runner_with_db, tmp_path
+    ):
+        """Brix column appears when at least one brew has a non-null Brix."""
+        _populate_brews(tmp_path / "test.db", 1)
+        _insert_brew_with_brix(tmp_path / "test.db", brix=1.38)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Brix" in header
+
+    # Tasting Notes column ---
+
+    def test_tasting_notes_column_hidden_when_all_null(self, runner_with_db, tmp_path):
+        """Tasting Notes column does not appear when no brew has tasting notes."""
+        _populate_brews(tmp_path / "test.db", 2)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Tasting" not in header
+
+    def test_tasting_notes_column_shown_when_at_least_one_brew_has_value(
+        self, runner_with_db, tmp_path
+    ):
+        """Tasting Notes column appears when at least one brew has tasting notes."""
+        _populate_brews(tmp_path / "test.db", 1)
+        _insert_brew_with_tasting_notes(tmp_path / "test.db", notes="Floral, citrus")
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Tasting" in header
+
+    # Grinder column ---
+
+    def test_grinder_column_hidden_when_all_null(self, runner_with_db, tmp_path):
+        """Grinder column does not appear when no brew has a grinder value."""
+        _populate_brews(tmp_path / "test.db", 2)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Grinder" not in header
+
+    def test_grinder_column_shown_when_at_least_one_brew_has_value(
+        self, runner_with_db, tmp_path
+    ):
+        """Grinder column appears when at least one brew has a grinder."""
+        _populate_brews(tmp_path / "test.db", 1)
+        _insert_brew_with_grinder(tmp_path / "test.db", grinder="Comandante C40")
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Grinder" in header
+
+    # Brewer column ---
+
+    def test_brewer_column_hidden_when_all_null(self, runner_with_db, tmp_path):
+        """Brewer column does not appear when no brew has a brewer value."""
+        _populate_brews(tmp_path / "test.db", 2)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Brewer" not in header
+
+    def test_brewer_column_shown_when_at_least_one_brew_has_value(
+        self, runner_with_db, tmp_path
+    ):
+        """Brewer column appears when at least one brew has a brewer."""
+        _populate_brews(tmp_path / "test.db", 1)
+        _insert_brew_with_brewer(tmp_path / "test.db", brewer="Hario V60")
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "Brewer" in header
+
+    # Mandatory columns always present ---
+
+    def test_mandatory_columns_always_shown(self, runner_with_db, tmp_path):
+        """ID, Date, Type, Dose, and Water columns are always present."""
+        _populate_brews(tmp_path / "test.db", 1)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        header = result.output.strip().split("\n")[0]
+        assert "ID" in header
+        assert "Date" in header
+        assert "Type" in header
+        assert "Dose" in header
+        assert "Water" in header
+
+    # Data values in rows ---
+
+    def test_ey_value_appears_in_data_row_when_column_shown(
+        self, runner_with_db, tmp_path
+    ):
+        """When EY column is visible, the actual EY value appears in the data row."""
+        _insert_brew_with_ey(tmp_path / "test.db", ey=21.3)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        assert "21.3" in result.output
+
+    def test_brix_value_appears_in_data_row_when_column_shown(
+        self, runner_with_db, tmp_path
+    ):
+        """When Brix column is visible, the actual Brix value appears in the data row."""
+        _insert_brew_with_brix(tmp_path / "test.db", brix=1.40)
+        result = runner_with_db.invoke(cli, ["list"])
+        assert result.exit_code == 0
+        assert "1.4" in result.output
