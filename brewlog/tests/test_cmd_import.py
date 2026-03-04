@@ -256,18 +256,15 @@ def test_import_v04_exact_error_message(runner_with_db):
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
     expected = (
-        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.5.\n'
-        'BrewLog v0.5 requires BrewSpec v0.5.\n'
+        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.6.\n'
+        'BrewLog v0.6 requires BrewSpec v0.6.\n'
         '\n'
-        'To migrate your file from v0.4 to v0.5, make the following changes:\n'
-        '  1. Change \'brewspec_version\' from "0.4" to "0.5"\n'
-        '  2. Replace \'coffee.origin\' (string array) with \'coffee.origins\' (object array):\n'
-        '     Before: coffee:\n'
-        '               origin: ["Ethiopia", "Colombia"]\n'
-        '     After:  coffee:\n'
-        '               origins:\n'
-        '                 - country: "Ethiopia"\n'
-        '                 - country: "Colombia"\n'
+        'To migrate your file from v0.5 to v0.6, make the following changes:\n'
+        '  1. Bump brewspec_version from "0.5" to "0.6"\n'
+        '  2. Convert equipment.grinder_setting from string to number (e.g. "21" \u2192 21)\n'
+        '  3. Remove water_volume_ml\n'
+        '  4. Move coffee.process to coffee.origins[].process\n'
+        '  5. Move coffee.varietal to coffee.origins[].varietal\n'
         '\n'
         'Full migration guide: https://github.com/coffee-standards/brewspec'
     )

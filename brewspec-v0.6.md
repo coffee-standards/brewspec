@@ -83,7 +83,7 @@ What v0.6 still defers to future versions:
 
 | Field | Type | Required | Constraints | Description | Examples |
 |-------|------|----------|-------------|-------------|----------|
-| `name` | string | Optional | minLength 1, maxLength 100 | Human-readable label for this origin entry. | `"Ethiopia Yirgacheffe Natural"` |
+| `name` | string | Optional | minLength 1, maxLength 100 | Descriptive name for this origin component. Plays the same role at the component level as coffee.name does at the coffee level. For single-origin coffees it will typically match coffee.name; for blends it is the name of this specific component (e.g. 'Brazil Natural', 'Colombia Washed'). | `"Ethiopia Yirgacheffe Natural"` |
 | `country` | string | Optional | minLength 1, maxLength 100 | Country of production. | `"Ethiopia"`, `"Colombia"` |
 | `region` | string | Optional | minLength 1, maxLength 100 | State, province, or named growing region. | `"Yirgacheffe"`, `"Huila"` |
 | `subregion` | string | Optional | minLength 1, maxLength 100 | District, zone, or sub-area within the region. | `"Kochere"` |

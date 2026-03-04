@@ -20,18 +20,15 @@ from brewlog import db, schema, serialise
 # Verbatim error message for non-v0.6 BrewSpec files. AC-25/MED-2.
 # The {version} placeholder is replaced with the version string found in the file.
 _V06_REQUIRED_MSG = """\
-Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.5.
-BrewLog v0.5 requires BrewSpec v0.5.
+Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.6.
+BrewLog v0.6 requires BrewSpec v0.6.
 
-To migrate your file from v0.4 to v0.5, make the following changes:
-  1. Change 'brewspec_version' from "0.4" to "0.5"
-  2. Replace 'coffee.origin' (string array) with 'coffee.origins' (object array):
-     Before: coffee:
-               origin: ["Ethiopia", "Colombia"]
-     After:  coffee:
-               origins:
-                 - country: "Ethiopia"
-                 - country: "Colombia"
+To migrate your file from v0.5 to v0.6, make the following changes:
+  1. Bump brewspec_version from "0.5" to "0.6"
+  2. Convert equipment.grinder_setting from string to number (e.g. "21" → 21)
+  3. Remove water_volume_ml
+  4. Move coffee.process to coffee.origins[].process
+  5. Move coffee.varietal to coffee.origins[].varietal
 
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
