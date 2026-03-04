@@ -1,6 +1,6 @@
 # Valid example: date-only format and full result object.
 # Demonstrates YYYY-MM-DD date, grind enum, result with all fields.
-brewspec_version: "0.5"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-21"
     type: "pour_over"
@@ -16,8 +16,8 @@ brews:
       type: "single_origin"
       origins:
         - country: "Ethiopia"
-      varietal: "Heirloom"
-      process: "Washed"
+          process: "Washed"
+          varietal: "Heirloom"
     equipment:
       grinder: "Comandante C40 MK4"
       brewer: "Hario V60 02"

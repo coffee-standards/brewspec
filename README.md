@@ -27,7 +27,7 @@ Create a YAML file describing your brew:
 
 ```yaml
 # my_brew.yaml
-brewspec_version: "0.4"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "pour_over"
@@ -38,9 +38,10 @@ brews:
     coffee:
       roast_date: "2026-01-20"
       type: "single_origin"
-      origin: ["Ethiopia"]
-      varietal: "Heirloom"
-      process: "Washed"
+      name: "Ethiopia Yirgacheffe"
+      origins:
+        - country: "Ethiopia"
+          varietal: "Heirloom"
     water:
       ppm: 150
     grind: "medium_fine"
@@ -103,7 +104,7 @@ ajv validate -s brewspec.schema.json -d my_brew.yaml
 
 ### 3. Read the spec
 
-See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, constraints, and design decisions.
+See [`brewspec-v0.6.md`](./brewspec-v0.6.md) for the full field reference, constraints, and design decisions.
 
 ---
 
@@ -111,7 +112,7 @@ See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, const
 
 ```
 ├── brewspec.schema.json     # JSON Schema (canonical spec)
-├── brewspec-v0.4.md         # Human-readable spec document (current)
+├── brewspec-v0.6.md         # Human-readable spec document (current)
 ├── README.md                # This file
 ├── LICENSE                  # Apache 2.0
 ├── NOTICE                   # Copyright attribution
@@ -133,9 +134,11 @@ See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, const
 │       ├── v0.1_format.yaml
 │       └── zero_duration.yaml
 ├── versions/
-│   ├── brewspec-v0.1.md              # Archived spec (v0.1)
+│   ├── brewspec-v0.1.md     # Archived spec (v0.1)
 │   ├── brewspec-v0.2.md     # Archived spec (v0.2)
-│   └── brewspec-v0.3.md     # Archived spec (v0.3)
+│   ├── brewspec-v0.3.md     # Archived spec (v0.3)
+│   ├── brewspec-v0.4.md     # Archived spec (v0.4)
+│   └── brewspec-v0.5.md     # Archived spec (v0.5)
 ├── tests/
 │   └── test_brewspec_schema.py
 └── brewlog/                 # BrewLog CLI (reference implementation)
@@ -148,10 +151,10 @@ See [`brewspec-v0.4.md`](./brewspec-v0.4.md) for the full field reference, const
 
 ## Schema
 
-BrewSpec v0.4 uses **JSON Schema Draft 2020-12**.
+BrewSpec v0.6 uses **JSON Schema Draft 2020-12**.
 
 - **Schema file:** [`brewspec.schema.json`](./brewspec.schema.json)
-- **Version:** 0.4 (stable)
+- **Version:** 0.6 (stable)
 - **Format:** YAML or JSON (both validate against the same schema)
 
 ---
@@ -165,7 +168,7 @@ BrewSpec v0.4 uses **JSON Schema Draft 2020-12**.
 - [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with result.ratings and tasting_notes
 - [`examples/valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews; includes blend with multiple origins
 - [`examples/valid/hybrid.yaml`](./examples/valid/hybrid.yaml) — AeroPress hybrid brew with blend coffee and water ppm
-- [`examples/valid/equipment.yaml`](./examples/valid/equipment.yaml) — Full brew with equipment and all v0.4 result fields
+- [`examples/valid/equipment.yaml`](./examples/valid/equipment.yaml) — Full brew with equipment including numeric grinder_setting and all v0.6 result fields
 
 **Invalid examples** demonstrate common validation failures (useful for testing parsers):
 - [`examples/invalid/missing_version.yaml`](./examples/invalid/missing_version.yaml)
@@ -183,13 +186,13 @@ BrewSpec v0.4 uses **JSON Schema Draft 2020-12**.
 
 ## Spec Document
 
-The human-readable spec is in [`brewspec-v0.4.md`](./brewspec-v0.4.md). It includes:
+The human-readable spec is in [`brewspec-v0.6.md`](./brewspec-v0.6.md). It includes:
 - Field reference tables (types, constraints, descriptions, examples)
 - Enumeration definitions (brew types, coffee types, grind sizes)
 - Validation instructions (Python, JavaScript, CLI) with storage-time guidance
 - Design decisions (result object, grind enum, dual-format date, etc.)
-- Backward compatibility guide (v0.3 to v0.4 migration, step-by-step)
-- Archived specs: [`versions/brewspec-v0.3.md`](./versions/brewspec-v0.3.md), [`versions/brewspec-v0.2.md`](./versions/brewspec-v0.2.md), [`versions/v0.1.md`](./versions/v0.1.md)
+- Backward compatibility guide (v0.5 to v0.6 migration, step-by-step)
+- Archived specs: [`versions/brewspec-v0.5.md`](./versions/brewspec-v0.5.md), [`versions/brewspec-v0.4.md`](./versions/brewspec-v0.4.md), [`versions/brewspec-v0.3.md`](./versions/brewspec-v0.3.md), [`versions/brewspec-v0.2.md`](./versions/brewspec-v0.2.md), [`versions/brewspec-v0.1.md`](./versions/v0.1.md)
 
 ---
 
@@ -238,7 +241,7 @@ Copyright 2026 Scott Luengen. See [NOTICE](./NOTICE) for details.
 
 **BrewLog** is the reference CLI implementation for BrewSpec — a local command-line tool for logging and tracking coffee brews using the BrewSpec format.
 
-Current version: **0.3.0** (targets BrewSpec v0.4)
+Current version: **0.6.0** (targets BrewSpec v0.6)
 
 ### Install
 
@@ -295,9 +298,8 @@ brewlog add --date 2026-02-23 --type pour_over --dose 20 --water 320 \
 | `--rating-mouthfeel` | int | Mouthfeel rating, 1–5 |
 | `--roast-date` | string | Coffee roast date (YYYY-MM-DD) |
 | `--coffee-type` | enum | `single_origin` or `blend` |
-| `--origin` | string | Coffee origin (repeatable: `--origin Ethiopia --origin Colombia`) |
-| `--varietal` | string | Coffee varietal (freeform) |
-| `--process` | string | Coffee processing method (freeform) |
+| `--coffee-name` | string | Coffee product name or descriptive label (e.g. `"Ethiopia Yirgacheffe"`) |
+| `--origin` | string | Coffee origin country (repeatable: `--origin Ethiopia --origin Colombia`) |
 | `--water-ppm` | float | Water mineral content in ppm (>= 0) |
 | `--grinder` | string | Grinder name or description |
 | `--brewer` | string | Brewer/dripper name or description |
@@ -363,7 +365,7 @@ brewlog delete 3 --force   # skips confirmation
 
 #### `brewlog export` — Export to BrewSpec file
 
-Exports all brews to a BrewSpec v0.4 YAML or JSON file. File format is determined by extension (`.yaml`, `.yml`, or `.json`).
+Exports all brews to a BrewSpec v0.6 YAML or JSON file. File format is determined by extension (`.yaml`, `.yml`, or `.json`).
 
 ```bash
 brewlog export my_brews.yaml
@@ -372,7 +374,7 @@ brewlog export my_brews.json
 
 #### `brewlog import` — Import from BrewSpec file
 
-Imports brews from a BrewSpec file. Requires BrewSpec v0.4 — v0.3 and earlier files are rejected with an actionable error message.
+Imports brews from a BrewSpec file. Requires BrewSpec v0.6 — earlier versions are rejected with an actionable error message.
 
 ```bash
 brewlog import my_brews.yaml
@@ -380,7 +382,7 @@ brewlog import my_brews.yaml
 
 ### Storage
 
-BrewLog stores brews in a local SQLite database (`~/.brewlog/brews.db`). All input is validated against the BrewSpec v0.4 schema via Pydantic before writing.
+BrewLog stores brews in a local SQLite database (`~/.brewlog/brews.db`). All input is validated against the BrewSpec v0.6 schema via Pydantic before writing.
 
 See [`brewlog/`](./brewlog/) for the full source code and tests.
 
@@ -388,7 +390,7 @@ See [`brewlog/`](./brewlog/) for the full source code and tests.
 
 ## Questions?
 
-- Read the spec: [`brewspec-v0.4.md`](./brewspec-v0.4.md)
+- Read the spec: [`brewspec-v0.6.md`](./brewspec-v0.6.md)
 - Check the examples: [`examples/`](./examples/)
 - Open an issue: https://github.com/coffee-standards/brewspec
 

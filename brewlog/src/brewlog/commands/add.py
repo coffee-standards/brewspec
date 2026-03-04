@@ -117,13 +117,11 @@ def _prompt_positive_float(label: str) -> float:
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
               help="Coffee classification: single_origin or blend.")
+@click.option("--coffee-name", "coffee_name",  type=str,   default=None,
+              help="Coffee product name or descriptive label (e.g. 'Ethiopia Yirgacheffe').")
 @click.option("--origin",      "origin",       type=str,   default=None,
               multiple=True,
               help="Coffee origin (may be repeated: --origin Ethiopia --origin Colombia).")
-@click.option("--varietal",    "varietal",     type=str,   default=None,
-              help="Coffee varietal (freeform).")
-@click.option("--process",     "process",      type=str,   default=None,
-              help="Coffee processing method (freeform).")
 @click.option("--water-ppm",   "water_ppm",    type=float, default=None,
               help="Water mineral content in ppm (>= 0).")
 @click.option("--tds",         "tds",          type=float, default=None,
@@ -161,7 +159,7 @@ def _prompt_positive_float(label: str) -> float:
 def add(
     date, brew_type, dose, water_weight,
     method, temp, grind, duration, notes,
-    roast_date, coffee_type, origin, varietal, process,
+    roast_date, coffee_type, coffee_name, origin,
     water_ppm, tds, ey, brix, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
@@ -229,7 +227,7 @@ def add(
 
     # -- Build Pydantic model (validates all fields) --
 
-    has_coffee = any([roast_date, coffee_type, origin, varietal, process])
+    has_coffee = any([roast_date, coffee_type, coffee_name, origin])
     coffee_obj = None
     if has_coffee:
         try:
@@ -240,9 +238,8 @@ def add(
             coffee_obj = CoffeeInput(
                 roast_date=roast_date,
                 type=coffee_type,
+                name=coffee_name,
                 origins=origins_list,
-                varietal=varietal,
-                process=process,
             )
         except ValidationError as exc:
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
@@ -303,7 +300,6 @@ def add(
             dose_g=dose,
             water_weight_g=water_weight,
             method=method or None,
-            water_volume_ml=None,
             water_temp_c=temp,
             grind=grind,
             duration_s=duration,

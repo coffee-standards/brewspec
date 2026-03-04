@@ -1,7 +1,7 @@
 """
 `brewlog export` command.
 
-Exports all brews to a BrewSpec v0.4-compliant YAML or JSON file,
+Exports all brews to a BrewSpec v0.6-compliant YAML or JSON file,
 or a flat CSV file (--format csv).
 
 Path is validated before any DB access. YAML/JSON files are validated
@@ -65,7 +65,7 @@ def _rows_to_csv(rows) -> str:
     help="Overwrite existing file without prompting.",
 )
 def export(path: str, fmt: str, force: bool) -> None:
-    """Export all brews to a BrewSpec v0.5 file."""
+    """Export all brews to a BrewSpec v0.6 file."""
 
     # -- Path validation (before any DB access) --
     out_path = serialise.validate_export_path(path, fmt=fmt)
@@ -110,13 +110,13 @@ def export(path: str, fmt: str, force: bool) -> None:
     if warned_grind:
         click.echo(
             "Warning: the following brews have non-standard grind values that are "
-            "not valid in BrewSpec v0.5 and were omitted from the export:",
+            "not valid in BrewSpec v0.6 and were omitted from the export:",
             err=True,
         )
         for brew_id, grind_val in warned_grind:
             click.echo(f"  Brew #{brew_id}: grind = '{grind_val}'", err=True)
 
-    document = {"brewspec_version": "0.5", "brews": brews_dicts}
+    document = {"brewspec_version": "0.6", "brews": brews_dicts}
 
     # -- Schema validation (safety net) --
     errors = schema.validate_document(document)

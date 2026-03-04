@@ -260,9 +260,8 @@ def test_add_optional_fields_stored(runner_with_db, tmp_path, monkeypatch):
         "--notes", "Bright acidity",
         "--roast-date", "2026-01-20",
         "--coffee-type", "single_origin",
+        "--coffee-name", "Ethiopia Single Origin",
         "--origin", "Ethiopia",
-        "--varietal", "Heirloom",
-        "--process", "Washed",
         "--water-ppm", "150.0",
         "--tds", "1.38",
     ])
@@ -278,8 +277,7 @@ def test_add_optional_fields_stored(runner_with_db, tmp_path, monkeypatch):
         assert row["notes"] == "Bright acidity"
         assert row["coffee_roast_date"] == "2026-01-20"
         assert row["coffee_type"] == "single_origin"
-        assert row["coffee_varietal"] == "Heirloom"
-        assert row["coffee_process"] == "Washed"
+        assert row["coffee_name"] == "Ethiopia Single Origin"
         assert row["water_ppm"] == 150.0
         assert row["result_tds"] == 1.38
     finally:

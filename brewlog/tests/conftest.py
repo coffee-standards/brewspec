@@ -53,9 +53,7 @@ def full_brew_dict():
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
-            "origin": ["Ethiopia"],
-            "varietal": "Heirloom",
-            "process": "Washed",
+            "origins": [{"country": "Ethiopia", "varietal": "Heirloom"}],
         },
         "water": {"ppm": 150.0},
         "result": {

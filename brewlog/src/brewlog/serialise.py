@@ -69,7 +69,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     brew["water_weight_g"] = r["water_weight_g"]
 
     # Optional brew-level fields (not grind — handled separately below)
-    for field in ("method", "water_volume_ml", "water_temp_c", "duration_s", "notes"):
+    # Note: water_volume_ml is excluded — removed in v0.6
+    for field in ("method", "water_temp_c", "duration_s", "notes"):
         if r.get(field) is not None:
             brew[field] = r[field]
 
@@ -90,12 +91,12 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         coffee["roast_date"] = r["coffee_roast_date"]
     if r.get("coffee_type") is not None:
         coffee["type"] = r["coffee_type"]
+    if r.get("coffee_name") is not None:
+        coffee["name"] = r["coffee_name"]
     if r.get("coffee_origins") is not None:
         coffee["origins"] = json.loads(r["coffee_origins"])
-    if r.get("coffee_varietal") is not None:
-        coffee["varietal"] = r["coffee_varietal"]
-    if r.get("coffee_process") is not None:
-        coffee["process"] = r["coffee_process"]
+    # Note: coffee_varietal and coffee_process columns are retained in the DB for
+    # backward compatibility but are NOT included in v0.6 export output.
     if coffee:
         brew["coffee"] = coffee
 

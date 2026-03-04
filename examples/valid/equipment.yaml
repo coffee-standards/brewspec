@@ -1,4 +1,4 @@
-brewspec_version: "0.5"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-20T07:30:00Z"
     type: "pour_over"
@@ -14,9 +14,9 @@ brews:
       type: "single_origin"
       origins:
         - country: "Ethiopia"
-        - country: "Yirgacheffe"
-      varietal: "Heirloom"
-      process: "Washed"
+          region: "Yirgacheffe"
+          varietal: "Heirloom"
+          process: "Washed"
     water:
       ppm: 120
     equipment:

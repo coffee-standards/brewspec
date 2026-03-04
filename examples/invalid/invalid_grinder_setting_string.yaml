@@ -1,0 +1,9 @@
+# Invalid: grinder_setting must be a number in v0.6; string is rejected.
+brewspec_version: "0.6"
+brews:
+  - date: "2026-03-01"
+    type: "pour_over"
+    dose_g: 18.0
+    water_weight_g: 288.0
+    equipment:
+      grinder_setting: "21 clicks"

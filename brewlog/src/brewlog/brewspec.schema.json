@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.5",
+  "title": "BrewSpec v0.6",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.5",
-      "description": "The BrewSpec version. Must be \"0.5\"."
+      "const": "0.6",
+      "description": "The BrewSpec version. Must be \"0.6\"."
     },
     "brews": {
       "type": "array",
@@ -68,11 +68,6 @@
           "exclusiveMinimum": 0,
           "description": "Water-to-coffee ratio expressed as a single float (grams of water per gram of coffee). e.g. 15.5 represents 15.5:1 or approximately 64g/L. Can be computed from water_weight_g / dose_g. When both are present, tools should validate consistency; mismatches should be surfaced as a warning, not a schema error."
         },
-        "water_volume_ml": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "Water volume in milliliters. Optional. Must be > 0 if present."
-        },
         "water_temp_c": {
           "type": "number",
           "minimum": 0,
@@ -114,6 +109,13 @@
       "additionalProperties": false,
       "description": "Optional coffee ingredient descriptor. All fields optional.",
       "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150,
+          "description": "A branded product name or human-readable descriptive label for the coffee (e.g. 'Ethiopia Yirgacheffe', 'Blue Bottle Hayes Valley Espresso', 'Estate'). Optional. Not required even when origins[] is populated. New in v0.6.",
+          "examples": ["Ethiopia Yirgacheffe", "Blue Bottle Hayes Valley Espresso", "Estate"]
+        },
         "roast_date": {
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
@@ -132,20 +134,6 @@
             "$ref": "#/$defs/origin"
           },
           "description": "Structured origin records. Array to support blends. Each entry is an origin object with all fields optional. minItems: 1 — omit the field entirely to record no origin data."
-        },
-        "varietal": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Coffee variety or cultivar. Freeform.",
-          "examples": ["Heirloom", "Gesha", "Bourbon"]
-        },
-        "process": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Processing method. Freeform. Records the green coffee processing method at the coffee object level. For per-origin process in blends, use origins[].process.",
-          "examples": ["Washed", "Natural", "Honey"]
         }
       }
     },
@@ -158,8 +146,8 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 100,
-          "description": "Human-readable label for this origin entry.",
-          "examples": ["Ethiopia Yirgacheffe Natural", "Brazil Fazenda Santa Ines"]
+          "description": "Descriptive name for this origin component. Plays the same role at the component level as coffee.name does at the coffee level. For single-origin coffees it will typically match coffee.name; for blends it is the name of this specific component (e.g. 'Brazil Natural', 'Colombia Washed').",
+          "examples": ["Ethiopia Yirgacheffe Natural", "Brazil Natural", "Colombia Washed"]
         },
         "country": {
           "type": "string",
@@ -193,7 +181,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 100,
-          "description": "Green coffee processing method at origin. Distinct from the brew-level coffee.process field.",
+          "description": "Green coffee processing method at origin. Distinct from the removed brew-level coffee.process field.",
           "examples": ["Washed", "Natural", "Honey"]
         },
         "lot": {
@@ -209,6 +197,13 @@
           "maximum": 2100,
           "description": "Year the crop was harvested. Four-digit integer.",
           "examples": [2025, 2024]
+        },
+        "varietal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Coffee varietal for this origin entry. Freeform. Records the coffee variety or cultivar specific to this component (e.g. Heirloom, Gesha, Bourbon). New in v0.6.",
+          "examples": ["Heirloom", "Gesha", "Bourbon", "Catuai", "SL28"]
         }
       }
     },
@@ -244,11 +239,9 @@
           "examples": ["Hario V60 02", "AeroPress Original", "Moka Pot"]
         },
         "grinder_setting": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 100,
-          "description": "Grinder dial position or click setting used for this brew. Freeform; grinder setting systems are incompatible across brands.",
-          "examples": ["21", "21 clicks", "3.2.1", "setting 21"]
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Grinder dial position or click setting used for this brew. Must be a positive number. Encoding convention: integer for primary increment grinders (e.g. 21 on a Comandante C40); decimal tenths for grinders with sub-steps between primary positions (e.g. 5.2 on a Fellow Ode Gen 2 means primary position 5, second sub-step). The schema does not enforce decimal precision — this convention is guidance for consistent encoding, not a constraint."
         },
         "notes": {
           "type": "string",

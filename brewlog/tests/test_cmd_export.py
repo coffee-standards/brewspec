@@ -51,9 +51,7 @@ def _insert_full(db_path):
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
                 type="single_origin",
-                origins=[OriginInput(country="Ethiopia")],
-                varietal="Heirloom",
-                process="Washed",
+                origins=[OriginInput(country="Ethiopia", varietal="Heirloom")],
             ),
             water=WaterInput(ppm=150.0),
             result=ResultInput(tds=1.38, ey=20.5),
@@ -120,7 +118,7 @@ def test_export_document_structure(runner_with_db, tmp_path):
     runner_with_db.invoke(cli, ["export", out_file])
     doc = yaml.safe_load(Path(out_file).read_text())
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.5"
+    assert doc["brewspec_version"] == "0.6"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
 

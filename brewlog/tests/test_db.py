@@ -76,9 +76,8 @@ def _full_brew():
         coffee=CoffeeInput(
             roast_date="2026-01-20",
             type="single_origin",
-            origins=[OriginInput(country="Ethiopia")],
-            varietal="Heirloom",
-            process="Washed",
+            name="Ethiopia Natural",
+            origins=[OriginInput(country="Ethiopia", varietal="Heirloom")],
         ),
         water=WaterInput(ppm=150.0),
         result=ResultInput(
@@ -106,6 +105,7 @@ def test_insert_brew_returns_incrementing_ids(tmp_db):
 
 def test_insert_brew_all_fields(tmp_db):
     """AC-10: inserts full BrewInput, all fields retrievable."""
+    import json
     brew_id = db_module.insert_brew(_full_brew(), tmp_db)
     row = db_module.get_brew(brew_id, tmp_db)
     assert row is not None
@@ -124,10 +124,12 @@ def test_insert_brew_all_fields(tmp_db):
     assert row["notes"] == "Bright acidity"
     assert row["coffee_roast_date"] == "2026-01-20"
     assert row["coffee_type"] == "single_origin"
-    assert row["coffee_varietal"] == "Heirloom"
-    assert row["coffee_process"] == "Washed"
+    assert row["coffee_name"] == "Ethiopia Natural"
+    # v0.6: varietal now in origins array, not a top-level coffee column
+    origins = json.loads(row["coffee_origins"])
+    assert origins[0]["varietal"] == "Heirloom"
     assert row["water_ppm"] == 150.0
-    # v0.3: ratings now stored in individual columns, not JSON
+    # ratings stored in individual columns
     assert row["result_rating_overall"] == 4
     assert row["result_rating_acidity"] == 5
 
@@ -266,9 +268,8 @@ def test_insert_brew_dict_full(tmp_db):
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
-            "origins": [{"country": "Ethiopia"}],
-            "varietal": "Heirloom",
-            "process": "Washed",
+            "name": "Ethiopia Single Origin",
+            "origins": [{"country": "Ethiopia", "varietal": "Heirloom"}],
         },
         "water": {"ppm": 150.0},
         "result": {
@@ -281,7 +282,8 @@ def test_insert_brew_dict_full(tmp_db):
     row = db_module.get_brew(brew_id, tmp_db)
     assert row["method"] == "Hario V60"
     assert row["coffee_type"] == "single_origin"
-    assert json.loads(row["coffee_origins"]) == [{"country": "Ethiopia"}]
+    assert row["coffee_name"] == "Ethiopia Single Origin"
+    assert json.loads(row["coffee_origins"]) == [{"country": "Ethiopia", "varietal": "Heirloom"}]
     assert row["water_ppm"] == 150.0
     assert row["result_tds"] == 1.38
     assert row["result_ey"] == 20.5

@@ -48,9 +48,7 @@ def _insert_full(db_path):
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
                 type="single_origin",
-                origins=[OriginInput(country="Ethiopia")],
-                varietal="Heirloom",
-                process="Washed",
+                origins=[OriginInput(country="Ethiopia", varietal="Heirloom")],
             ),
             water=WaterInput(ppm=150.0),
             result=ResultInput(

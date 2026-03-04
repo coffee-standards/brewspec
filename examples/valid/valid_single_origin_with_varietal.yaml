@@ -1,15 +1,21 @@
+# Valid example: single origin with varietal at origin level.
+# Demonstrates coffee.name (new in v0.6) alongside coffee.origins[].varietal.
+# For single-origin coffees, coffee.name and origins[].name typically match.
 brewspec_version: "0.6"
 brews:
-  - date: "2026-02-28"
+  - date: "2026-03-01"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 280.0
-    brew_ratio: 15.56
-    method: "Hario V60"
+    water_weight_g: 288.0
+    brew_ratio: 16.0
+    method: "Hario V60 02"
     grind: "medium_fine"
-    duration_s: 195
+    water_temp_c: 96
+    duration_s: 210
     coffee:
+      name: "Ethiopia Yirgacheffe Natural"
       type: "single_origin"
+      roast_date: "2026-02-10"
       origins:
         - name: "Ethiopia Yirgacheffe Natural"
           country: "Ethiopia"
@@ -17,18 +23,17 @@ brews:
           subregion: "Kochere"
           producer: "Daye Bensa Washing Station"
           process: "Natural"
-          lot: "Lot 42 Export Grade 1"
           harvest_year: 2025
           varietal: "Heirloom"
     equipment:
       grinder: "Comandante C40 MK4"
       brewer: "Hario V60 02"
-      grinder_setting: 21
-      notes: "Burrs 3 months old"
+      grinder_setting: 22
+      notes: "Burrs 4 months old"
     result:
-      tds: 1.38
-      ey: 20.1
-      tasting_notes: "Bright citrus, blueberry jam, clean finish"
+      tds: 1.41
+      ey: 21.2
+      tasting_notes: "Blueberry jam, floral, clean finish"
       ratings:
         overall: 5
         flavour: 5

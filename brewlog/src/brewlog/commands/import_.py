@@ -1,7 +1,7 @@
 """
 `brewlog import` command.
 
-Imports brews from a BrewSpec v0.5 YAML or JSON file.
+Imports brews from a BrewSpec v0.6 YAML or JSON file.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
@@ -17,20 +17,21 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v0.5 BrewSpec files. AC-13.
+# Verbatim error message for non-v0.6 BrewSpec files. AC-25/MED-2.
 # The {version} placeholder is replaced with the version string found in the file.
-_V05_REQUIRED_MSG = """\
-Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.3.
-BrewLog v0.3 requires BrewSpec v0.4.
+_V06_REQUIRED_MSG = """\
+Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.5.
+BrewLog v0.5 requires BrewSpec v0.5.
 
-To migrate your file from v0.3 to v0.4, make the following changes:
-  1. Change 'brewspec_version' from "0.3" to "0.4"
-  2. Move 'tds' (if present) from the brew level to 'result.tds'
-  3. Move 'ey' (if present) from the brew level to 'result.ey'
-  4. Move 'rating' (if present) from the brew level to 'result.ratings.overall'
-  5. Replace any freeform 'grind' values with one of:
-     turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse
-     (or remove the 'grind' field if no match applies)
+To migrate your file from v0.4 to v0.5, make the following changes:
+  1. Change 'brewspec_version' from "0.4" to "0.5"
+  2. Replace 'coffee.origin' (string array) with 'coffee.origins' (object array):
+     Before: coffee:
+               origin: ["Ethiopia", "Colombia"]
+     After:  coffee:
+               origins:
+                 - country: "Ethiopia"
+                 - country: "Colombia"
 
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
@@ -38,7 +39,7 @@ Full migration guide: https://github.com/coffee-standards/brewspec"""
 @click.command("import")
 @click.argument("path", type=str)
 def import_cmd(path: str) -> None:
-    """Import brews from a BrewSpec v0.5 YAML or JSON file."""
+    """Import brews from a BrewSpec v0.6 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
     in_path = serialise.validate_import_path(path)
@@ -76,11 +77,11 @@ def import_cmd(path: str) -> None:
         click.echo("Error: file content is not a valid BrewSpec document.", err=True)
         sys.exit(1)
 
-    # -- AC-13: Check for non-v0.5 BrewSpec version before schema validation --
+    # -- Check for non-v0.6 BrewSpec version before schema validation --
     file_version = str(doc.get("brewspec_version", ""))
-    if file_version != "0.5":
+    if file_version != "0.6":
         version_label = file_version if file_version else "(unknown)"
-        click.echo(_V05_REQUIRED_MSG.format(version=version_label), err=True)
+        click.echo(_V06_REQUIRED_MSG.format(version=version_label), err=True)
         sys.exit(1)
 
     # -- Schema validation (before any DB writes) --

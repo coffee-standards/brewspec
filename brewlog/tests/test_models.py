@@ -1,6 +1,6 @@
 """
 Unit tests for Pydantic models in brewlog.models.
-Tests map to input validation requirements for BrewSpec v0.5.
+Tests map to input validation requirements for BrewSpec v0.6.
 """
 
 import pytest
@@ -31,7 +31,7 @@ def test_brew_input_valid_minimal():
 
 
 def test_brew_input_valid_all_fields():
-    """All optional fields accepted (v0.5: origins, brew_ratio, equipment fields)."""
+    """All optional fields accepted (v0.6: origins with varietal, coffee.name, numeric grinder_setting)."""
     from brewlog.models import ResultInput, RatingsInput
 
     brew = BrewInput(
@@ -41,7 +41,6 @@ def test_brew_input_valid_all_fields():
         water_weight_g=300.0,
         brew_ratio=15.0,
         method="French Press",
-        water_volume_ml=300.0,
         water_temp_c=95.0,
         grind="coarse",
         duration_s=240,
@@ -49,12 +48,11 @@ def test_brew_input_valid_all_fields():
         coffee=CoffeeInput(
             roast_date="2026-01-15",
             type="blend",
+            name="House Blend",
             origins=[
-                OriginInput(country="Ethiopia"),
+                OriginInput(country="Ethiopia", varietal="Heirloom"),
                 OriginInput(country="Colombia"),
             ],
-            varietal="Bourbon",
-            process="Natural",
         ),
         water=WaterInput(ppm=120.0),
         result=ResultInput(
@@ -67,14 +65,15 @@ def test_brew_input_valid_all_fields():
     )
     assert brew.method == "French Press"
     assert brew.brew_ratio == 15.0
-    assert brew.water_volume_ml == 300.0
     assert brew.water_temp_c == 95.0
     assert brew.grind == "coarse"
     assert brew.duration_s == 240
     assert brew.notes == "Smooth and balanced"
     assert brew.coffee is not None
+    assert brew.coffee.name == "House Blend"
     assert len(brew.coffee.origins) == 2
     assert brew.coffee.origins[0].country == "Ethiopia"
+    assert brew.coffee.origins[0].varietal == "Heirloom"
     assert brew.water is not None
     assert brew.water.ppm == 120.0
     assert brew.result is not None
@@ -553,19 +552,31 @@ def test_coffee_input_origins_single():
 
 
 # ---------------------------------------------------------------------------
-# CoffeeInput — freeform text fields
+# CoffeeInput — freeform text fields (v0.6: varietal/process removed from coffee level)
 # ---------------------------------------------------------------------------
 
-def test_coffee_input_varietal_empty_rejected():
-    """varietal='' rejected."""
-    with pytest.raises(ValidationError):
-        CoffeeInput(varietal="")
+def test_coffee_input_name_valid():
+    """AC v0.6: coffee.name accepted."""
+    coffee = CoffeeInput(name="Ethiopian Yirgacheffe")
+    assert coffee.name == "Ethiopian Yirgacheffe"
 
 
-def test_coffee_input_process_empty_rejected():
-    """process='' rejected."""
+def test_coffee_input_name_empty_rejected():
+    """AC v0.6: coffee.name='' rejected (minLength:1)."""
     with pytest.raises(ValidationError):
-        CoffeeInput(process="")
+        CoffeeInput(name="")
+
+
+def test_coffee_input_name_maxlength_accepted():
+    """AC v0.6: coffee.name of exactly 150 chars is accepted."""
+    coffee = CoffeeInput(name="x" * 150)
+    assert len(coffee.name) == 150
+
+
+def test_coffee_input_name_maxlength_exceeded():
+    """AC v0.6: coffee.name of 151 chars is rejected."""
+    with pytest.raises(ValidationError):
+        CoffeeInput(name="x" * 151)
 
 
 def test_coffee_input_all_none_valid():
@@ -577,32 +588,36 @@ def test_coffee_input_all_none_valid():
 
 
 # ---------------------------------------------------------------------------
-# CoffeeInput — maxLength validators
+# OriginInput — varietal field (v0.6: moved from coffee to origin)
 # ---------------------------------------------------------------------------
 
-def test_coffee_input_varietal_maxlength_accepted():
-    """varietal of exactly 100 chars is accepted."""
-    coffee = CoffeeInput(varietal="x" * 100)
-    assert len(coffee.varietal) == 100
+def test_origin_input_varietal_valid():
+    """AC v0.6: origin.varietal accepted."""
+    origin = OriginInput(country="Ethiopia", varietal="Heirloom")
+    assert origin.varietal == "Heirloom"
 
 
-def test_coffee_input_varietal_maxlength_exceeded():
-    """varietal of 101 chars is rejected."""
+def test_origin_input_varietal_empty_rejected():
+    """AC v0.6: origin.varietal='' rejected (minLength:1)."""
     with pytest.raises(ValidationError):
-        CoffeeInput(varietal="x" * 101)
+        OriginInput(varietal="")
 
 
-def test_coffee_input_process_maxlength_accepted():
-    """process of exactly 100 chars is accepted."""
-    coffee = CoffeeInput(process="x" * 100)
-    assert len(coffee.process) == 100
+def test_origin_input_varietal_maxlength_accepted():
+    """AC v0.6: origin.varietal of exactly 100 chars is accepted."""
+    origin = OriginInput(varietal="x" * 100)
+    assert len(origin.varietal) == 100
 
 
-def test_coffee_input_process_maxlength_exceeded():
-    """process of 101 chars is rejected."""
+def test_origin_input_varietal_maxlength_exceeded():
+    """AC v0.6: origin.varietal of 101 chars is rejected."""
     with pytest.raises(ValidationError):
-        CoffeeInput(process="x" * 101)
+        OriginInput(varietal="x" * 101)
 
+
+# ---------------------------------------------------------------------------
+# CoffeeInput — maxLength validators
+# ---------------------------------------------------------------------------
 
 def test_coffee_input_origins_country_maxlength_accepted():
     """origins country of exactly 100 chars is accepted."""

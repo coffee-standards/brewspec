@@ -1,4 +1,4 @@
-brewspec_version: "0.5"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
@@ -14,8 +14,8 @@ brews:
       type: single_origin
       origins:
         - country: Ethiopia
-      varietal: Heirloom
-      process: Washed
+          process: Washed
+          varietal: Heirloom
     water:
       ppm: 150.0
     result:

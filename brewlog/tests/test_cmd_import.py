@@ -207,8 +207,8 @@ def test_import_v03_file_lists_migration_changes(runner_with_db):
     """AC-13: error message lists required structural changes."""
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
-    # Must mention tds/ey moving to result sub-object
-    assert "result" in result.output.lower()
+    # Must mention migration steps (v0.4 to v0.5: origins object array)
+    assert "origins" in result.output.lower() or "coffee.origin" in result.output.lower()
 
 
 def test_import_v03_file_points_to_migration_guide(runner_with_db):
@@ -251,22 +251,23 @@ def test_import_v02_file_rejected(runner_with_db, tmp_path):
     assert result.exit_code == 1
 
 
-def test_import_v03_exact_error_message(runner_with_db):
-    """AC-13: v0.3 file rejection produces the exact verbatim error message from the spec."""
+def test_import_v04_exact_error_message(runner_with_db):
+    """MED-2: v0.4 (and older) file rejection produces the exact verbatim error message."""
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
     expected = (
-        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.3.\n'
-        'BrewLog v0.3 requires BrewSpec v0.4.\n'
+        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.5.\n'
+        'BrewLog v0.5 requires BrewSpec v0.5.\n'
         '\n'
-        'To migrate your file from v0.3 to v0.4, make the following changes:\n'
-        '  1. Change \'brewspec_version\' from "0.3" to "0.4"\n'
-        '  2. Move \'tds\' (if present) from the brew level to \'result.tds\'\n'
-        '  3. Move \'ey\' (if present) from the brew level to \'result.ey\'\n'
-        '  4. Move \'rating\' (if present) from the brew level to \'result.ratings.overall\'\n'
-        '  5. Replace any freeform \'grind\' values with one of:\n'
-        '     turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse\n'
-        '     (or remove the \'grind\' field if no match applies)\n'
+        'To migrate your file from v0.4 to v0.5, make the following changes:\n'
+        '  1. Change \'brewspec_version\' from "0.4" to "0.5"\n'
+        '  2. Replace \'coffee.origin\' (string array) with \'coffee.origins\' (object array):\n'
+        '     Before: coffee:\n'
+        '               origin: ["Ethiopia", "Colombia"]\n'
+        '     After:  coffee:\n'
+        '               origins:\n'
+        '                 - country: "Ethiopia"\n'
+        '                 - country: "Colombia"\n'
         '\n'
         'Full migration guide: https://github.com/coffee-standards/brewspec'
     )

@@ -81,9 +81,6 @@ def show(id: int) -> None:
     if row["duration_s"] is not None:
         _print_field("Duration:", row["duration_s"], "s")
 
-    if row["water_volume_ml"] is not None:
-        _print_field("Water volume:", row["water_volume_ml"], "ml")
-
     if row["notes"] is not None:
         _print_field("Notes:", row["notes"])
 
@@ -125,13 +122,14 @@ def show(id: int) -> None:
     # -- Coffee section --
     has_coffee = any(
         row[f] is not None
-        for f in ("coffee_roast_date", "coffee_type", "coffee_origins",
-                  "coffee_varietal", "coffee_process")
+        for f in ("coffee_roast_date", "coffee_type", "coffee_name", "coffee_origins")
     )
     if has_coffee:
         click.echo("")
         click.echo("Coffee")
         click.echo("------")
+        if row["coffee_name"] is not None:
+            _print_field("Name:", row["coffee_name"])
         if row["coffee_roast_date"] is not None:
             _print_field("Roast date:", row["coffee_roast_date"])
         if row["coffee_type"] is not None:
@@ -146,10 +144,6 @@ def show(id: int) -> None:
                 else:
                     parts.append(str(o))
             _print_field("Origins:", ", ".join(parts))
-        if row["coffee_varietal"] is not None:
-            _print_field("Varietal:", row["coffee_varietal"])
-        if row["coffee_process"] is not None:
-            _print_field("Process:", row["coffee_process"])
 
     # -- Water section --
     if row["water_ppm"] is not None:

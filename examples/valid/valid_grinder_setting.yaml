@@ -1,4 +1,4 @@
-brewspec_version: "0.5"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-28"
     type: "pour_over"
@@ -7,4 +7,4 @@ brews:
     equipment:
       grinder: "Comandante C40 MK4"
       brewer: "Hario V60 02"
-      grinder_setting: "21 clicks"
+      grinder_setting: 21

@@ -48,6 +48,7 @@ UPDATABLE_COLUMNS: frozenset[str] = frozenset({
     "coffee_roast_date",
     "coffee_type",
     "coffee_origins",
+    "coffee_name",
     "coffee_varietal",
     "coffee_process",
     "water_ppm",
@@ -78,6 +79,10 @@ _V5_MIGRATION_COLUMNS: dict[str, str] = {
     "equipment_grinder_setting": "TEXT",
     "equipment_notes":          "TEXT",
     "brew_ratio":               "REAL",
+}
+
+_V6_MIGRATION_COLUMNS: dict[str, str] = {
+    "coffee_name": "TEXT",
 }
 
 
@@ -154,7 +159,7 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
     }
-    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS}
+    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS, **_V6_MIGRATION_COLUMNS}
     for col, col_type in all_migration_columns.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
@@ -186,10 +191,9 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
             brew_ratio,
-            water_volume_ml, water_temp_c, grind, duration_s,
+            water_temp_c, grind, duration_s,
             notes,
-            coffee_roast_date, coffee_type, coffee_origins,
-            coffee_varietal, coffee_process,
+            coffee_roast_date, coffee_type, coffee_name, coffee_origins,
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
@@ -201,10 +205,9 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?,
-            ?, ?, ?, ?,
-            ?,
             ?, ?, ?,
-            ?, ?,
+            ?,
+            ?, ?, ?, ?,
             ?,
             ?, ?,
             ?, ?,
@@ -222,16 +225,14 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         brew.dose_g,
         brew.water_weight_g,
         brew.brew_ratio,
-        brew.water_volume_ml,
         brew.water_temp_c,
         brew.grind,
         brew.duration_s,
         brew.notes,
         coffee.roast_date if coffee else None,
         coffee.type if coffee else None,
+        coffee.name if coffee else None,
         origins_json,
-        coffee.varietal if coffee else None,
-        coffee.process if coffee else None,
         water.ppm if water else None,
         equipment.grinder if equipment else None,
         equipment.brewer if equipment else None,
@@ -275,10 +276,9 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         INSERT INTO brews (
             date, type, method, dose_g, water_weight_g,
             brew_ratio,
-            water_volume_ml, water_temp_c, grind, duration_s,
+            water_temp_c, grind, duration_s,
             notes,
-            coffee_roast_date, coffee_type, coffee_origins,
-            coffee_varietal, coffee_process,
+            coffee_roast_date, coffee_type, coffee_name, coffee_origins,
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
@@ -290,10 +290,9 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?,
-            ?, ?, ?, ?,
-            ?,
             ?, ?, ?,
-            ?, ?,
+            ?,
+            ?, ?, ?, ?,
             ?,
             ?, ?,
             ?, ?,
@@ -311,16 +310,14 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         brew_dict.get("dose_g"),
         brew_dict.get("water_weight_g"),
         brew_dict.get("brew_ratio"),
-        brew_dict.get("water_volume_ml"),
         brew_dict.get("water_temp_c"),
         brew_dict.get("grind"),
         brew_dict.get("duration_s"),
         brew_dict.get("notes"),
         coffee.get("roast_date"),
         coffee.get("type"),
+        coffee.get("name"),
         json.dumps(origins) if origins else None,
-        coffee.get("varietal"),
-        coffee.get("process"),
         water.get("ppm"),
         equipment.get("grinder"),
         equipment.get("brewer"),

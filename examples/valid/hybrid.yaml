@@ -1,4 +1,4 @@
-brewspec_version: "0.5"
+brewspec_version: "0.6"
 brews:
   - date: "2026-02-18T07:15:00Z"
     type: "hybrid"
@@ -11,9 +11,8 @@ brews:
       type: "blend"
       origins:
         - country: "Ethiopia"
+          process: "Natural"
         - country: "Colombia"
-      varietal: "Mixed"
-      process: "Natural"
     water:
       ppm: 75
     grind: "medium"
