@@ -25,6 +25,7 @@ const { label, code, language } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+    min-width: 0; /* prevent grid item from expanding beyond column width on mobile */
   }
 
   .code-label {
