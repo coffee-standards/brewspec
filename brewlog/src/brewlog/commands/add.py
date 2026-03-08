@@ -25,8 +25,8 @@ from brewlog.models import (
     ResultInput,
     RatingsInput,
     DATE_PATTERN,
-    BREW_TYPE_ENUM,
 )
+from brewlog.prompts import prompt_brew_type
 
 
 # ---------------------------------------------------------------------------
@@ -53,25 +53,6 @@ def _prompt_date() -> str:
         )
 
 
-def _prompt_brew_type() -> str:
-    """Prompt for brew type using a numbered menu. Re-prompts on invalid selection."""
-    options = sorted(BREW_TYPE_ENUM)
-    n = len(options)
-    while True:
-        click.echo("Brew type:")
-        for i, opt in enumerate(options, start=1):
-            click.echo(f"  {i}) {opt}")
-        raw = click.prompt(f"Choice [1-{n}]")
-        try:
-            choice = int(raw)
-        except ValueError:
-            click.echo(f"  Invalid choice. Please enter a number between 1 and {n}.")
-            continue
-        if 1 <= choice <= n:
-            return options[choice - 1]
-        click.echo(f"  Invalid choice. Please enter a number between 1 and {n}.")
-
-
 def _prompt_positive_float(label: str) -> float:
     """Prompt for a positive float value. Re-prompts on non-numeric or non-positive input."""
     while True:
@@ -87,11 +68,70 @@ def _prompt_positive_float(label: str) -> float:
         return value
 
 
+def _build_origins_from_flags(
+    origin_name: tuple,
+    origin_country: tuple,
+    origin_region: tuple,
+    origin_subregion: tuple,
+    origin_producer: tuple,
+    origin_process: tuple,
+    origin_lot: tuple,
+    origin_year: tuple,
+    origin_varietal: tuple,
+    origin_plain: tuple,
+) -> list[OriginInput] | None:
+    """
+    Build a list of OriginInput objects from the positional-parallel flag tuples.
+
+    The structured --origin-* flags take precedence over plain --origin flags.
+    If no structured origin flags are given but --origin is, fall back to plain string origins.
+    """
+    has_structured = any([
+        origin_name, origin_country, origin_region, origin_subregion,
+        origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+    ])
+
+    if not has_structured and not origin_plain:
+        return None
+
+    if not has_structured and origin_plain:
+        # Legacy: plain string origins
+        return [OriginInput(country=o) for o in origin_plain]
+
+    # Structured: positional-parallel approach
+    # Find the max length across all flag tuples
+    max_len = max(
+        len(origin_name), len(origin_country), len(origin_region),
+        len(origin_subregion), len(origin_producer), len(origin_process),
+        len(origin_lot), len(origin_year), len(origin_varietal),
+    )
+
+    def _get(tpl: tuple, i: int):
+        return tpl[i] if i < len(tpl) else None
+
+    origins = []
+    for i in range(max_len):
+        origin = OriginInput(
+            name=_get(origin_name, i),
+            country=_get(origin_country, i),
+            region=_get(origin_region, i),
+            subregion=_get(origin_subregion, i),
+            producer=_get(origin_producer, i),
+            process=_get(origin_process, i),
+            lot=_get(origin_lot, i),
+            harvest_year=_get(origin_year, i),
+            varietal=_get(origin_varietal, i),
+        )
+        origins.append(origin)
+    return origins if origins else None
+
+
 # ---------------------------------------------------------------------------
 # Command definition
 # ---------------------------------------------------------------------------
 
 @click.command("add")
+@click.pass_context
 @click.option("--date",        "date",         type=str,   default=None,
               help="Brew date: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DD.")
 @click.option("--type",        "brew_type",    type=str,   default=None,
@@ -100,6 +140,8 @@ def _prompt_positive_float(label: str) -> float:
               help="Coffee dose in grams (> 0).")
 @click.option("--water",       "water_weight", type=float, default=None,
               help="Water weight in grams (> 0).")
+@click.option("--brew-ratio",  "brew_ratio",   type=float, default=None,
+              help="Water-to-coffee ratio (> 0). e.g. 15.5")
 @click.option("--method",      "method",       type=str,   default=None,
               help="Freeform brewer description (e.g. 'Hario V60').")
 @click.option("--temp",        "temp",         type=float, default=None,
@@ -121,7 +163,25 @@ def _prompt_positive_float(label: str) -> float:
               help="Coffee product name or descriptive label (e.g. 'Ethiopia Yirgacheffe').")
 @click.option("--origin",      "origin",       type=str,   default=None,
               multiple=True,
-              help="Coffee origin (may be repeated: --origin Ethiopia --origin Colombia).")
+              help="Coffee origin (may be repeated: --origin Ethiopia --origin Colombia). Legacy flag.")
+@click.option("--origin-name",      "origin_name",      type=str, multiple=True, default=(),
+              help="Origin component name (repeatable).")
+@click.option("--origin-country",   "origin_country",   type=str, multiple=True, default=(),
+              help="Country of production (repeatable).")
+@click.option("--origin-region",    "origin_region",    type=str, multiple=True, default=(),
+              help="Region within the country (repeatable).")
+@click.option("--origin-subregion", "origin_subregion", type=str, multiple=True, default=(),
+              help="Sub-area within the region (repeatable).")
+@click.option("--origin-producer",  "origin_producer",  type=str, multiple=True, default=(),
+              help="Farm, cooperative, or washing station (repeatable).")
+@click.option("--origin-process",   "origin_process",   type=str, multiple=True, default=(),
+              help="Green coffee processing method (repeatable).")
+@click.option("--origin-lot",       "origin_lot",       type=str, multiple=True, default=(),
+              help="Lot or batch identifier (repeatable).")
+@click.option("--origin-year",      "origin_year",      type=int, multiple=True, default=(),
+              help="Harvest year, e.g. 2025 (repeatable).")
+@click.option("--origin-varietal",  "origin_varietal",  type=str, multiple=True, default=(),
+              help="Coffee varietal for this origin entry (repeatable).")
 @click.option("--water-ppm",   "water_ppm",    type=float, default=None,
               help="Water mineral content in ppm (>= 0).")
 @click.option("--tds",         "tds",          type=float, default=None,
@@ -154,17 +214,26 @@ def _prompt_positive_float(label: str) -> float:
               help="Mouthfeel rating, 1-5.")
 @click.option("--grinder",     "grinder",      type=str,   default=None,
               help="Grinder name or description.")
+@click.option("--grinder-setting", "grinder_setting", type=float, default=None,
+              help="Grinder dial or click setting (> 0). e.g. 21 or 5.2")
 @click.option("--brewer",      "brewer",       type=str,   default=None,
               help="Brewer/dripper name or description.")
+@click.option("--equipment-notes", "equipment_notes", type=str, default=None,
+              help="Equipment state notes (e.g. 'Burrs replaced 2026-01').")
 def add(
+    ctx,
     date, brew_type, dose, water_weight,
+    brew_ratio,
     method, temp, grind, duration, notes,
-    roast_date, coffee_type, coffee_name, origin,
+    roast_date, coffee_type, coffee_name,
+    origin,
+    origin_name, origin_country, origin_region, origin_subregion,
+    origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
     water_ppm, tds, ey, brix, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
-    grinder, brewer,
+    grinder, grinder_setting, brewer, equipment_notes,
 ) -> None:
     """Log a new brew."""
 
@@ -177,6 +246,30 @@ def add(
             err=True,
         )
         sys.exit(1)
+
+    # -- Validate new v0.5 flags before prompting for required fields --
+
+    if brew_ratio is not None and brew_ratio <= 0:
+        click.echo("Error: --brew-ratio must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if coffee_name is not None and not coffee_name.strip():
+        click.echo("Error: --coffee-name must not be empty.", err=True)
+        sys.exit(1)
+
+    if grinder_setting is not None and grinder_setting <= 0:
+        click.echo("Error: --grinder-setting must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if equipment_notes is not None and not equipment_notes.strip():
+        click.echo("Error: --equipment-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    # Validate --origin-varietal entries (non-empty when supplied)
+    for v in origin_varietal:
+        if not v or not v.strip():
+            click.echo("Error: --origin-varietal must not be empty.", err=True)
+            sys.exit(1)
 
     # -- Tip: shown only in fully interactive mode (no required flags given) --
 
@@ -198,7 +291,7 @@ def add(
         sys.exit(1)
 
     if brew_type is None:
-        brew_type = _prompt_brew_type()
+        brew_type = prompt_brew_type()
 
     if dose is None:
         dose = _prompt_positive_float("Coffee dose in grams")
@@ -225,16 +318,21 @@ def add(
             )
             sys.exit(1)
 
-    # -- Build Pydantic model (validates all fields) --
+    # -- Build coffee object --
 
-    has_coffee = any([roast_date, coffee_type, coffee_name, origin])
+    has_structured_origin = any([
+        origin_name, origin_country, origin_region, origin_subregion,
+        origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+    ])
+    has_coffee = any([roast_date, coffee_type, coffee_name, origin, has_structured_origin])
     coffee_obj = None
     if has_coffee:
         try:
-            # Convert plain string origins (from --origin flag) to OriginInput objects
-            origins_list = None
-            if origin:
-                origins_list = [OriginInput(country=o) for o in origin]
+            origins_list = _build_origins_from_flags(
+                origin_name, origin_country, origin_region, origin_subregion,
+                origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+                origin,
+            )
             coffee_obj = CoffeeInput(
                 roast_date=roast_date,
                 type=coffee_type,
@@ -253,10 +351,16 @@ def add(
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
             sys.exit(1)
 
+    has_equipment = any(v is not None for v in (grinder, brewer, grinder_setting, equipment_notes))
     equipment_obj = None
-    if grinder is not None or brewer is not None:
+    if has_equipment:
         try:
-            equipment_obj = EquipmentInput(grinder=grinder, brewer=brewer)
+            equipment_obj = EquipmentInput(
+                grinder=grinder,
+                brewer=brewer,
+                grinder_setting=grinder_setting,
+                notes=equipment_notes,
+            )
         except ValidationError as exc:
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
             sys.exit(1)
@@ -299,6 +403,7 @@ def add(
             type=brew_type,
             dose_g=dose,
             water_weight_g=water_weight,
+            brew_ratio=brew_ratio,
             method=method or None,
             water_temp_c=temp,
             grind=grind,
@@ -314,7 +419,8 @@ def add(
         sys.exit(1)
 
     # -- Write to DB --
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
     try:
         brew_id = db.insert_brew(brew, conn)
     finally:

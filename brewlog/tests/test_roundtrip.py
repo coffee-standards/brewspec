@@ -102,7 +102,7 @@ def test_export_import_roundtrip_yaml(tmp_path, monkeypatch):
     monkeypatch.setattr(db_mod, "DB_PATH", dest_db)
     result = runner.invoke(cli, ["import", export_file])
     assert result.exit_code == 0
-    assert "Imported 3 brews." in result.output
+    assert "3 brews added" in result.output
 
     assert _count_rows(dest_db) == 3
 

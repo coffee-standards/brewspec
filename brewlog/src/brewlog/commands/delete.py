@@ -18,7 +18,8 @@ from brewlog import db
 @click.argument("brew_id", type=int)
 @click.option("--force", is_flag=True, default=False,
               help="Skip confirmation prompt and delete immediately.")
-def delete(brew_id: int, force: bool) -> None:
+@click.pass_context
+def delete(ctx: click.Context, brew_id: int, force: bool) -> None:
     """Delete a brew by ID.
 
     Note: brew IDs are permanent and are not reassigned after deletion.
@@ -29,7 +30,8 @@ def delete(brew_id: int, force: bool) -> None:
         click.echo("Error: brew ID must be a positive integer.", err=True)
         sys.exit(1)
 
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
     try:
         row = db.get_brew(brew_id, conn)
         if row is None:

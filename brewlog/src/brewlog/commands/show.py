@@ -21,6 +21,41 @@ def _print_field(label: str, value, unit: str = "") -> None:
     click.echo(f"  {label:<20}{display}")
 
 
+def _print_origin_field(label: str, value) -> None:
+    """Print an indented origin sub-field."""
+    click.echo(f"    {label:<16}{value}")
+
+
+def _display_origins(origins: list[dict]) -> None:
+    """Display structured origin data in show output (AC-48)."""
+    _ORIGIN_FIELDS = [
+        ("name",         "Name:"),
+        ("country",      "Country:"),
+        ("region",       "Region:"),
+        ("subregion",    "Subregion:"),
+        ("producer",     "Producer:"),
+        ("process",      "Process:"),
+        ("varietal",     "Varietal:"),
+        ("lot",          "Lot:"),
+        ("harvest_year", "Harvest Year:"),
+    ]
+
+    if len(origins) == 1:
+        click.echo(f"  {'Origin:'}")
+        origin = origins[0]
+        for key, label in _ORIGIN_FIELDS:
+            val = origin.get(key)
+            if val is not None:
+                _print_origin_field(label, val)
+    else:
+        for idx, origin in enumerate(origins, start=1):
+            click.echo(f"  Origin {idx}:")
+            for key, label in _ORIGIN_FIELDS:
+                val = origin.get(key)
+                if val is not None:
+                    _print_origin_field(label, val)
+
+
 # All result columns used for has_results detection (AC-35)
 _RESULT_COLS = (
     "result_tds", "result_ey", "result_brix", "result_tasting_notes",
@@ -44,10 +79,12 @@ _RATING_SHOW = [
 
 @click.command("show")
 @click.argument("id", type=int)
-def show(id: int) -> None:
+@click.pass_context
+def show(ctx: click.Context, id: int) -> None:
     """Show all fields for a brew by ID."""
 
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
     try:
         row = db.get_brew(id, conn)
     finally:
@@ -71,6 +108,10 @@ def show(id: int) -> None:
 
     _print_field("Dose:", row["dose_g"], "g")
     _print_field("Water weight:", row["water_weight_g"], "g")
+
+    # brew_ratio: new in v0.5 (AC-40)
+    if row["brew_ratio"] is not None:
+        _print_field("Brew Ratio:", f"{row['brew_ratio']:.1f}")
 
     if row["water_temp_c"] is not None:
         _print_field("Water temp:", row["water_temp_c"], "C")
@@ -136,14 +177,7 @@ def show(id: int) -> None:
             _print_field("Type:", row["coffee_type"])
         if row["coffee_origins"] is not None:
             origins_data = json.loads(row["coffee_origins"])
-            # Display each origin: prefer name, then country, then raw dict
-            parts = []
-            for o in origins_data:
-                if isinstance(o, dict):
-                    parts.append(o.get("name") or o.get("country") or str(o))
-                else:
-                    parts.append(str(o))
-            _print_field("Origins:", ", ".join(parts))
+            _display_origins(origins_data)
 
     # -- Water section --
     if row["water_ppm"] is not None:
@@ -152,10 +186,11 @@ def show(id: int) -> None:
         click.echo("-----")
         _print_field("PPM:", row["water_ppm"])
 
-    # -- Equipment section --
+    # -- Equipment section -- (AC-55)
     has_equipment = any(
         row[f] is not None
-        for f in ("equipment_grinder", "equipment_brewer")
+        for f in ("equipment_grinder", "equipment_brewer",
+                  "equipment_grinder_setting", "equipment_notes")
     )
     if has_equipment:
         click.echo("")
@@ -163,5 +198,9 @@ def show(id: int) -> None:
         click.echo("---------")
         if row["equipment_grinder"] is not None:
             _print_field("Grinder:", row["equipment_grinder"])
+        if row["equipment_grinder_setting"] is not None:
+            _print_field("Grinder Setting:", row["equipment_grinder_setting"])
         if row["equipment_brewer"] is not None:
             _print_field("Brewer:", row["equipment_brewer"])
+        if row["equipment_notes"] is not None:
+            _print_field("Notes:", row["equipment_notes"])

@@ -164,7 +164,7 @@ def test_rows_to_brewspec_document_structure(tmp_db):
     rows = db_module.get_all_brews(tmp_db)
     doc = serialise.rows_to_brewspec_document(rows)
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.5"
+    assert doc["brewspec_version"] == "0.6"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
     assert len(doc["brews"]) == 1

@@ -26,11 +26,12 @@ def runner_with_db(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_import_yaml_success(runner_with_db, tmp_path):
-    """AC-28, AC-30: imports valid YAML, prints 'Imported N brews.'"""
+    """AC-28, AC-30: imports valid YAML, prints import summary."""
     fixture = str(FIXTURES_DIR / "valid_brewspec.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
     assert result.exit_code == 0
-    assert "Imported 1 brews." in result.output or "Imported 1 brew" in result.output
+    assert "Import complete:" in result.output
+    assert "1 brews added" in result.output
 
 
 def test_import_json_success(runner_with_db, tmp_path):
@@ -38,15 +39,15 @@ def test_import_json_success(runner_with_db, tmp_path):
     fixture = str(FIXTURES_DIR / "valid_brewspec.json")
     result = runner_with_db.invoke(cli, ["import", fixture])
     assert result.exit_code == 0
-    assert "Imported" in result.output
+    assert "Import complete:" in result.output
 
 
 def test_import_count_message(runner_with_db, tmp_path):
-    """AC-30: 'Imported 3 brews.' for a 3-brew file."""
+    """AC-30: '3 brews added' for a 3-brew file."""
     fixture = str(FIXTURES_DIR / "valid_brewspec_multi.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
     assert result.exit_code == 0
-    assert "Imported 3 brews." in result.output
+    assert "3 brews added" in result.output
 
 
 def test_import_data_stored_in_db(runner_with_db, tmp_path, monkeypatch):
@@ -159,7 +160,7 @@ def test_import_unknown_extension_rejected(runner_with_db, tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_import_appends_not_replaces(runner_with_db, tmp_path, monkeypatch):
-    """AC-33: import twice -> 2x rows (no dedup)."""
+    """AC-15/AC-16: import twice -> duplicates are skipped (dedup by date+type+dose+water)."""
     import brewlog.db as db_mod
     db_path = tmp_path / "test.db"
     monkeypatch.setattr(db_mod, "DB_PATH", db_path)
@@ -167,12 +168,14 @@ def test_import_appends_not_replaces(runner_with_db, tmp_path, monkeypatch):
     fixture = str(FIXTURES_DIR / "valid_brewspec.yaml")
     runner = CliRunner()
     runner.invoke(cli, ["import", fixture])
-    runner.invoke(cli, ["import", fixture])
+    result = runner.invoke(cli, ["import", fixture])
 
     conn = db_mod.get_connection(db_path=db_path)
     try:
         rows = db_mod.list_brews(conn, all_rows=True)
-        assert len(rows) == 2
+        # Second import is deduplicated — same brew not inserted twice
+        assert len(rows) == 1
+        assert "1 skipped" in result.output
     finally:
         conn.close()
 

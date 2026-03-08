@@ -1,8 +1,8 @@
 """
 `brewlog export` command.
 
-Exports all brews to a BrewSpec v0.6-compliant YAML or JSON file,
-or a flat CSV file (--format csv).
+Exports all brews (or a single brew via --id N) to a BrewSpec v0.6-compliant
+YAML or JSON file, or a flat CSV file (--format csv).
 
 Path is validated before any DB access. YAML/JSON files are validated
 against the JSON Schema before writing to disk.
@@ -64,16 +64,31 @@ def _rows_to_csv(rows) -> str:
     default=False,
     help="Overwrite existing file without prompting.",
 )
-def export(path: str, fmt: str, force: bool) -> None:
+@click.option(
+    "--id", "brew_id",
+    type=int,
+    default=None,
+    help="Export a single brew by ID.",
+)
+@click.pass_context
+def export(ctx: click.Context, path: str, fmt: str, force: bool, brew_id: int | None) -> None:
     """Export all brews to a BrewSpec v0.6 file."""
 
     # -- Path validation (before any DB access) --
     out_path = serialise.validate_export_path(path, fmt=fmt)
 
     # -- Fetch rows --
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
     try:
-        rows = db.get_all_brews(conn)
+        if brew_id is not None:
+            row = db.get_brew(brew_id, conn)
+            if row is None:
+                click.echo(f"No brew found with ID {brew_id}.", err=True)
+                sys.exit(1)
+            rows = [row]
+        else:
+            rows = db.get_all_brews(conn)
     finally:
         conn.close()
 
@@ -113,8 +128,8 @@ def export(path: str, fmt: str, force: bool) -> None:
             "not valid in BrewSpec v0.6 and were omitted from the export:",
             err=True,
         )
-        for brew_id, grind_val in warned_grind:
-            click.echo(f"  Brew #{brew_id}: grind = '{grind_val}'", err=True)
+        for bid, grind_val in warned_grind:
+            click.echo(f"  Brew #{bid}: grind = '{grind_val}'", err=True)
 
     document = {"brewspec_version": "0.6", "brews": brews_dicts}
 

@@ -5,6 +5,7 @@ Imports brews from a BrewSpec v0.6 YAML or JSON file.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
+Deduplicates based on date + type + dose_g + water_weight_g.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v0.6 BrewSpec files. AC-25/MED-2.
+# Verbatim error message for non-v0.6 BrewSpec files. AC-25/MED-2, AC-36.
 # The {version} placeholder is replaced with the version string found in the file.
 _V06_REQUIRED_MSG = """\
 Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.6.
@@ -33,9 +34,27 @@ To migrate your file from v0.5 to v0.6, make the following changes:
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
 
+def _brew_exists(brew_dict: dict, conn) -> bool:
+    """
+    Return True if a brew with the same date, type, dose_g, and water_weight_g exists.
+    All four fields use exact equality (parameterised). AC-15.
+    """
+    row = conn.execute(
+        "SELECT 1 FROM brews WHERE date = ? AND type = ? AND dose_g = ? AND water_weight_g = ? LIMIT 1",
+        (
+            brew_dict.get("date"),
+            brew_dict.get("type"),
+            brew_dict.get("dose_g"),
+            brew_dict.get("water_weight_g"),
+        )
+    ).fetchone()
+    return row is not None
+
+
 @click.command("import")
 @click.argument("path", type=str)
-def import_cmd(path: str) -> None:
+@click.pass_context
+def import_cmd(ctx: click.Context, path: str) -> None:
     """Import brews from a BrewSpec v0.6 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
@@ -81,7 +100,7 @@ def import_cmd(path: str) -> None:
         click.echo(_V06_REQUIRED_MSG.format(version=version_label), err=True)
         sys.exit(1)
 
-    # -- Schema validation (before any DB writes) --
+    # -- Schema validation (before any DB writes or dedup checks) AC-19 --
     errors = schema.validate_document(doc)
     if errors:
         click.echo("Validation failed:", err=True)
@@ -89,14 +108,21 @@ def import_cmd(path: str) -> None:
             click.echo(f"  - {e}", err=True)
         sys.exit(1)
 
-    # -- Insert all brews in a single transaction --
+    # -- Insert brews with deduplication (AC-15 to AC-18) --
     brews = doc.get("brews", [])
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
+    inserted = 0
+    skipped = 0
     try:
         conn.execute("BEGIN")
         try:
             for brew_dict in brews:
-                db.insert_brew_dict(brew_dict, conn)
+                if _brew_exists(brew_dict, conn):
+                    skipped += 1
+                else:
+                    db.insert_brew_dict(brew_dict, conn)
+                    inserted += 1
             conn.commit()
         except Exception:
             conn.rollback()
@@ -105,4 +131,4 @@ def import_cmd(path: str) -> None:
     finally:
         conn.close()
 
-    click.echo(f"Imported {len(brews)} brews.")
+    click.echo(f"Import complete: {inserted} brews added, {skipped} skipped (already exist).")

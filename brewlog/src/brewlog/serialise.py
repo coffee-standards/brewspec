@@ -14,6 +14,8 @@ from pathlib import Path
 
 import click
 
+BREWSPEC_VERSION = "0.6"
+
 
 # ---------------------------------------------------------------------------
 # Constants — AC-11, AC-15
@@ -95,6 +97,14 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         coffee["name"] = r["coffee_name"]
     if r.get("coffee_origins") is not None:
         coffee["origins"] = json.loads(r["coffee_origins"])
+    elif r.get("coffee_origin") is not None:
+        # Legacy fallback: convert string array to object array for v0.6 export
+        try:
+            countries = json.loads(r["coffee_origin"])
+            if isinstance(countries, list):
+                coffee["origins"] = [{"country": c} for c in countries if isinstance(c, str)]
+        except (json.JSONDecodeError, TypeError):
+            pass
     # Note: coffee_varietal and coffee_process columns are retained in the DB for
     # backward compatibility but are NOT included in v0.6 export output.
     if coffee:
@@ -144,8 +154,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.5 document dict.
-    Returns {"brewspec_version": "0.5", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec v0.6 document dict.
+    Returns {"brewspec_version": "0.6", "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.
@@ -156,7 +166,7 @@ def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
         brew_dict.pop("_invalid_grind", None)
         brews.append(brew_dict)
     return {
-        "brewspec_version": "0.5",
+        "brewspec_version": BREWSPEC_VERSION,
         "brews": brews,
     }
 
@@ -227,6 +237,30 @@ def validate_import_path(path_str: str) -> Path:
         click.echo(
             f"Error: file exceeds 10MB limit ({p.stat().st_size} bytes). "
             "Refusing to parse.",
+            err=True,
+        )
+        sys.exit(1)
+    return p
+
+
+def validate_db_path(path_str: str) -> Path:
+    """
+    Validate a --db PATH value.
+
+    Rejects paths containing '..' components.
+    Rejects paths whose parent directory does not exist.
+    Returns a Path on success.
+    Calls sys.exit(1) with error message to stderr on failure.
+    The file itself need not exist — it will be created on first connection.
+    """
+    p = Path(path_str)
+    if ".." in p.parts:
+        click.echo("Error: --db path must not contain '..' components.", err=True)
+        sys.exit(1)
+    if not p.parent.exists():
+        click.echo(
+            f"Error: directory '{p.parent}' does not exist. "
+            "Create the directory before specifying a custom database path.",
             err=True,
         )
         sys.exit(1)

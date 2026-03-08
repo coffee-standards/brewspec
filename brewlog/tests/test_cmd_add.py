@@ -405,7 +405,7 @@ def test_add_interactive_numbered_menu_shown(tmp_path, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["add"], input="\n4\n18.0\n280.0\n")
     assert result.exit_code == 0
-    assert "1)" in result.output
+    assert "1." in result.output
     assert "espresso" in result.output
     assert "pour_over" in result.output
 

@@ -8,6 +8,7 @@ All SQL queries use parameterised ? placeholders — no string interpolation.
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -24,15 +25,17 @@ DB_PATH = DB_DIR / "brews.db"
 
 
 # ---------------------------------------------------------------------------
-# Column allowlist for update_brew() — AC-1, AC-34
+# Column allowlist for update_brew() — AC-1, AC-34, AC-43, AC-50f, AC-57, AC-58
 # ---------------------------------------------------------------------------
 
 UPDATABLE_COLUMNS: frozenset[str] = frozenset({
+    "type",
     "method",
     "grind",
     "water_temp_c",
     "duration_s",
     "notes",
+    "brew_ratio",
     "result_tds",
     "result_ey",
     "result_brix",
@@ -76,7 +79,7 @@ _V3_MIGRATION_COLUMNS: dict[str, str] = {
 
 _V5_MIGRATION_COLUMNS: dict[str, str] = {
     "coffee_origins":           "TEXT",
-    "equipment_grinder_setting": "TEXT",
+    "equipment_grinder_setting": "REAL",
     "equipment_notes":          "TEXT",
     "brew_ratio":               "REAL",
 }
@@ -126,13 +129,15 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             notes                     TEXT,
             coffee_roast_date         TEXT,
             coffee_type               TEXT,
+            coffee_name               TEXT,
             coffee_origins            TEXT,
+            coffee_origin             TEXT,
             coffee_varietal           TEXT,
             coffee_process            TEXT,
             water_ppm                 REAL,
             equipment_grinder         TEXT,
             equipment_brewer          TEXT,
-            equipment_grinder_setting TEXT,
+            equipment_grinder_setting REAL,
             equipment_notes           TEXT,
             result_tds                REAL,
             result_ey                 REAL,
@@ -154,7 +159,7 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
 
 def _apply_migrations(conn: sqlite3.Connection) -> None:
-    """Add any missing v0.3 and v0.5 columns without modifying existing data."""
+    """Add any missing columns and apply data migrations."""
     existing = {
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
@@ -163,6 +168,62 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
     for col, col_type in all_migration_columns.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
+
+    # Step A: Coerce TEXT equipment_grinder_setting values to REAL.
+    # Handles rows created before the type correction.
+    rows = conn.execute(
+        "SELECT id, equipment_grinder_setting FROM brews "
+        "WHERE equipment_grinder_setting IS NOT NULL"
+    ).fetchall()
+    for row in rows:
+        raw = row[1]
+        if isinstance(raw, str):
+            m = re.match(r"^\s*(\d+(?:\.\d+)?)", raw)
+            if m:
+                val = float(m.group(1))
+                if val > 0:
+                    conn.execute(
+                        "UPDATE brews SET equipment_grinder_setting = ? WHERE id = ?",
+                        (val, row[0])
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE brews SET equipment_grinder_setting = NULL WHERE id = ?",
+                        (row[0],)
+                    )
+            else:
+                conn.execute(
+                    "UPDATE brews SET equipment_grinder_setting = NULL WHERE id = ?",
+                    (row[0],)
+                )
+
+    # Step B: Migrate coffee_origin (string array) to coffee_origins (object array).
+    # Only runs when coffee_origin column exists and rows need migration.
+    # Guard: skip entirely if the column was never added to this DB.
+    existing_after = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(brews)").fetchall()
+    }
+    if "coffee_origin" not in existing_after:
+        conn.commit()
+        return
+
+    origin_rows = conn.execute(
+        "SELECT id, coffee_origin FROM brews "
+        "WHERE coffee_origin IS NOT NULL AND coffee_origins IS NULL"
+    ).fetchall()
+    for row in origin_rows:
+        try:
+            countries = json.loads(row[1])
+            if isinstance(countries, list):
+                origins_obj = [{"country": c} for c in countries if isinstance(c, str)]
+                conn.execute(
+                    "UPDATE brews SET coffee_origins = ? WHERE id = ?",
+                    (json.dumps(origins_obj), row[0])
+                )
+        except (json.JSONDecodeError, TypeError):
+            pass  # Malformed legacy data: leave coffee_origins NULL
+
     conn.commit()
 
 
@@ -475,3 +536,83 @@ def update_brew(brew_id: int, updates: dict, conn: sqlite3.Connection) -> bool:
     )
     conn.commit()
     return cursor.rowcount > 0
+
+
+# ---------------------------------------------------------------------------
+# Stats and search queries — v0.5
+# ---------------------------------------------------------------------------
+
+def get_brew_stats(conn: sqlite3.Connection) -> dict:
+    """
+    Return brew statistics for the stats command.
+
+    Returns a dict with keys:
+      total: int
+      most_common_type: str | None
+      avg_overall_rating: float | None
+      rating_distribution: dict[int, int]  {1: count, ..., 5: count}
+
+    All queries are read-only; no user input involved.
+    """
+    total = conn.execute("SELECT COUNT(*) FROM brews").fetchone()[0]
+
+    most_common_row = conn.execute(
+        "SELECT type, COUNT(*) AS cnt FROM brews "
+        "GROUP BY type ORDER BY cnt DESC, type ASC LIMIT 1"
+    ).fetchone()
+    most_common_type = most_common_row[0] if most_common_row else None
+
+    avg_row = conn.execute(
+        "SELECT AVG(result_rating_overall) FROM brews "
+        "WHERE result_rating_overall IS NOT NULL"
+    ).fetchone()
+    avg_rating = avg_row[0]  # float or None
+
+    dist_rows = conn.execute(
+        "SELECT result_rating_overall, COUNT(*) FROM brews "
+        "WHERE result_rating_overall IS NOT NULL "
+        "GROUP BY result_rating_overall ORDER BY result_rating_overall"
+    ).fetchall()
+    distribution = {i: 0 for i in range(1, 6)}
+    for star, count in dist_rows:
+        if 1 <= star <= 5:
+            distribution[star] = count
+
+    return {
+        "total": total,
+        "most_common_type": most_common_type,
+        "avg_overall_rating": round(avg_rating, 1) if avg_rating is not None else None,
+        "rating_distribution": distribution,
+    }
+
+
+def search_brews(
+    conn: sqlite3.Connection,
+    query: str,
+    limit: int | None = None,
+) -> list[sqlite3.Row]:
+    """
+    Search brews by case-insensitive substring match across:
+      notes, result_tasting_notes, coffee_name, coffee_origins, coffee_origin.
+
+    Uses LIKE ? with %query% parameter — no f-string interpolation of the query value.
+    Returns rows ordered by id DESC.
+    limit=None returns all matches.
+    """
+    pattern = f"%{query}%"
+    sql = """
+        SELECT * FROM brews
+        WHERE (
+            notes LIKE ?
+            OR result_tasting_notes LIKE ?
+            OR coffee_name LIKE ?
+            OR coffee_origins LIKE ?
+            OR coffee_origin LIKE ?
+        )
+        ORDER BY id DESC
+    """
+    params: list = [pattern] * 5
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(limit)
+    return conn.execute(sql, params).fetchall()

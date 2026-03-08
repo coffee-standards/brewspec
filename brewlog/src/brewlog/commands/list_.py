@@ -258,7 +258,9 @@ def _render_table(rows) -> None:
     "--rating-max", "rating_max", type=int, default=None,
     help="Filter brews with overall rating <= N (1-5).",
 )
+@click.pass_context
 def list_cmd(
+    ctx: click.Context,
     limit: int,
     show_all: bool,
     brew_type: str | None,
@@ -347,7 +349,8 @@ def list_cmd(
         or rating_max is not None
     )
 
-    conn = db.get_connection()
+    db_path = ctx.obj.get("db_path") if ctx.obj else None
+    conn = db.get_connection(db_path=db_path)
     try:
         rows = db.list_brews_filtered(
             conn,
