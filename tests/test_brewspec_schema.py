@@ -1260,8 +1260,8 @@ def test_coffee_origins_empty_object_entry_accepted(validator):
     })
 
 
-def test_coffee_origins_empty_array_rejected(validator):
-    """coffee.origins: [] (empty array) fails validation (minItems: 1)."""
+def test_coffee_origins_empty_array_rejected_with_valid_brew_base(validator):
+    """coffee.origins: [] (empty array) fails validation (minItems: 1) when using VALID_BREW base."""
     with pytest.raises(ValidationError):
         validator.validate({
             "brewspec_version": "0.6",
