@@ -47,7 +47,7 @@ _RATING_DIMS = [
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.5 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v0.6 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).

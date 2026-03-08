@@ -1170,6 +1170,38 @@ class TestCoffeeOrigins:
         finally:
             conn.close()
 
+    def test_origin_varietal_export_import_round_trip(self, runner, db_path, tmp_path):
+        """varietal survives export → import round-trip via coffee.origins."""
+        # 1. Add a brew with --origin-country and --origin-varietal
+        runner.invoke(cli, [
+            "add", "--date", "2026-02-19", "--type", "pour_over",
+            "--dose", "18.0", "--water", "280.0",
+            "--origin-country", "Ethiopia",
+            "--origin-varietal", "Heirloom",
+        ])
+
+        # 2. Export to a temp YAML file
+        out_file = tmp_path / "export.yaml"
+        result = runner.invoke(cli, ["export", str(out_file)])
+        assert result.exit_code == 0
+
+        # 3. Delete the brew so the DB is empty
+        runner.invoke(cli, ["delete", "1", "--yes"])
+
+        # 4. Re-import the YAML file
+        result = runner.invoke(cli, ["import", str(out_file)])
+        assert result.exit_code == 0
+
+        # 5. Assert the re-imported brew has varietal: "Heirloom" in coffee_origins
+        conn = db_module.get_connection(db_path=db_path)
+        try:
+            rows = db_module.get_all_brews(conn)
+            assert len(rows) == 1
+            origins = json.loads(rows[0]["coffee_origins"])
+            assert origins[0]["varietal"] == "Heirloom"
+        finally:
+            conn.close()
+
     def test_legacy_origin_export_fallback(self, db_path, tmp_path, monkeypatch):
         """AC-49: Legacy coffee_origin rows exported with origin object structure."""
         monkeypatch.setattr(db_module, "DB_PATH", db_path)
