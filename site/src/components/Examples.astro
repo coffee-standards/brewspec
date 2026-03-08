@@ -5,16 +5,18 @@
 // fragrance, aroma, and sweetness.
 import CodeBlock from './CodeBlock.astro';
 
-const pourOverYaml = `brewspec_version: "0.4"
+const pourOverYaml = `brewspec_version: "0.6"
 brews:
   - date: "2026-02-25"
     type: "pour_over"
     dose_g: 18
     water_weight_g: 280`;
 
-// Corrected full espresso example — all 8 SCA rating dimensions present:
+// Full espresso example — all 8 SCA rating dimensions present:
 // overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel
-const espressoYaml = `brewspec_version: "0.4"
+// v0.6: coffee.origins is an array of objects (country, region, varietal);
+// coffee.varietal and coffee.process removed from the top-level coffee object.
+const espressoYaml = `brewspec_version: "0.6"
 brews:
   - date: "2026-02-25T08:30:00Z"
     type: "espresso"
@@ -26,11 +28,13 @@ brews:
     method: "La Marzocco Linea Mini"
     notes: "Re-calibrated grinder after three weeks"
     coffee:
-      origin: ["Colombia"]
+      name: "El Paraiso Washed Castillo"
       roast_date: "2026-02-10"
       type: "single_origin"
-      varietal: "Castillo"
-      process: "Washed"
+      origins:
+        - country: "Colombia"
+          region: "Huila"
+          varietal: "Castillo"
     water:
       ppm: 120
     equipment:
