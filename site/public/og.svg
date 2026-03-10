@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!--
+    BrewSpec OG image — 1200×630
+    Export to PNG at 1200×630 for og.png.
+    Best rendered in a browser with DM Sans and JetBrains Mono loaded for correct typeface.
+    Falls back to system-ui / monospace on systems without those fonts installed.
+
+    Palette:
+      Background  #F7F5F2
+      Text        #1A1814
+      Muted       #6B6460
+      Accent      #C47B2B
+      Border      #E2DED9
+      Code bg     #1E1E1E
+  -->
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#F7F5F2"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1200" height="7" fill="#C47B2B"/>
+
+  <!-- Subtle outer border -->
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#E2DED9" stroke-width="2"/>
+
+  <!-- ─────────────────────────────────────────────────────────
+       Ghost YAML (right panel, decorative texture element)
+       Signals "data format" without being literal imagery.
+       Very low opacity — present as visual texture, not content.
+       ───────────────────────────────────────────────────────── -->
+  <g
+    opacity="0.09"
+    font-family="'JetBrains Mono', 'Fira Code', 'Courier New', monospace"
+    font-size="21"
+    fill="#1A1814"
+    letter-spacing="-0.01em"
+  >
+    <text x="740" y="180">brews:</text>
+    <text x="740" y="214">  - type: pour_over</text>
+    <text x="740" y="248">    method: Hario V60</text>
+    <text x="740" y="282">    dose_g: 20</text>
+    <text x="740" y="316">    water_weight_g: 320</text>
+    <text x="740" y="350">    grind: medium_fine</text>
+    <text x="740" y="384">    water_temp_c: 94</text>
+    <text x="740" y="418">    result:</text>
+    <text x="740" y="452">      tds: 1.38</text>
+    <text x="740" y="486">      ey: 21.5</text>
+    <text x="740" y="520">      ratings:</text>
+    <text x="740" y="554">        overall: 4</text>
+  </g>
+
+  <!-- Subtle vertical divider between content and code zones -->
+  <line x1="700" y1="60" x2="700" y2="572" stroke="#E2DED9" stroke-width="1"/>
+
+  <!-- ─────────────────────────────────────────────────────────
+       Left content zone
+       ───────────────────────────────────────────────────────── -->
+
+  <!-- Eyebrow — metadata in small caps style -->
+  <text
+    x="80" y="188"
+    font-family="'DM Sans', system-ui, -apple-system, sans-serif"
+    font-size="15"
+    font-weight="500"
+    letter-spacing="0.14em"
+    fill="#6B6460"
+  >OPEN FORMAT · APACHE 2.0 · JSON SCHEMA</text>
+
+  <!-- Two-tone wordmark: Brew (dark) + Spec (accent) -->
+  <text
+    x="80" y="318"
+    font-family="'DM Sans', system-ui, -apple-system, sans-serif"
+    font-size="118"
+    font-weight="600"
+    letter-spacing="-0.025em"
+  ><tspan fill="#1A1814">Brew</tspan><tspan fill="#C47B2B">Spec</tspan></text>
+
+  <!-- Tagline -->
+  <text
+    x="80" y="382"
+    font-family="'DM Sans', system-ui, -apple-system, sans-serif"
+    font-size="30"
+    font-weight="400"
+    fill="#6B6460"
+    letter-spacing="-0.01em"
+  >An open format for coffee brews.</text>
+
+  <!-- Divider rule -->
+  <line x1="80" y1="420" x2="500" y2="420" stroke="#E2DED9" stroke-width="1"/>
+
+  <!-- URL — monospace, accent colour -->
+  <text
+    x="80" y="462"
+    font-family="'JetBrains Mono', 'Fira Code', 'Courier New', monospace"
+    font-size="22"
+    fill="#C47B2B"
+  >brewspec.coffee</text>
+
+</svg>
