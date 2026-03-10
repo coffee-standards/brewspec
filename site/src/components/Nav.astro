@@ -5,7 +5,7 @@
 <header class="site-header">
   <nav class="nav" aria-label="Main navigation">
     <div class="nav-inner content-width">
-      <a href="/" class="nav-wordmark" aria-label="BrewSpec home">BrewSpec</a>
+      <a href="/" class="nav-wordmark" aria-label="BrewSpec home">Brew<span class="nav-wordmark-accent">Spec</span></a>
 
       <button
         class="nav-toggle"
@@ -70,6 +70,7 @@
   }
 
   .nav-wordmark {
+    font-family: var(--font-head);
     font-size: var(--text-lg);
     font-weight: var(--font-weight-bold);
     text-decoration: none;
@@ -82,6 +83,10 @@
     text-decoration: none;
   }
 
+  .nav-wordmark-accent {
+    color: var(--color-accent);
+  }
+
   .nav-links {
     display: flex;
     align-items: center;
@@ -92,6 +97,7 @@
   }
 
   .nav-link {
+    font-family: var(--font-head);
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     color: var(--color-text-muted);

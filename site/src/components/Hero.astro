@@ -7,10 +7,11 @@
     <h1 class="hero-seo-h1">An open format for describing a coffee brew</h1>
 
     <!-- Display headline — visually prominent, styled large -->
+    <p class="hero-eyebrow">Open format · v0.6 · Apache 2.0</p>
     <p class="hero-headline">Coffee brewing, precisely described.</p>
 
     <p class="hero-subheadline">
-      BrewSpec is a free, versioned data format for coffee brew records — method, dose,
+      <span class="brewspec-wordmark">Brew<span class="brewspec-wordmark-accent">Spec</span></span> is a free, versioned data format for coffee brew records — method, dose,
       water, grind, extraction, result. Build on it. Log with it. Export from one tool,
       import into another.
     </p>
@@ -48,13 +49,33 @@
     border-width: 0;
   }
 
+  .hero-eyebrow {
+    font-family: var(--font-head);
+    font-size: 0.6875rem;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0;
+  }
+
   .hero-headline {
+    font-family: var(--font-head);
     font-size: var(--text-hero);
     font-weight: var(--font-weight-bold);
     line-height: var(--line-height-heading);
     color: var(--color-text);
     letter-spacing: -0.02em;
     margin-bottom: 0;
+  }
+
+  .brewspec-wordmark {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+  }
+
+  .brewspec-wordmark-accent {
+    color: var(--color-accent);
   }
 
   .hero-subheadline {

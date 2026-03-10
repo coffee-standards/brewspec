@@ -393,6 +393,7 @@ See [`brewlog/`](./brewlog/) for the full source code and tests.
 - Read the spec: [`brewspec-v0.6.md`](./brewspec-v0.6.md)
 - Check the examples: [`examples/`](./examples/)
 - Open an issue: https://github.com/coffee-standards/brewspec
+- Email us: hello@brewspec.coffee
 
 ---
 
