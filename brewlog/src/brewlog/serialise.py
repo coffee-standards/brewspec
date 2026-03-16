@@ -64,11 +64,10 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
     brew: dict = {}
 
-    # Required fields (always present; NOT NULL in schema)
-    brew["date"] = r["date"]
-    brew["type"] = r["type"]
-    brew["dose_g"] = r["dose_g"]
-    brew["water_weight_g"] = r["water_weight_g"]
+    # Formerly-required fields — now optional in v0.7; omit if NULL
+    for field in ("date", "type", "dose_g", "water_weight_g"):
+        if r.get(field) is not None:
+            brew[field] = r[field]
 
     # Optional brew-level fields (not grind — handled separately below)
     # Note: water_volume_ml is excluded — removed in v0.6

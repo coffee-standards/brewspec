@@ -121,11 +121,11 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS brews (
             id                        INTEGER PRIMARY KEY AUTOINCREMENT,
-            date                      TEXT    NOT NULL,
-            type                      TEXT    NOT NULL,
+            date                      TEXT,
+            type                      TEXT,
             method                    TEXT,
-            dose_g                    REAL    NOT NULL,
-            water_weight_g            REAL    NOT NULL,
+            dose_g                    REAL,
+            water_weight_g            REAL,
             brew_ratio                REAL,
             water_volume_ml           REAL,
             water_temp_c              REAL,
@@ -164,8 +164,118 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _has_not_null_on_date(conn: sqlite3.Connection) -> bool:
+    """Return True if the brews table has NOT NULL on the 'date' column.
+
+    SQLite PRAGMA table_info returns notnull=1 when the column was declared
+    NOT NULL.  We use 'date' as the sentinel — it was the first of the four
+    formerly-required fields in every pre-v0.7 schema.
+    """
+    for row in conn.execute("PRAGMA table_info(brews)").fetchall():
+        if row[1] == "date":
+            return bool(row[3])  # index 3 is the notnull flag
+    return False
+
+
+def _rebuild_brews_table(conn: sqlite3.Connection) -> None:
+    """Rebuild the brews table so that all formerly-required fields are nullable.
+
+    SQLite does not support ALTER COLUMN to drop NOT NULL.  The standard
+    workaround is:
+      1. Rename the existing table to a temp name.
+      2. Create the new table with the correct (nullable) schema.
+      3. Copy all rows from the temp table into the new table.
+      4. Drop the temp table.
+
+    All columns that may exist in any pre-v0.7 database are listed in the
+    INSERT … SELECT so that data is never lost.  Columns introduced by
+    later migrations that are absent from an older DB produce NULL values,
+    which is correct.
+    """
+    conn.executescript("""
+        ALTER TABLE brews RENAME TO brews_old;
+
+        CREATE TABLE brews (
+            id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+            date                      TEXT,
+            type                      TEXT,
+            method                    TEXT,
+            dose_g                    REAL,
+            water_weight_g            REAL,
+            brew_ratio                REAL,
+            water_volume_ml           REAL,
+            water_temp_c              REAL,
+            grind                     TEXT,
+            duration_s                INTEGER,
+            notes                     TEXT,
+            coffee_roast_date         TEXT,
+            coffee_type               TEXT,
+            coffee_name               TEXT,
+            coffee_origins            TEXT,
+            coffee_origin             TEXT,
+            coffee_varietal           TEXT,
+            coffee_process            TEXT,
+            water_ppm                 REAL,
+            equipment_grinder         TEXT,
+            equipment_brewer          TEXT,
+            equipment_grinder_setting REAL,
+            equipment_notes           TEXT,
+            result_tds                REAL,
+            result_ey                 REAL,
+            result_brix               REAL,
+            result_yield_g            REAL,
+            result_tasting_notes      TEXT,
+            result_ratings            TEXT,
+            result_rating_overall     INTEGER,
+            result_rating_fragrance   INTEGER,
+            result_rating_aroma       INTEGER,
+            result_rating_flavour     INTEGER,
+            result_rating_aftertaste  INTEGER,
+            result_rating_acidity     INTEGER,
+            result_rating_sweetness   INTEGER,
+            result_rating_mouthfeel   INTEGER
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
+    """)
+
+    # Copy rows column-by-column; columns absent from the old table default
+    # to NULL via COALESCE-style absence — SQLite inserts NULL for missing
+    # columns in the source when they don't exist in the old table.
+    old_cols = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(brews_old)").fetchall()
+    }
+    all_cols = [
+        "id", "date", "type", "method", "dose_g", "water_weight_g",
+        "brew_ratio", "water_volume_ml", "water_temp_c", "grind", "duration_s",
+        "notes", "coffee_roast_date", "coffee_type", "coffee_name",
+        "coffee_origins", "coffee_origin", "coffee_varietal", "coffee_process",
+        "water_ppm", "equipment_grinder", "equipment_brewer",
+        "equipment_grinder_setting", "equipment_notes",
+        "result_tds", "result_ey", "result_brix", "result_yield_g",
+        "result_tasting_notes", "result_ratings",
+        "result_rating_overall", "result_rating_fragrance",
+        "result_rating_aroma", "result_rating_flavour",
+        "result_rating_aftertaste", "result_rating_acidity",
+        "result_rating_sweetness", "result_rating_mouthfeel",
+    ]
+    present = [c for c in all_cols if c in old_cols]
+    cols_sql = ", ".join(present)
+    conn.execute(
+        f"INSERT INTO brews ({cols_sql}) SELECT {cols_sql} FROM brews_old"  # noqa: S608
+    )
+    conn.execute("DROP TABLE brews_old")
+    conn.commit()
+
+
 def _apply_migrations(conn: sqlite3.Connection) -> None:
     """Add any missing columns and apply data migrations."""
+    # If the existing table still has NOT NULL on formerly-required fields,
+    # rebuild it with nullable columns before adding any new columns.
+    if _has_not_null_on_date(conn):
+        _rebuild_brews_table(conn)
+
     existing = {
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
