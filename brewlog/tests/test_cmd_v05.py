@@ -74,19 +74,19 @@ def _insert_brew(db_path, **kwargs):
 
 
 class TestVersionBump:
-    """v0.5.0 version string appears in the welcome screen and --version output."""
+    """v0.6.0 version string appears in the welcome screen and --version output."""
 
-    def test_welcome_screen_shows_v050(self, runner):
-        """Welcome screen shows 'BrewLog v0.5.0'."""
+    def test_welcome_screen_shows_v060(self, runner):
+        """Welcome screen shows 'BrewLog v0.6.0'."""
         result = runner.invoke(cli, [])
         assert result.exit_code == 0
-        assert "0.5.0" in result.output
+        assert "0.6.0" in result.output
 
-    def test_version_flag_shows_v050(self, runner):
-        """--version outputs 0.5.0."""
+    def test_version_flag_shows_v060(self, runner):
+        """--version outputs 0.6.0."""
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "0.5.0" in result.output
+        assert "0.6.0" in result.output
 
 
 # ===========================================================================
@@ -1201,6 +1201,49 @@ class TestCoffeeOrigins:
             assert origins[0]["varietal"] == "Heirloom"
         finally:
             conn.close()
+
+    def test_origin_varietal_castillo_export(self, runner, db_path, tmp_path):
+        """MED-1: --origin-varietal Castillo survives to exported YAML origins[0].varietal."""
+        runner.invoke(cli, [
+            "add", "--date", "2026-02-19", "--type", "pour_over",
+            "--dose", "18.0", "--water", "280.0",
+            "--origin-varietal", "Castillo",
+        ])
+        out_file = tmp_path / "out.yaml"
+        result = runner.invoke(cli, ["export", str(out_file)])
+        assert result.exit_code == 0, result.output
+        doc = yaml.safe_load(out_file.read_text())
+        origins = doc["brews"][0]["coffee"]["origins"]
+        assert origins[0]["varietal"] == "Castillo"
+
+    def test_origin_varietal_import_show(self, runner, db_path, tmp_path):
+        """MED-1: importing a YAML with varietal in origins[] shows varietal in `show` output."""
+        import_file = tmp_path / "varietal_import.yaml"
+        import_file.write_text(yaml.dump({
+            "brewspec_version": "0.7",
+            "brews": [{
+                "date": "2026-03-10",
+                "type": "pour_over",
+                "dose_g": 18.0,
+                "water_weight_g": 280.0,
+                "coffee": {
+                    "origins": [{"country": "Colombia", "varietal": "Castillo"}]
+                },
+            }]
+        }))
+        import_result = runner.invoke(cli, ["import", str(import_file)])
+        assert import_result.exit_code == 0, import_result.output
+
+        conn = db_module.get_connection(db_path=db_path)
+        try:
+            rows = db_module.get_all_brews(conn)
+            brew_id = rows[0]["id"]
+        finally:
+            conn.close()
+
+        show_result = runner.invoke(cli, ["show", str(brew_id)])
+        assert show_result.exit_code == 0, show_result.output
+        assert "Castillo" in show_result.output
 
     def test_legacy_origin_export_fallback(self, db_path, tmp_path, monkeypatch):
         """AC-49: Legacy coffee_origin rows exported with origin object structure."""

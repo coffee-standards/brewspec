@@ -49,6 +49,8 @@ from brewlog.prompts import prompt_brew_type
               help="Extraction yield (> 0).")
 @click.option("--brix",        "brix",         type=float, default=None,
               help="Degrees Brix (>= 0).")
+@click.option("--yield-g",     "yield_g",      type=float, default=None,
+              help="Output weight of the brew in grams (> 0). For espresso: liquid collected in cup.")
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
               help=(
                   "Sensory tasting notes — impressions of the cup. "
@@ -116,7 +118,7 @@ def update(
     ctx,
     brew_id,
     brew_type,
-    method, grind, temp, duration, notes, brew_ratio, tds, ey, brix, tasting_notes,
+    method, grind, temp, duration, notes, brew_ratio, tds, ey, brix, yield_g, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
@@ -196,6 +198,10 @@ def update(
 
     if brix is not None and brix < 0:
         click.echo("Error: brix must be >= 0", err=True)
+        sys.exit(1)
+
+    if yield_g is not None and yield_g <= 0:
+        click.echo("Error: --yield-g must be greater than 0.", err=True)
         sys.exit(1)
 
     if roast_date is not None and not ROAST_DATE_PATTERN.match(roast_date):
@@ -329,6 +335,8 @@ def update(
         updates["result_ey"] = ey
     if brix is not None:
         updates["result_brix"] = brix
+    if yield_g is not None:
+        updates["result_yield_g"] = yield_g
     if tasting_notes is not None:
         updates["result_tasting_notes"] = tasting_notes
     # AC-31: individual rating columns (no JSON sentinel pattern)

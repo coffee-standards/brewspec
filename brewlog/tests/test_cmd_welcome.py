@@ -91,13 +91,13 @@ def test_version_flag(runner):
 # AC-42 (v0.4): Version is 0.4.0
 # ---------------------------------------------------------------------------
 
-def test_version_is_0_4_0():
-    """AC-61/62 (v0.5): __version__ is 0.5.0."""
-    assert __version__ == "0.5.0"
+def test_version_is_0_6_0():
+    """AC-63 (v0.6): __version__ is 0.6.0."""
+    assert __version__ == "0.6.0"
 
 
-def test_welcome_screen_shows_0_4_0(runner):
-    """AC-61/62 (v0.5): welcome screen displays version 0.5.0."""
+def test_welcome_screen_shows_0_6_0(runner):
+    """AC-63 (v0.6): welcome screen displays version 0.6.0."""
     result = runner.invoke(cli, [])
     assert result.exit_code == 0
-    assert "0.5.0" in result.output
+    assert "0.6.0" in result.output

@@ -400,3 +400,34 @@ def test_update_grind_invalid(runner):
     _add_brew(runner)
     result = runner.invoke(cli, ["update", "--grind", "light"])
     assert result.exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# v0.6 (BrewSpec v0.7): --yield-g flag on update
+# ---------------------------------------------------------------------------
+
+def test_update_yield_g_stored(runner, db_path):
+    """update --yield-g stores result_yield_g in DB."""
+    _add_brew(runner)
+    result = runner.invoke(cli, ["update", "--yield-g", "36.5"])
+    assert result.exit_code == 0, result.output
+    conn = db_module.get_connection(db_path=db_path)
+    try:
+        row = db_module.get_brew(1, conn)
+        assert row["result_yield_g"] == 36.5
+    finally:
+        conn.close()
+
+
+def test_update_yield_g_zero_rejected(runner):
+    """update --yield-g 0 -> exit 1 (must be > 0)."""
+    _add_brew(runner)
+    result = runner.invoke(cli, ["update", "--yield-g", "0"])
+    assert result.exit_code == 1
+
+
+def test_update_yield_g_negative_rejected(runner):
+    """update --yield-g -5 -> exit 1."""
+    _add_brew(runner)
+    result = runner.invoke(cli, ["update", "--yield-g", "-5"])
+    assert result.exit_code == 1

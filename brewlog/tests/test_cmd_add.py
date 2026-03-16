@@ -901,3 +901,78 @@ def test_grind_help_lists_enum_values(runner_with_db):
     result = runner_with_db.invoke(cli, ["add", "--help"])
     assert "medium_fine" in result.output
     assert "coarse" in result.output
+
+
+# ---------------------------------------------------------------------------
+# v0.6 (BrewSpec v0.7): --yield-g flag on add
+# ---------------------------------------------------------------------------
+
+def test_add_yield_g_stored(runner_with_db, tmp_path, monkeypatch):
+    """add --yield-g stores result_yield_g in DB."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "yield_test.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-03-16", "--type", "espresso",
+        "--dose", "18.0", "--water", "36.0", "--yield-g", "36.5",
+    ])
+    assert result.exit_code == 0, result.output
+    conn = db_mod.get_connection(db_path=db_path)
+    try:
+        row = db_mod.get_brew(1, conn)
+        assert row["result_yield_g"] == 36.5
+    finally:
+        conn.close()
+
+
+def test_add_yield_g_zero_rejected(runner_with_db):
+    """add --yield-g 0 -> exit 1 (must be > 0)."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-03-16", "--type", "espresso",
+        "--dose", "18.0", "--water", "36.0", "--yield-g", "0",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_yield_g_negative_rejected(runner_with_db):
+    """add --yield-g -1 -> exit 1."""
+    result = runner_with_db.invoke(cli, [
+        "add", "--date", "2026-03-16", "--type", "espresso",
+        "--dose", "18.0", "--water", "36.0", "--yield-g", "-1",
+    ])
+    assert result.exit_code == 1
+
+
+def test_add_yield_g_appears_in_show(tmp_path, monkeypatch):
+    """add --yield-g then show displays 'Yield:' and the value."""
+    import brewlog.db as db_mod
+    db_path = tmp_path / "yield_show.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner = CliRunner()
+    runner.invoke(cli, [
+        "add", "--date", "2026-03-16", "--type", "espresso",
+        "--dose", "18.0", "--water", "36.0", "--yield-g", "36.5",
+    ])
+    result = runner.invoke(cli, ["show", "1"])
+    assert result.exit_code == 0, result.output
+    assert "Yield:" in result.output
+    assert "36.5g" in result.output
+
+
+def test_add_yield_g_in_export(tmp_path, monkeypatch):
+    """add --yield-g then export includes result.yield_g as float."""
+    import brewlog.db as db_mod
+    import yaml
+    db_path = tmp_path / "yield_export.db"
+    monkeypatch.setattr(db_mod, "DB_PATH", db_path)
+    runner = CliRunner()
+    runner.invoke(cli, [
+        "add", "--date", "2026-03-16", "--type", "espresso",
+        "--dose", "18.0", "--water", "36.0", "--yield-g", "36.5",
+    ])
+    out_file = tmp_path / "out.yaml"
+    result = runner.invoke(cli, ["export", str(out_file)])
+    assert result.exit_code == 0, result.output
+    doc = yaml.safe_load(out_file.read_text())
+    assert doc["brews"][0]["result"]["yield_g"] == 36.5
+    assert isinstance(doc["brews"][0]["result"]["yield_g"], float)

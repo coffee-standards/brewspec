@@ -190,6 +190,8 @@ def _build_origins_from_flags(
               help="Extraction yield percentage (> 0).")
 @click.option("--brix",        "brix",         type=float, default=None,
               help="Degrees Brix (>= 0).")
+@click.option("--yield-g",     "yield_g",      type=float, default=None,
+              help="Output weight of the brew in grams (> 0). For espresso: liquid collected in cup.")
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
               help=(
                   "Sensory tasting notes — impressions of the cup. "
@@ -229,7 +231,7 @@ def add(
     origin,
     origin_name, origin_country, origin_region, origin_subregion,
     origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
-    water_ppm, tds, ey, brix, tasting_notes,
+    water_ppm, tds, ey, brix, yield_g, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
@@ -263,6 +265,10 @@ def add(
 
     if equipment_notes is not None and not equipment_notes.strip():
         click.echo("Error: --equipment-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    if yield_g is not None and yield_g <= 0:
+        click.echo("Error: --yield-g must be greater than 0.", err=True)
         sys.exit(1)
 
     # Validate --origin-varietal entries (non-empty when supplied)
@@ -367,7 +373,7 @@ def add(
 
     result_obj = None
     has_any_rating = any(v is not None for v in _RATING_DIMS.values())
-    has_result = any(v is not None for v in (tds, ey, brix, tasting_notes)) or has_any_rating
+    has_result = any(v is not None for v in (tds, ey, brix, yield_g, tasting_notes)) or has_any_rating
     if has_result:
         ratings_obj = None
         if has_any_rating:
@@ -390,6 +396,7 @@ def add(
                 tds=tds,
                 ey=ey,
                 brix=brix,
+                yield_g=yield_g,
                 tasting_notes=tasting_notes,
                 ratings=ratings_obj,
             )
