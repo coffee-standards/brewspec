@@ -1,6 +1,6 @@
 # Valid example: date-only format and full result object.
 # Demonstrates YYYY-MM-DD date, grind enum, result with all fields.
-brewspec_version: "0.6"
+brewspec_version: "0.7"
 brews:
   - date: "2026-02-21"
     type: "pour_over"

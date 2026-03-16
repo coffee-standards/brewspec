@@ -555,7 +555,7 @@ class TestImportDeduplication:
     """Import deduplication: skip brews that already exist."""
 
     def _make_valid_v06_yaml(self, brews_list):
-        doc = {"brewspec_version": "0.6", "brews": brews_list}
+        doc = {"brewspec_version": "0.7", "brews": brews_list}
         return yaml.dump(doc, default_flow_style=False)
 
     def _base_brew(self, date="2026-02-19", brew_type="pour_over"):
@@ -649,7 +649,7 @@ class TestImportDeduplication:
         custom_db = tmp_path / "import_test.db"
         import_file = tmp_path / "import.yaml"
         brews = [{"date": "2026-02-19", "type": "pour_over", "dose_g": 18.0, "water_weight_g": 280.0}]
-        import_file.write_text(yaml.dump({"brewspec_version": "0.6", "brews": brews}))
+        import_file.write_text(yaml.dump({"brewspec_version": "0.7", "brews": brews}))
         result = runner.invoke(cli, ["--db", str(custom_db), "import", str(import_file)])
         assert result.exit_code == 0
         assert "1 brews added" in result.output
@@ -695,7 +695,7 @@ class TestExportById:
         assert not (tmp_path / "nope.yaml").exists()
 
     def test_export_id_schema_valid(self, runner, db_path, tmp_path):
-        """AC-23: Single-brew export passes v0.6 schema validation."""
+        """AC-23: Single-brew export passes v0.7 schema validation."""
         from brewlog import schema
         _insert_brew(db_path)
         out_file = str(tmp_path / "single.yaml")
@@ -706,14 +706,14 @@ class TestExportById:
         errors = schema.validate_document(doc)
         assert not errors
 
-    def test_export_id_version_is_06(self, runner, db_path, tmp_path):
-        """AC-34: Export with --id writes brewspec_version: '0.6'."""
+    def test_export_id_version_is_07(self, runner, db_path, tmp_path):
+        """AC-34: Export with --id writes brewspec_version: '0.7'."""
         _insert_brew(db_path)
         out_file = str(tmp_path / "single.yaml")
         runner.invoke(cli, ["export", out_file, "--id", "1"])
         content = (tmp_path / "single.yaml").read_text()
         doc = yaml.safe_load(content)
-        assert doc["brewspec_version"] == "0.6"
+        assert doc["brewspec_version"] == "0.7"
 
     def test_export_no_id_exports_all(self, runner, db_path, tmp_path):
         """AC-24: No --id exports all brews."""
@@ -757,20 +757,20 @@ class TestExportById:
 
 
 # ===========================================================================
-# AC-34 to AC-36: BrewSpec v0.6 schema adoption
+# AC-34 to AC-36: BrewSpec v0.7 schema adoption
 # ===========================================================================
 
 
 class TestSchemaAdoption:
-    """BrewSpec v0.6 schema adoption."""
+    """BrewSpec v0.7 schema adoption."""
 
-    def test_export_writes_v06_version(self, runner, db_path, tmp_path):
-        """AC-34: All exports write brewspec_version: '0.6'."""
+    def test_export_writes_v07_version(self, runner, db_path, tmp_path):
+        """AC-34: All exports write brewspec_version: '0.7'."""
         _insert_brew(db_path)
         out_file = str(tmp_path / "out.yaml")
         runner.invoke(cli, ["export", out_file])
         doc = yaml.safe_load((tmp_path / out_file).read_text())
-        assert doc["brewspec_version"] == "0.6"
+        assert doc["brewspec_version"] == "0.7"
 
     def test_import_rejects_v05_file(self, runner, db_path, tmp_path):
         """AC-35: v0.5 file rejected with error, exit 1."""
@@ -941,7 +941,7 @@ class TestBrewRatio:
         """AC-42: brew_ratio read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.6",
+            "brewspec_version": "0.7",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1091,7 +1091,7 @@ class TestCoffeeOrigins:
         assert "Origin 2:" in result.output
 
     def test_origin_serialised_in_export(self, runner, db_path, tmp_path):
-        """AC-49: coffee_origins serialised in v0.6 export."""
+        """AC-49: coffee_origins serialised in v0.7 export."""
         runner.invoke(cli, [
             "add", "--date", "2026-02-19", "--type", "pour_over",
             "--dose", "18.0", "--water", "280.0",
@@ -1124,7 +1124,7 @@ class TestCoffeeOrigins:
         """AC-50: import reads coffee.origins into coffee_origins column."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.6",
+            "brewspec_version": "0.7",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1296,7 +1296,7 @@ class TestCoffeeName:
         """AC-50e: coffee.name read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.6",
+            "brewspec_version": "0.7",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1490,7 +1490,7 @@ class TestEquipmentFields:
         """AC-56: equipment fields read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.6",
+            "brewspec_version": "0.7",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",

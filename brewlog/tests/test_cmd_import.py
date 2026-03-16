@@ -210,8 +210,8 @@ def test_import_v03_file_lists_migration_changes(runner_with_db):
     """AC-13: error message lists required structural changes."""
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
-    # Must mention migration steps (v0.4 to v0.5: origins object array)
-    assert "origins" in result.output.lower() or "coffee.origin" in result.output.lower()
+    # Must mention migration steps (v0.6 to v0.7: bump version)
+    assert "brewspec_version" in result.output.lower() or "0.7" in result.output
 
 
 def test_import_v03_file_points_to_migration_guide(runner_with_db):
@@ -255,19 +255,15 @@ def test_import_v02_file_rejected(runner_with_db, tmp_path):
 
 
 def test_import_v04_exact_error_message(runner_with_db):
-    """MED-2: v0.4 (and older) file rejection produces the exact verbatim error message."""
+    """MED-2: v0.3 (and older) file rejection produces the exact verbatim error message."""
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
     expected = (
-        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.6.\n'
-        'BrewLog v0.6 requires BrewSpec v0.6.\n'
+        'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.7.\n'
+        'BrewLog v0.7 requires BrewSpec v0.7.\n'
         '\n'
-        'To migrate your file from v0.5 to v0.6, make the following changes:\n'
-        '  1. Bump brewspec_version from "0.5" to "0.6"\n'
-        '  2. Convert equipment.grinder_setting from string to number (e.g. "21" \u2192 21)\n'
-        '  3. Remove water_volume_ml\n'
-        '  4. Move coffee.process to coffee.origins[].process\n'
-        '  5. Move coffee.varietal to coffee.origins[].varietal\n'
+        'To migrate your file from v0.6 to v0.7, make the following changes:\n'
+        '  1. Bump brewspec_version from "0.6" to "0.7"\n'
         '\n'
         'Full migration guide: https://github.com/coffee-standards/brewspec'
     )

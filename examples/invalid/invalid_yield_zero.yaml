@@ -1,0 +1,10 @@
+# Invalid: result.yield_g value of 0 is rejected (exclusiveMinimum: 0).
+# yield_g must be strictly greater than 0 when present.
+brewspec_version: "0.7"
+brews:
+  - date: "2026-03-16"
+    type: "espresso"
+    dose_g: 18.0
+    water_weight_g: 36.0
+    result:
+      yield_g: 0

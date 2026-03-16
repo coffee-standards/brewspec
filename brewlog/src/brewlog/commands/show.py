@@ -58,7 +58,7 @@ def _display_origins(origins: list[dict]) -> None:
 
 # All result columns used for has_results detection (AC-35)
 _RESULT_COLS = (
-    "result_tds", "result_ey", "result_brix", "result_tasting_notes",
+    "result_tds", "result_ey", "result_brix", "result_yield_g", "result_tasting_notes",
     "result_rating_overall", "result_rating_fragrance", "result_rating_aroma",
     "result_rating_flavour", "result_rating_aftertaste", "result_rating_acidity",
     "result_rating_sweetness", "result_rating_mouthfeel",
@@ -141,6 +141,8 @@ def show(ctx: click.Context, id: int) -> None:
             _print_field("EY (%):", row["result_ey"])
         if row["result_brix"] is not None:
             _print_field("Brix:", row["result_brix"])
+        if row["result_yield_g"] is not None:
+            _print_field("Yield:", f"{row['result_yield_g']}g")
         if row["result_tasting_notes"] is not None:
             _print_field("Tasting Notes:", row["result_tasting_notes"])
 

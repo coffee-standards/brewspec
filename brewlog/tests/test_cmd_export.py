@@ -118,7 +118,7 @@ def test_export_document_structure(runner_with_db, tmp_path):
     runner_with_db.invoke(cli, ["export", out_file])
     doc = yaml.safe_load(Path(out_file).read_text())
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.6"
+    assert doc["brewspec_version"] == "0.7"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
 

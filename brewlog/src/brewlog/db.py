@@ -39,6 +39,7 @@ UPDATABLE_COLUMNS: frozenset[str] = frozenset({
     "result_tds",
     "result_ey",
     "result_brix",
+    "result_yield_g",
     "result_tasting_notes",
     "result_rating_overall",
     "result_rating_fragrance",
@@ -86,6 +87,10 @@ _V5_MIGRATION_COLUMNS: dict[str, str] = {
 
 _V6_MIGRATION_COLUMNS: dict[str, str] = {
     "coffee_name": "TEXT",
+}
+
+_V7_MIGRATION_COLUMNS: dict[str, str] = {
+    "result_yield_g": "REAL",
 }
 
 
@@ -142,6 +147,7 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             result_tds                REAL,
             result_ey                 REAL,
             result_brix               REAL,
+            result_yield_g            REAL,
             result_tasting_notes      TEXT,
             result_ratings            TEXT,
             result_rating_overall     INTEGER,
@@ -164,7 +170,7 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
     }
-    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS, **_V6_MIGRATION_COLUMNS}
+    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS, **_V6_MIGRATION_COLUMNS, **_V7_MIGRATION_COLUMNS}
     for col, col_type in all_migration_columns.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
@@ -258,7 +264,7 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
-            result_tds, result_ey, result_brix,
+            result_tds, result_ey, result_brix, result_yield_g,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
             result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
@@ -272,7 +278,7 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             ?,
             ?, ?,
             ?, ?,
-            ?, ?, ?,
+            ?, ?, ?, ?,
             ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -302,6 +308,7 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         result.tds if result else None,
         result.ey if result else None,
         result.brix if result else None,
+        result.yield_g if result else None,
         result.tasting_notes if result else None,
         ratings.overall if ratings else None,
         ratings.fragrance if ratings else None,
@@ -343,7 +350,7 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
-            result_tds, result_ey, result_brix,
+            result_tds, result_ey, result_brix, result_yield_g,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
             result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
@@ -357,7 +364,7 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             ?,
             ?, ?,
             ?, ?,
-            ?, ?, ?,
+            ?, ?, ?, ?,
             ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -387,6 +394,7 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         result.get("tds"),
         result.get("ey"),
         result.get("brix"),
+        result.get("yield_g"),
         result.get("tasting_notes"),
         ratings.get("overall"),
         ratings.get("fragrance"),

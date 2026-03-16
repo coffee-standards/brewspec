@@ -1,0 +1,20 @@
+brewspec_version: "0.7"
+brews:
+  - date: "2026-03-16"
+    type: "espresso"
+    dose_g: 18.0
+    water_weight_g: 36.0
+    grind: "espresso"
+    duration_s: 28
+    equipment:
+      grinder: "Comandante C40 MK4"
+      brewer: "La Marzocco Linea Mini"
+      grinder_setting: 12
+    result:
+      yield_g: 36.5
+      tds: 9.2
+      tasting_notes: "Caramel sweetness, low acidity, thick mouthfeel"
+      ratings:
+        overall: 4
+        flavour: 4
+        mouthfeel: 5

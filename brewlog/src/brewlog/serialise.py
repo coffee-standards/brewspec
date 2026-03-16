@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-BREWSPEC_VERSION = "0.6"
+BREWSPEC_VERSION = "0.7"
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ _RATING_DIMS = [
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.6 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v0.7 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).
@@ -135,6 +135,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         result["ey"] = r["result_ey"]
     if r.get("result_brix") is not None:
         result["brix"] = r["result_brix"]
+    if r.get("result_yield_g") is not None:
+        result["yield_g"] = r["result_yield_g"]
     if r.get("result_tasting_notes") is not None:
         result["tasting_notes"] = r["result_tasting_notes"]
 
@@ -154,8 +156,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.6 document dict.
-    Returns {"brewspec_version": "0.6", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec v0.7 document dict.
+    Returns {"brewspec_version": "0.7", "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.

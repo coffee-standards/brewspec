@@ -7,7 +7,7 @@ These models serve two purposes:
   2. Secondary validation layer — after JSON Schema validation on import, each
      brew can optionally be run through BrewInput for additional checks.
 
-Field names mirror BrewSpec v0.6 snake_case names exactly.
+Field names mirror BrewSpec v0.7 snake_case names exactly.
 """
 
 from __future__ import annotations
@@ -214,6 +214,7 @@ class ResultInput(BaseModel):
     tds: Optional[float] = None
     ey: Optional[float] = None
     brix: Optional[float] = None
+    yield_g: Optional[float] = None
     tasting_notes: Optional[str] = None
     ratings: Optional[RatingsInput] = None
 
@@ -229,6 +230,13 @@ class ResultInput(BaseModel):
     def validate_brix(cls, v: Optional[float]) -> Optional[float]:
         if v is not None and v < 0:
             raise ValueError("brix must be >= 0")
+        return v
+
+    @field_validator("yield_g")
+    @classmethod
+    def yield_g_must_be_positive(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v <= 0:
+            raise ValueError("yield_g must be > 0")
         return v
 
     @field_validator("tasting_notes")
@@ -247,13 +255,14 @@ class ResultInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 class BrewInput(BaseModel):
-    """Primary model for a brew log entry. Validates all BrewSpec v0.6 constraints."""
+    """Primary model for a brew log entry. Validates all BrewSpec v0.7 constraints."""
 
-    # Required fields (no default)
-    date: str
-    type: str                           # brew type enum
-    dose_g: float
-    water_weight_g: float
+    # In v0.7 these four fields are optional at the schema level.
+    # The CLI add/update commands still collect them interactively.
+    date: Optional[str] = None
+    type: Optional[str] = None          # brew type enum
+    dose_g: Optional[float] = None
+    water_weight_g: Optional[float] = None
 
     # Optional brew parameters
     brew_ratio: Optional[float] = None
@@ -271,12 +280,14 @@ class BrewInput(BaseModel):
     result: Optional[ResultInput] = None
 
     # ------------------------------------------------------------------
-    # Required field validators
+    # Field validators (fields are optional in v0.7)
     # ------------------------------------------------------------------
 
     @field_validator("date")
     @classmethod
-    def validate_date(cls, v: str) -> str:
+    def validate_date(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
         if not DATE_PATTERN.match(v):
             raise ValueError(
                 "date must be YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ"
@@ -294,7 +305,9 @@ class BrewInput(BaseModel):
 
     @field_validator("type")
     @classmethod
-    def validate_brew_type(cls, v: str) -> str:
+    def validate_brew_type(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
         if v not in BREW_TYPE_ENUM:
             raise ValueError(
                 f"type must be one of: {sorted(BREW_TYPE_ENUM)}"
@@ -303,8 +316,8 @@ class BrewInput(BaseModel):
 
     @field_validator("dose_g", "water_weight_g")
     @classmethod
-    def validate_positive_required(cls, v: float) -> float:
-        if v <= 0:
+    def validate_positive_required(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v <= 0:
             raise ValueError("value must be greater than 0")
         return v
 

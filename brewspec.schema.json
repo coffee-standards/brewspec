@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.6",
+  "title": "BrewSpec v0.7",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.6",
-      "description": "The BrewSpec version. Must be \"0.6\"."
+      "const": "0.7",
+      "description": "The BrewSpec version. Must be \"0.7\"."
     },
     "brews": {
       "type": "array",
@@ -23,7 +23,6 @@
   "$defs": {
     "brew": {
       "type": "object",
-      "required": ["date", "type", "dose_g", "water_weight_g"],
       "additionalProperties": false,
       "properties": {
         "date": {
@@ -271,6 +270,11 @@
           "type": "number",
           "minimum": 0,
           "description": "Dissolved sugar content in degrees Brix. A value of 0 is valid (distilled water). Must be >= 0 if present."
+        },
+        "yield_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Output weight of the brew in grams. For espresso, this is the liquid collected in the cup (distinct from water_weight_g, which is the input water). For other brew types, yield_g may approximate water_weight_g less absorbed water. Must be > 0 if present."
         },
         "tasting_notes": {
           "type": "string",
