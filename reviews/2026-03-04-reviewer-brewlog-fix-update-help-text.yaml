@@ -1,0 +1,40 @@
+review:
+  task_id: brewlog-fix-update-help-text
+  reviewer: reviewer
+  date: "2026-03-04"
+  verdict: PASS
+
+summary: >
+  The BREW_ID help text in the update command is complete and untruncated.
+  The fix was already in place in the current implementation — the manifest
+  bug was filed against an earlier version that used an explicit --id flag.
+  The current code uses a positional BREW_ID argument with a complete docstring.
+  518 tests pass. Ruff clean.
+
+checks:
+  - id: help-text-complete
+    result: PASS
+    note: >
+      update.py line 94 docstring: "BREW_ID is optional; defaults to the last
+      brew when omitted." Contains the required phrase "defaults to the last brew".
+      Click renders this verbatim in --help output.
+
+  - id: test-coverage
+    result: PASS
+    note: >
+      TestUpdateHelpText class (test_cmd_v04.py lines 158-172) has two assertions
+      covering the exact required phrase. Both tests pass.
+
+  - id: test-suite
+    result: PASS
+    note: "518 tests passed, 0 failed."
+
+  - id: lint
+    result: PASS
+    note: "ruff check . — 0 errors."
+
+  - id: security
+    result: PASS
+    note: "No changes to input validation, SQL, file I/O, or error messages."
+
+non_blocking: []

@@ -1,0 +1,27 @@
+result:
+  date: "2026-02-15"
+  agent: architect
+  task: "Design technical architecture for brewspec-v0.1"
+  input_summary: "Read feature spec (15 AC), product spec, and principles. Produce JSON Schema, directory layout, example files, validation strategy, test strategy, security considerations, and implementation checklist."
+  scores:
+    input_adherence: 3
+    format_compliance: 3
+    scope_discipline: 3
+    spec_traceability: 3
+    convention_compliance: 3
+    downstream_handoff: 3
+    testability: 3
+    security: 3
+  evidence:
+    input_adherence: "All 15 AC addressed with explicit design artifacts. Complete JSON Schema, 4 valid + 6 invalid examples, test map covering every AC, validation strategy, spec/README outlines."
+    format_compliance: "Design doc follows standard structure: schema, directory layout, examples, validation strategy, test strategy, security, implementation checklist, AC verification table."
+    scope_discipline: "Strict v0.1 scope. No coffee metadata, equipment, water chemistry, pour schedules, or tasting dimensions. additionalProperties: false enforces this at schema level."
+    spec_traceability: "Every schema field, example, and test maps to a specific AC. Design decisions table traces each choice to its AC or spec requirement."
+    convention_compliance: "JSON Schema Draft 2020-12, Python jsonschema library, pytest, yaml.safe_load, snake_case fields, ISO 8601 UTC, metric units — all per CLAUDE.md and principles."
+    downstream_handoff: "Complete JSON Schema ready to copy. All example files with exact YAML content. Test file structure with fixtures and parametrized tests. Implementation checklist in TDD order."
+    testability: "Test map covers all 15 AC. Parametrized tests for examples. Specific assertions for each constraint (range, enum, required, format). Meta-test for schema validity."
+    security: "Safe parsing (yaml.safe_load), trust boundary documented, freeform text safety rules, file I/O path validation, size limits, encoding handling."
+  weighted_score: 1.0
+  passed: true
+  issues: []
+  remediation: null

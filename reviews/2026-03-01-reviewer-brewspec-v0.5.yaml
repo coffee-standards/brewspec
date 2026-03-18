@@ -1,0 +1,517 @@
+# Reviewer report — BrewSpec v0.5
+# Date: 2026-03-01
+# Commit reviewed: e6370ce
+# Repo: github.com/coffee-standards/brewspec
+
+result:
+  date: "2026-03-01"
+  agent: reviewer
+  task: "BrewSpec v0.5 review"
+  input_summary: >
+    Reviewed commit e6370ce in the public brewspec repo against the BrewSpec v0.5 product
+    spec (specs/products/brewspec-v0.5.md, 38 ACs) and the design doc
+    (specs/designs/brewspec-v0.5.md). Files examined: brewspec.schema.json, brewspec-v0.5.md,
+    versions/brewspec-v0.4.md, examples/valid/* (13 files), examples/invalid/* (11 files),
+    tests/test_brewspec_schema.py, brewlog/src/brewlog/models.py, brewlog/src/brewlog/db.py,
+    brewlog/src/brewlog/serialise.py, brewlog/src/brewlog/commands/add.py,
+    brewlog/src/brewlog/commands/export.py, brewlog/src/brewlog/commands/import_.py,
+    brewlog/src/brewlog/commands/show.py, brewlog/tests/* (7 test files), README.md.
+    Tests executed via pytest; lint checked via ruff.
+
+  verdict: PASS
+
+  # --------------------------------------------------------------------------
+  # Test and lint results
+  # --------------------------------------------------------------------------
+  test_results:
+    schema_tests: 117     # tests/test_brewspec_schema.py
+    cli_tests: 534        # brewlog/tests/* (all CLI and model tests)
+    total: 651
+    status: all_passed
+    failures: []
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  # --------------------------------------------------------------------------
+  # Spec compliance
+  # --------------------------------------------------------------------------
+  spec_compliance:
+
+    # --- Schema Version Bump ---
+    AC-1:
+      status: PASS
+      note: >
+        brewspec.schema.json title is "BrewSpec v0.5" and brewspec_version const
+        is "0.5". test_version_const_rejects_v0_4 confirms v0.4 is rejected.
+
+    # --- Brew Ratio Field ---
+    AC-2:
+      status: PASS
+      note: >
+        brew_ratio in schema: type number, exclusiveMinimum: 0. Description in schema
+        matches AC-7 verbatim text about water-to-coffee ratio semantics.
+
+    AC-3:
+      status: PASS
+      note: >
+        test_brew_ratio_positive_float_accepted validates brew_ratio: 15.5 passes.
+        valid_brew_ratio.yaml and valid_single_origin_full.yaml use brew_ratio: 15.56.
+
+    AC-4:
+      status: PASS
+      note: >
+        test_brew_ratio_zero_rejected confirms brew_ratio: 0 fails
+        (exclusiveMinimum: 0).
+
+    AC-5:
+      status: PASS
+      note: >
+        test_brew_ratio_negative_rejected confirms brew_ratio: -1 fails.
+
+    AC-6:
+      status: PASS
+      note: >
+        test_brew_ratio_omitted_accepted confirms brew_ratio omitted passes.
+        Field is optional in schema (not in required array).
+
+    AC-7:
+      status: PASS
+      note: >
+        Schema description for brew_ratio in brewspec.schema.json line 69 matches
+        the verbatim text required by AC-7, including the consistency warning note.
+        brewspec-v0.5.md field reference table documents the same semantics.
+
+    # --- Grinder Setting Field ---
+    AC-8:
+      status: PASS
+      note: >
+        equipment.grinder_setting: type string, minLength: 1, maxLength: 100.
+        Examples in schema include "21", "21 clicks", "3.2.1", "setting 21".
+
+    AC-9:
+      status: PASS
+      note: >
+        test_equipment_grinder_setting_click_count_accepted validates
+        grinder: "Comandante C40", grinder_setting: "21 clicks" passes.
+
+    AC-10:
+      status: PASS
+      note: >
+        test_equipment_grinder_setting_omitted_accepted validates omission passes.
+
+    AC-11:
+      status: PASS
+      note: >
+        test_equipment_grinder_setting_empty_string_rejected validates "" fails
+        (minLength: 1).
+
+    AC-12:
+      status: PASS
+      note: >
+        test_equipment_all_four_fields_accepted validates all four fields
+        (grinder, brewer, grinder_setting, notes) in one object.
+        test_equipment_unrecognised_field_rejected validates additionalProperties: false.
+
+    # --- Equipment Notes Field ---
+    AC-13:
+      status: PASS
+      note: >
+        equipment.notes: type string, minLength: 1, maxLength: 2000 in schema.
+        test_equipment_notes_maxlength_accepted (2000 chars) and
+        test_equipment_notes_maxlength_exceeded (2001 chars) both pass.
+
+    AC-14:
+      status: PASS
+      note: >
+        test_equipment_notes_accepted validates notes: "Burrs replaced 2026-01" passes.
+        valid_equipment_notes.yaml example present and passes schema validation.
+
+    AC-15:
+      status: PASS
+      note: >
+        test_equipment_notes_omitted_accepted validates omission passes.
+
+    AC-16:
+      status: PASS
+      note: >
+        test_equipment_notes_empty_string_rejected validates "" fails (minLength: 1).
+
+    # --- Structured Origin: coffee.origins replaces coffee.origin ---
+    AC-17:
+      status: PASS
+      note: >
+        coffee object has additionalProperties: false and no origin property.
+        test_coffee_origin_string_array_rejected confirms coffee.origin fails.
+        invalid_origin_string_array.yaml example present in invalid/ directory.
+
+    AC-18:
+      status: PASS
+      note: >
+        coffee.origins: type array, minItems: 1, items $ref origin. Present in
+        schema and confirmed by test_coffee_origins_single_entry_accepted.
+
+    AC-19:
+      status: PASS
+      note: >
+        Origin $def has additionalProperties: false with exactly 8 optional fields:
+        name, country, region, subregion, producer, process, lot, harvest_year.
+        All string fields have minLength: 1, maxLength: 100. harvest_year is type
+        integer, minimum: 1900, maximum: 2100. All constraints verified by tests
+        including boundary and type-rejection tests.
+
+    AC-20:
+      status: PASS
+      note: >
+        test_coffee_origins_empty_object_entry_accepted validates {} entry passes.
+
+    AC-21:
+      status: PASS
+      note: >
+        test_coffee_origins_single_entry_accepted validates single entry with
+        country, region, producer, process, harvest_year passes.
+        valid_single_origin_full.yaml example passes schema validation.
+
+    AC-22:
+      status: PASS
+      note: >
+        test_coffee_origins_blend_two_entries_accepted validates two-entry blend.
+        valid_blend_origin.yaml example passes schema validation with two entries.
+
+    AC-23:
+      status: PASS
+      note: >
+        test_coffee_origins_empty_array_rejected validates [] fails (minItems: 1).
+
+    AC-24:
+      status: PASS
+      note: >
+        test_coffee_origins_unrecognised_field_rejected validates altitude: 1800
+        fails (additionalProperties: false on origin $def).
+
+    AC-25:
+      status: PASS
+      note: >
+        test_coffee_origins_omitted_accepted validates omission of origins passes.
+
+    # --- Carry-Forward Fixes ---
+    AC-26:
+      status: PASS
+      note: >
+        examples/invalid/rating_out_of_range.yaml comment now reads: "Invalid:
+        result.ratings.overall value of 6 exceeds the maximum of 5. All rating
+        dimension fields (overall, fragrance, aroma, flavour, aftertaste, acidity,
+        sweetness, mouthfeel) accept integers 1-5 inclusive only." File uses
+        brewspec_version "0.5" and result.ratings.overall: 6. Test
+        test_rating_out_of_range_file_fails confirms it fails validation.
+        No obsolete reference to a brew-level rating field.
+
+    AC-27:
+      status: PASS
+      note: >
+        README.md invalid examples inventory (lines 171-180) now includes
+        invalid_date_no_z.yaml, invalid_grind_freeform.yaml, and
+        invalid_tds_at_brew_level.yaml, each with a brief description. This
+        specific AC (the inventory) is addressed. See Medium issues for
+        broader README stale-version content.
+
+    # --- Examples Updated for v0.5 ---
+    AC-28:
+      status: PASS
+      note: >
+        All 8 existing valid example files updated to brewspec_version "0.5".
+        coffee.origin fields migrated to coffee.origins with country field.
+        Confirmed for pour_over.yaml, pour_over.json, immersion_minimal.yaml,
+        espresso.yaml, multi_brew.yaml, hybrid.yaml, equipment.yaml,
+        pour_over_date_only.yaml.
+
+    AC-29:
+      status: PASS
+      note: >
+        valid_single_origin_full.yaml has country, region, subregion (as producer),
+        producer, process, and harvest_year. All five required fields (country,
+        region, producer, process, harvest_year) are populated.
+
+    AC-30:
+      status: PASS
+      note: >
+        valid_blend_origin.yaml has two origins entries (Ethiopia + Colombia),
+        each with name, country, region, process, and one with producer.
+
+    AC-31:
+      status: PASS
+      note: >
+        valid_brew_ratio.yaml and valid_single_origin_full.yaml both include
+        brew_ratio (15.56 and 15.56 respectively).
+
+    AC-32:
+      status: PASS
+      note: >
+        valid_grinder_setting.yaml and valid_single_origin_full.yaml include
+        equipment.grinder_setting: "21 clicks".
+
+    AC-33:
+      status: PASS
+      note: >
+        valid_equipment_notes.yaml and valid_single_origin_full.yaml include
+        equipment.notes.
+
+    AC-34:
+      status: PASS
+      note: >
+        examples/invalid/invalid_origin_string_array.yaml exists with coffee.origin
+        string array format. Comment explains the failure reason.
+        test_invalid_origin_string_array_file_fails confirms it fails validation.
+
+    # --- Spec Document ---
+    AC-35:
+      status: PASS
+      note: >
+        brewspec-v0.5.md exists at repo root. Contains complete field reference tables
+        covering all fields: brew, coffee, origin, water, equipment, result, ratings.
+
+    AC-36:
+      status: PASS
+      note: >
+        "What Changed in v0.5" section covers all required changes: version bump,
+        brew_ratio addition, equipment.grinder_setting addition, equipment.notes
+        addition, coffee.origin removal, coffee.origins structured array addition,
+        and carry-forward example + README fixes.
+
+    AC-37:
+      status: PASS
+      note: >
+        "Backward Compatibility" section documents v0.4-to-v0.5 migration: origin
+        string-to-object migration with code example, and notes that new optional
+        fields require no action unless the user wishes to adopt them.
+
+    # --- Test Suite ---
+    AC-38:
+      status: PASS
+      note: >
+        All required test cases from AC-38 are present in tests/test_brewspec_schema.py:
+        brew_ratio: 15.5 passes (test_brew_ratio_positive_float_accepted);
+        brew_ratio: 0 fails (test_brew_ratio_zero_rejected);
+        brew_ratio: -1 fails (test_brew_ratio_negative_rejected);
+        brew_ratio omitted passes (test_brew_ratio_omitted_accepted);
+        grinder_setting: "21 clicks" passes (test_equipment_grinder_setting_click_count_accepted);
+        grinder_setting: "" fails (test_equipment_grinder_setting_empty_string_rejected);
+        grinder_setting omitted passes (test_equipment_grinder_setting_omitted_accepted);
+        equipment.notes accepted (test_equipment_notes_accepted);
+        equipment.notes "" fails (test_equipment_notes_empty_string_rejected);
+        equipment.notes omitted passes (test_equipment_notes_omitted_accepted);
+        equipment unrecognised field fails (test_equipment_unrecognised_field_rejected);
+        origins single entry passes (test_coffee_origins_single_entry_accepted);
+        origins two entries passes (test_coffee_origins_blend_two_entries_accepted);
+        origins [] fails (test_coffee_origins_empty_array_rejected);
+        origin unrecognised field fails (test_coffee_origins_unrecognised_field_rejected);
+        coffee.origin string array fails (test_coffee_origin_string_array_rejected);
+        origins omitted passes (test_coffee_origins_omitted_accepted);
+        brewspec_version "0.4" rejected (test_version_const_rejects_v0_4).
+
+  # --------------------------------------------------------------------------
+  # Critical / High issues
+  # --------------------------------------------------------------------------
+  critical_issues: []
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: >
+      PASS — All new fields validated via Pydantic before DB write: brew_ratio uses
+      float with > 0 check; grinder_setting and equipment.notes use string validators
+      with minLength/maxLength; origins uses list[OriginInput] with per-field
+      validators; harvest_year validated as int in range 1900-2100. Schema validation
+      (Draft202012Validator) runs before any insert on import. The add command builds
+      OriginInput objects from --origin flag strings before writing.
+
+    sql_injection: >
+      PASS — All SQL uses parameterised ? placeholders. No user-controlled values
+      appear in SQL string construction. The update_brew() f-string column name
+      interpolation is safe: column names come from the UPDATABLE_COLUMNS allowlist
+      (a frozenset in application code, not user input), and an assertion enforces
+      this. insert_brew and insert_brew_dict both use fully parameterised INSERT
+      statements. New columns (brew_ratio, coffee_origins, equipment_grinder_setting,
+      equipment_notes) are correctly included in parameterised parameter tuples.
+
+    file_io: >
+      PASS — yaml.safe_load() used for all YAML parsing. JSON uses json.loads().
+      Import path validated via validate_import_path() before file open: rejects
+      '..' components and files over 10MB. Export path validated via
+      validate_export_path(): rejects '..', validates extension, checks parent
+      directory exists.
+
+    no_dangerous_functions: >
+      PASS — No eval(), exec(), or pickle on user data. coffee_origins stored and
+      retrieved as JSON (json.dumps / json.loads). String fields stored and displayed
+      as plain text only. show.py displays origins by reading origin dicts
+      and extracting known keys (name or country); no execution or interpolation.
+
+    error_messages: >
+      PASS — Error messages do not expose internal paths or stack traces. Pydantic
+      ValidationError messages expose field names and constraint descriptions, which
+      is appropriate. Import validation errors list schema constraint violations
+      without exposing file paths or internal state.
+
+    additional_properties: >
+      PASS — additionalProperties: false is enforced on all new objects: the origin
+      $def (confirmed by test_coffee_origins_unrecognised_field_rejected) and the
+      equipment object with its four fields (confirmed by
+      test_equipment_unrecognised_field_rejected). The coffee object continues to
+      enforce this, ensuring coffee.origin is rejected (AC-17).
+
+    string_limits: >
+      PASS — maxLength: 100 on all new short string fields (grinder_setting, and
+      all origin string fields). maxLength: 2000 on equipment.notes. All constraints
+      tested in schema test suite and enforced in Pydantic models.
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues
+  # --------------------------------------------------------------------------
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/README.md"
+      description: >
+        README.md is substantially stale for v0.5. Multiple v0.4 references remain:
+        (1) Quick Start example uses brewspec_version: "0.4" and coffee.origin: ["Ethiopia"]
+        (lines 30-41), which will fail v0.5 schema validation; (2) "BrewSpec v0.4 uses
+        JSON Schema Draft 2020-12" (line 151); (3) repo structure lists
+        brewspec-v0.4.md as current spec doc (line 114); (4) links to brewspec-v0.4.md
+        throughout (lines 106, 186, 192, 391); (5) BrewLog CLI section says "targets
+        BrewSpec v0.4" (line 241) and "Exports to BrewSpec v0.4" (line 366) and
+        "Requires BrewSpec v0.4" (line 375) and "validated against the BrewSpec v0.4
+        schema" (line 383). The invalid examples inventory (AC-27 scope) is correct and
+        complete; the surrounding README content is not. Note: brewspec-v0.4.md also
+        still exists at the repo root alongside brewspec-v0.5.md; it is archived in
+        versions/ but not removed from root.
+      suggestion: >
+        Update the README Quick Start example to brewspec_version: "0.5" with
+        coffee.origins format. Update all v0.4 version references to v0.5. Update
+        BrewLog CLI description to reflect v0.5 targets. Remove or archive
+        brewspec-v0.4.md from the repo root (it is already in versions/).
+        Update the valid examples list to include the five new valid example files
+        (valid_single_origin_full.yaml, valid_blend_origin.yaml, valid_brew_ratio.yaml,
+        valid_grinder_setting.yaml, valid_equipment_notes.yaml).
+
+    - id: MED-2
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/commands/import_.py"
+      description: >
+        The _V05_REQUIRED_MSG error string (lines 22-35) is stale. It reads:
+        "BrewLog v0.3 requires BrewSpec v0.4" and "To migrate from v0.3 to v0.4".
+        The import command now requires BrewSpec v0.5, but the error message still
+        gives v0.3-to-v0.4 migration instructions. A user importing a v0.3 or v0.4
+        file will see instructions that are no longer applicable to the current version
+        requirements. The test for this exact message
+        (test_import_v03_exact_error_message) passes only because the expected string
+        in the test also contains the stale text (line 259-260 of test_cmd_import.py).
+      suggestion: >
+        Update _V05_REQUIRED_MSG to reference BrewLog v0.5 and BrewSpec v0.5, and
+        update the migration steps to describe the v0.4-to-v0.5 migration path
+        (rename origin to origins, wrap strings in objects with country field, bump
+        version). Update test_import_v03_exact_error_message to match the new message.
+
+    - id: MED-3
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/commands/show.py"
+      description: >
+        The equipment section has_equipment check (line 163) only checks
+        equipment_grinder and equipment_brewer. If a brew has only
+        equipment_grinder_setting or equipment_notes set (no grinder or brewer model),
+        the Equipment section is suppressed entirely and those fields are not displayed.
+        Additionally, neither equipment_grinder_setting nor equipment_notes is displayed
+        anywhere in show.py even when has_equipment is True. Similarly, brew_ratio is
+        not displayed. These are BrewSpec v0.5 fields that can be stored but not
+        displayed by the current show command.
+      suggestion: >
+        This is a BrewLog CLI concern rather than a BrewSpec schema concern. Defer to
+        brewlog-cli-v0.5 which will add full v0.5 field display to the show command.
+        Record as a carry-forward item for that task. Severity is Low because the
+        data is correctly stored and exported — only the interactive display is missing.
+
+    - id: MED-4
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/commands/export.py"
+      description: >
+        Module docstring (line 4) reads "Exports all brews to a BrewSpec v0.4-compliant
+        YAML or JSON file" — stale version reference. The command itself correctly emits
+        brewspec_version: "0.5".
+      suggestion: >
+        Update docstring to "v0.5-compliant". One-line fix.
+
+    - id: MED-5
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/examples/valid/equipment.yaml"
+      description: >
+        The equipment.yaml example uses origins: [{country: "Ethiopia"}, {country:
+        "Yirgacheffe"}] where "Yirgacheffe" is in the country field but it is a region
+        within Ethiopia, not a country. This is not a schema violation (any non-empty
+        string is valid for country) but is semantically misleading as a canonical
+        example of structured origin data.
+      suggestion: >
+        Replace the second origin entry with: {country: "Ethiopia", region:
+        "Yirgacheffe"} to accurately demonstrate the structured origin format and
+        avoid misleading tool builders who use this file as a reference.
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    tests_written_first: unknown
+    all_acs_have_tests: true
+    meaningful_assertions: true
+    notes: >
+      Cannot verify tests-written-first from commit history (single commit). All 38 ACs
+      have corresponding tests in tests/test_brewspec_schema.py. Tests assert specific
+      ValidationError raises for invalid cases and successful validation for valid cases
+      — not just assertTrue(True). Edge cases are well covered: boundary values for
+      harvest_year (1899, 1900, 2100, 2101), type mismatches (float and string for
+      harvest_year), zero and negative brew_ratio, empty string rejection for all
+      new string fields. CLI tests in brewlog/tests/ cover the OriginInput path
+      through the add command (test_add_origin_multiple confirms --origin flags
+      map to country field of OriginInput objects). All 651 tests pass.
+
+  # --------------------------------------------------------------------------
+  # Summary
+  # --------------------------------------------------------------------------
+  summary: >
+    PASS. BrewSpec v0.5 schema implementation is correct and complete. All 38 acceptance
+    criteria pass. The JSON Schema correctly adds brew_ratio (exclusiveMinimum: 0),
+    equipment.grinder_setting (minLength: 1, maxLength: 100), and equipment.notes
+    (minLength: 1, maxLength: 2000); replaces coffee.origin with coffee.origins as
+    a structured object array; and bumps the version const to "0.5". The spec document
+    (brewspec-v0.5.md) is complete with field reference, What Changed, and Backward
+    Compatibility sections. Examples are updated and the invalid examples directory
+    includes the new invalid_origin_string_array.yaml. All 651 tests pass; ruff is clean.
+    Four non-blocking medium/low findings: (1) README.md is substantially stale with v0.4
+    references throughout, including a Quick Start example that uses the now-invalid
+    coffee.origin format; (2) import command error message still references v0.3/v0.4
+    rather than the current v0.5 requirement; (3) show command does not display the new
+    v0.5 equipment fields or brew_ratio (BrewLog CLI v0.5 concern); (4) export.py
+    docstring is stale. The README issue (MED-1) is the most visible of these and should
+    be addressed before the next public release. Proceed to deployment.
+
+  carry_forward:
+    - "MED-1: README.md contains multiple stale v0.4 references including a Quick Start
+      example that uses coffee.origin (now invalid in v0.5). Update the Quick Start to
+      brewspec_version: 0.5 with coffee.origins format; update all version references
+      from v0.4 to v0.5; update the BrewLog CLI section to reflect v0.5 targets; remove
+      brewspec-v0.4.md from the repo root (already archived to versions/); add the five
+      new valid example files to the valid examples list."
+    - "MED-2: import_.py _V05_REQUIRED_MSG references BrewLog v0.3 and BrewSpec v0.4
+      migration steps. Update to reflect BrewLog v0.5 requiring BrewSpec v0.5, with
+      correct v0.4-to-v0.5 migration instructions (rename origin to origins, wrap
+      country strings in objects). Update corresponding test_import_v03_exact_error_message."
+    - "MED-3 (brewlog-cli-v0.5 carry-forward): show command does not display brew_ratio,
+      equipment.grinder_setting, or equipment.notes. has_equipment detection only checks
+      grinder and brewer model fields. Add display of all v0.5 fields to the show command
+      and correct the has_equipment gate to also trigger on grinder_setting and notes."
+    - "MED-4: export.py module docstring line 4 says 'v0.4-compliant' — update to v0.5."
+    - "MED-5: equipment.yaml example places 'Yirgacheffe' in the country field of the
+      second origin entry; it is a region within Ethiopia. Replace with {country:
+      'Ethiopia', region: 'Yirgacheffe'} to demonstrate structured origin correctly."

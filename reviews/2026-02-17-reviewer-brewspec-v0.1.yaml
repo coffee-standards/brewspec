@@ -1,0 +1,424 @@
+# Review: BrewSpec v0.1
+# Reviewer: reviewer agent
+# Date: 2026-02-17
+
+result:
+  date: "2026-02-17"
+  agent: reviewer
+  task: "Review BrewSpec v0.1 implementation"
+  verdict: PASS
+
+  summary: >
+    Implementation fully satisfies all 15 acceptance criteria. The JSON Schema is
+    structurally correct and matches the architect's design exactly. All 29 tests
+    pass. Valid and invalid examples are accurate and meaningful. Security practices
+    (yaml.safe_load, parameterized schema constraints, no secrets) are correct.
+    No blocking issues found.
+
+  # ─────────────────────────────────────────────
+  # 1. SPEC COMPLIANCE
+  # ─────────────────────────────────────────────
+  spec_compliance:
+    AC-1:
+      status: PASS
+      evidence: >
+        brewspec/spec/brewspec.schema.json exists. It uses JSON Schema Draft 2020-12
+        ($schema: https://json-schema.org/draft/2020-12/schema). All required and optional
+        fields, types, constraints, and enumerations are present per the product spec scope.
+        Meta-validation passes (test_schema_is_valid_draft_2020_12 PASSED).
+
+    AC-2:
+      status: PASS
+      evidence: >
+        brewspec.schema.json line 11: "const": "0.1" on brewspec_version property.
+        Exact string match enforced. Missing version and wrong version (e.g. "1.0") are
+        both rejected by the validator. Verified by test_version_must_be_0_1 PASSED.
+
+    AC-3:
+      status: PASS
+      evidence: >
+        brewspec.schema.json lines 14-20: brews is "type": "array", "minItems": 1.
+        Missing brews and empty brews: [] are both rejected. Verified by
+        test_brews_must_be_nonempty_array PASSED and empty_brews_array.yaml invalid
+        example correctly fails validation.
+
+    AC-4:
+      status: PASS
+      evidence: >
+        Brew object required array (schema line 26): ["date", "type", "coffee", "water"].
+        date enforced as ISO 8601 UTC pattern ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$.
+        type is enum restricted. coffee requires dose_g > 0 (exclusiveMinimum: 0).
+        water requires weight_g > 0 (exclusiveMinimum: 0). Verified by
+        test_required_brew_fields, test_required_coffee_fields, test_required_water_fields,
+        test_date_format_iso8601, all PASSED.
+
+    AC-5:
+      status: PASS
+      evidence: >
+        All optional fields present in schema with correct constraints:
+        method (string, minLength: 1), water.volume_ml (number, exclusiveMinimum: 0),
+        water.temp_c (number, minimum: 0, maximum: 100), grind (string, minLength: 1),
+        duration_s (number, minimum: 0), rating (integer, minimum: 1, maximum: 5),
+        notes (string, minLength: 1). Verified by test_optional_fields_accepted and
+        test_temperature_range PASSED.
+
+    AC-6:
+      status: PASS
+      evidence: >
+        rating schema: "type": "integer", "minimum": 1, "maximum": 5.
+        Rejects 0, 6, -1, and 3.5 (float). Accepts 1-5. Invalid example
+        rating_out_of_range.yaml (rating: 6) correctly fails. Verified by
+        test_rating_range_1_to_5 PASSED.
+
+    AC-7:
+      status: PASS
+      evidence: >
+        coffee.dose_g and water.weight_g use "exclusiveMinimum": 0 — rejects zero and
+        negative. water.volume_ml also uses "exclusiveMinimum": 0. duration_s uses
+        "minimum": 0 — accepts zero, rejects negative. Invalid example negative_weight.yaml
+        (dose_g: -10) correctly fails. Verified by test_negative_values_rejected,
+        test_zero_weight_rejected, test_zero_duration_accepted PASSED.
+
+    AC-8:
+      status: PASS
+      evidence: >
+        type field schema: "enum": ["immersion", "pour_over", "espresso", "hybrid"].
+        Rejects "drip", "aeropress", "cold_brew", "turkish". All four valid values
+        accepted. Invalid example invalid_type_enum.yaml (type: "drip") correctly fails.
+        Verified by test_type_enum_validation PASSED.
+
+    AC-9:
+      status: PASS
+      evidence: >
+        Four valid YAML examples + one valid JSON example in brewspec/spec/examples/valid/:
+        pour_over.yaml (all optional fields), immersion_minimal.yaml (required fields only),
+        espresso.yaml (rating and notes), multi_brew.yaml (3 brews). All cover different
+        brew types. Exceeds the minimum of 3 required. All 5 examples pass schema validation
+        (test_valid_examples_pass parametrized over 5 files, all PASSED).
+
+    AC-10:
+      status: PASS
+      evidence: >
+        Six invalid YAML examples in brewspec/spec/examples/invalid/:
+        missing_version.yaml, missing_required_field.yaml, invalid_type_enum.yaml,
+        rating_out_of_range.yaml, negative_weight.yaml, empty_brews_array.yaml.
+        Exceeds minimum of 3. All correctly fail schema validation.
+        Verified by test_invalid_examples_fail parametrized over 6 files, all PASSED.
+
+    AC-11:
+      status: PASS
+      evidence: >
+        Test suite (tests/test_brewspec_schema.py) validates the schema against all
+        example files via parametrized tests (test_valid_examples_pass and
+        test_invalid_examples_fail). Discovery is file-system-based (glob pattern),
+        so new examples are automatically included. 29 tests, 100% pass rate in
+        independent reviewer run confirmed.
+
+    AC-12:
+      status: PASS
+      evidence: >
+        brewspec/spec/brewspec-v0.1.md contains a complete Field Reference section with
+        tables for top-level fields, brew object, coffee object, and water object. Each
+        entry includes: field name, type, required/optional status, constraints, description,
+        and examples. Satisfies "name, type, constraints, purpose, and examples" requirement.
+
+    AC-13:
+      status: PASS
+      evidence: >
+        brewspec/spec/brewspec-v0.1.md contains a "Design Decisions" section covering
+        all five required rationale items per the spec:
+        (1) array-only format, (2) freeform method/grind, (3) metric units only,
+        (4) ISO 8601 timestamps in UTC, (5) snake_case. An additional decision
+        (rating 1-5 and why not 0-10/0-100) is present, which is within scope.
+        All five required are covered with rationale.
+
+    AC-14:
+      status: PASS
+      evidence: >
+        brewspec/spec/README.md includes: project description (What is BrewSpec / Why
+        BrewSpec), validation instructions in Python / JavaScript / CLI (Quick Start),
+        schema section (what version of JSON Schema, where to find it), examples section
+        (both valid and invalid, with links), spec document pointer, and Contributing
+        section with guidelines. All required elements per spec and architect outline present.
+
+    AC-15:
+      status: PASS
+      evidence: >
+        Schema is pure JSON and format-agnostic — validation logic is identical regardless
+        of whether input was parsed from YAML or JSON. Test suite demonstrates this with
+        yaml.safe_load() for YAML files and json.loads() for JSON files, both passing
+        through the same Draft202012Validator. pour_over.json demonstrates JSON format
+        support. Verified by test_json_format_supported PASSED.
+
+  # ─────────────────────────────────────────────
+  # 2. DESIGN COMPLIANCE
+  # ─────────────────────────────────────────────
+  design_compliance:
+    status: PASS
+    findings:
+      - >
+        Schema (brewspec/spec/brewspec.schema.json) is an exact match to the architect's
+        design in specs/designs/brewspec-v0.1.md Section 1. Every field, constraint,
+        and structural decision (additionalProperties: false, $defs, exclusiveMinimum,
+        const: "0.1", minItems: 1) is implemented as specified.
+      - >
+        Directory layout matches architect Section 2 exactly: brewspec/spec/ contains
+        the schema, spec doc, README, and examples in valid/ and invalid/ subdirectories.
+      - >
+        Example files match architect Section 3 content exactly (including field values,
+        not just structure). pour_over.yaml, immersion_minimal.yaml, espresso.yaml, and
+        multi_brew.yaml are character-for-character matches to the designed examples.
+      - >
+        Test strategy follows architect Section 5: uses Draft202012Validator, fixture-based
+        schema loading, parametrized discovery of example files, and tests mapped to ACs
+        per the test map table in the design.
+      - >
+        Safe parsing (yaml.safe_load, json.loads) implemented as required by architect
+        Section 4 and Section 6 (Security Considerations).
+      - >
+        One deviation: architect Section 5 fixture uses relative paths
+        (Path("brewspec/spec/...")), but implementation correctly uses absolute paths
+        via Path(__file__).parent.parent. This is an improvement over the design, not
+        a deficiency. Tests pass regardless of working directory.
+
+  # ─────────────────────────────────────────────
+  # 3. CRITICAL / HIGH ISSUES
+  # ─────────────────────────────────────────────
+  critical_and_high_issues: []
+
+  # ─────────────────────────────────────────────
+  # 4. SECURITY FINDINGS
+  # ─────────────────────────────────────────────
+  security:
+    overall: PASS
+    findings:
+      input_validation:
+        status: PASS
+        notes: >
+          Schema enforces types, ranges, and required fields. exclusiveMinimum: 0
+          on weights prevents zero/negative. Integer type on rating prevents floats.
+          ISO 8601 regex on date prevents arbitrary strings.
+
+      safe_yaml_parsing:
+        status: PASS
+        notes: >
+          tests/test_brewspec_schema.py line 483: yaml.safe_load() used exclusively.
+          yaml.load() is not present anywhere in the codebase. This is the single most
+          critical security requirement for YAML file processing.
+
+      sql_injection:
+        status: N/A
+        notes: >
+          No SQL in this deliverable. Schema-only task. SQL injection is a concern for
+          the BrewLog CLI task (next feature).
+
+      freeform_text_safety:
+        status: PASS
+        notes: >
+          method, grind, and notes are freeform strings with minLength: 1 but no
+          maxLength. The spec doc and README correctly describe them as plain text.
+          No eval(), exec(), or shell usage present. No maxLength is a documented
+          trade-off — the spec places this responsibility on tools (spec notes:
+          "Tools should enforce max length at the application layer if needed").
+          This is acceptable for v0.1 (schema only; no application processing in scope).
+
+      no_secrets:
+        status: PASS
+        notes: >
+          No credentials, API keys, authentication tokens, or PII in any file.
+          Example data uses fictional brew records with no identifying information.
+
+      path_handling:
+        status: PASS
+        notes: >
+          Test paths are derived from __file__ (absolute, not user-supplied). No
+          user-facing file I/O in this deliverable. Path safety for import/export
+          is deferred to BrewLog CLI.
+
+      additional_properties:
+        status: PASS
+        notes: >
+          additionalProperties: false on the root object, brew object, coffee object,
+          and water object. Unknown fields are rejected by the schema, which prevents
+          injection of unexpected data.
+
+    low_concern:
+      - >
+        notes field has no maxLength constraint. Per the spec design doc, maxLength
+        is deferred to the application layer. This is intentional and correctly documented.
+        If BrewLog CLI does not enforce a limit, very large notes strings could cause
+        memory issues on import. This should be addressed when implementing BrewLog CLI.
+
+  # ─────────────────────────────────────────────
+  # 5. MEDIUM / LOW ISSUES
+  # ─────────────────────────────────────────────
+  medium_and_low_issues:
+    - severity: Low
+      location: "tests/test_brewspec_schema.py, test_valid_examples_pass parametrize decorator (line 486)"
+      issue: >
+        Parametrized test IDs display as "example_file0", "example_file1" etc. rather
+        than the filename (e.g. "pour_over.yaml"). This makes it harder to identify
+        which file failed from test output alone.
+      recommendation: >
+        Use pytest.mark.parametrize ids parameter:
+        @pytest.mark.parametrize("example_file",
+            sorted(VALID_DIR.glob("*.yaml")) + sorted(VALID_DIR.glob("*.json")),
+            ids=lambda f: f.name)
+        This is a readability improvement with no correctness impact.
+
+    - severity: Low
+      location: "brewspec/spec/brewspec-v0.1.md, Validation section (line 130)"
+      issue: >
+        Python validation example uses open() without specifying encoding:
+        json.load(open("brewspec.schema.json")) and yaml.safe_load(open("my_brew.yaml")).
+        On some platforms, default encoding may not be UTF-8. The spec defines UTF-8
+        as the required encoding.
+      recommendation: >
+        Use: open("brewspec.schema.json", encoding="utf-8") and
+        open("my_brew.yaml", encoding="utf-8") in the validation examples. Minor
+        correctness issue limited to documentation examples only; test suite uses
+        Path.read_text() which handles encoding.
+
+    - severity: Low
+      location: "brewspec/spec/examples/valid/ - no hybrid brew example"
+      issue: >
+        The valid examples cover pour_over, immersion, and espresso brew types. The
+        hybrid type (e.g., AeroPress) is defined in the spec enum and field reference
+        but has no standalone valid example demonstrating its use. AC-9 requires
+        "different brew types" and is met (3+ types covered), but a hybrid example
+        would make the examples set more complete.
+      recommendation: >
+        Add brewspec/spec/examples/valid/hybrid.yaml with an AeroPress brew for
+        completeness. Not required for AC-9 compliance; suggested for v0.1 doc quality.
+
+    - severity: Low
+      location: "brewspec/spec/brewspec-v0.1.md, Contributing section (line 266)"
+      issue: >
+        The spec document's Contributing section says "See README.md for contribution
+        guidelines" but the contribution guidelines are in fact in README.md, and
+        README.md also says "Open an issue or pull request in the BrewSpec repository."
+        Neither document links to an actual repository URL. This is expected at v0.1
+        pre-release, but should be updated before public release.
+      recommendation: >
+        Add a repository URL (e.g., GitHub link) before public release. Deferred action.
+
+  # ─────────────────────────────────────────────
+  # 6. TESTS
+  # ─────────────────────────────────────────────
+  tests:
+    run_command: "python -m pytest tests/ -v"
+    run_date: "2026-02-17"
+    total_tests: 29
+    passed: 29
+    failed: 0
+    skipped: 0
+    pass_rate: "100%"
+
+    tdd_compliance:
+      status: PASS
+      evidence: >
+        The backend-dev self-review (reviews/2026-02-15-backend-dev-brewspec-v0.1.yaml)
+        documents TDD order: tests written first (Step 1), schema and examples second
+        (Steps 2-4), tests verified passing (Step 5), then documentation (Steps 6-7).
+        The git log shows a single implementation commit rather than granular
+        test-first/implement sequence, which is a limitation of the single-agent
+        workflow. However, the test content itself confirms TDD intent: test names
+        reference acceptance criteria, tests cover both happy path and error cases,
+        and no test is trivially true.
+
+    ac_coverage:
+      AC-1: "test_schema_is_valid_draft_2020_12"
+      AC-2: "test_version_must_be_0_1"
+      AC-3: "test_brews_must_be_nonempty_array"
+      AC-4: "test_required_brew_fields, test_required_coffee_fields, test_required_water_fields, test_date_format_iso8601"
+      AC-5: "test_optional_fields_accepted, test_minimal_brew_passes, test_temperature_range"
+      AC-6: "test_rating_range_1_to_5"
+      AC-7: "test_negative_values_rejected, test_zero_weight_rejected, test_zero_duration_accepted"
+      AC-8: "test_type_enum_validation"
+      AC-9: "test_valid_examples_pass (parametrized, 5 files)"
+      AC-10: "test_invalid_examples_fail (parametrized, 6 files)"
+      AC-11: "(covered by AC-9 + AC-10)"
+      AC-12: "No automated test — spec document reviewed manually by reviewer"
+      AC-13: "No automated test — spec document reviewed manually by reviewer"
+      AC-14: "No automated test — README reviewed manually by reviewer"
+      AC-15: "test_json_format_supported"
+
+    coverage_gaps:
+      - >
+        AC-12, AC-13, AC-14 (spec document and README content) have no automated tests.
+        This is consistent with the design (these are documentation artifacts). Manual
+        review confirms compliance. Not flagged as a deficiency.
+      - >
+        No test for water.temp_c exactly at boundary values 0 and 100 in isolation —
+        test_temperature_range does test 0, 50, and 100 as valid, and -1 and 101 as
+        invalid. Boundaries are covered.
+
+    test_quality: STRONG
+    test_quality_notes: >
+      Tests are meaningful and specific. Invalid ratings include 0, 6, -1, and 3.5
+      (float) — covering both out-of-range and wrong-type cases. Date format tests
+      include 5 distinct malformed formats. Type enum tests include 4 invalid values.
+      Boundary conditions are tested explicitly (zero weight rejected, zero duration
+      accepted, temp at 0 and 100). The two additional security tests
+      (test_freeform_text_fields_not_empty and test_additional_properties_rejected)
+      are grounded in design security requirements, not speculative.
+
+  # ─────────────────────────────────────────────
+  # SELF-REVIEW SCORECARD
+  # ─────────────────────────────────────────────
+  self_review:
+    scores:
+      input_adherence: 3      # All 15 ACs evaluated individually with evidence
+      format_compliance: 3    # Follows 7-section Report Format exactly
+      scope_discipline: 3     # No findings beyond spec ACs and security checklist
+      spec_traceability: 3    # Every finding references a specific AC, schema line, or security concern
+      convention_compliance: 3 # Checked against principles.md, CLAUDE.md, and tech stack
+      security: 3             # All security checklist items evaluated (input validation, SQL, file I/O, secrets, freeform text, paths, dangerous functions)
+
+    weighted_score: 1.0
+    passed: true
+
+    score_rationale:
+      input_adherence: >
+        3 - Every acceptance criterion (AC-1 through AC-15) is addressed individually
+        with status (PASS/FAIL) and specific evidence (file paths, line numbers,
+        test names).
+      format_compliance: >
+        3 - Review follows all 7 required sections: Summary, Spec Compliance,
+        Critical/High Issues, Security Findings, Medium/Low Issues, Tests, Verdict.
+      scope_discipline: >
+        3 - No issues flagged outside the product spec scope or security checklist.
+        Low-severity findings (parametrize IDs, encoding in doc examples, hybrid example)
+        all trace to the spec or documented security requirements.
+      spec_traceability: >
+        3 - Design compliance findings reference architect design sections. Schema findings
+        reference line numbers. Security findings map to the product spec's Security
+        Requirements section and architect Section 6.
+      convention_compliance: >
+        3 - Verified Python 3.11+ usage, yaml.safe_load() (secure by habit principle),
+        test-driven development (tests prove the spec principle), minimal dependencies
+        (pyyaml, jsonschema per CLAUDE.md), and absolute paths in test fixtures.
+      security: >
+        3 - Evaluated all security checklist items: input validation (PASS), SQL
+        injection (N/A), safe file I/O (PASS), no dangerous functions (PASS),
+        path handling (PASS), no secrets (PASS), no stack trace exposure (PASS).
+
+  # ─────────────────────────────────────────────
+  # 7. VERDICT
+  # ─────────────────────────────────────────────
+  final_verdict: PASS
+  verdict_notes: >
+    Implementation satisfies all 15 acceptance criteria. Tests pass (29/29). Schema
+    is structurally correct and matches the architect design. Security practices are
+    appropriate for a schema-only deliverable. No blocking issues found.
+
+    Four low-severity non-blocking observations (parametrize IDs, encoding in doc
+    code examples, missing hybrid example, placeholder repo URL) are noted for
+    awareness but do not require changes before the task is considered done.
+
+    Task status may be updated to "done" in manifest.yaml.
+
+  recommended_manifest_update:
+    task_id: brewspec-v0.1
+    status: done
+    review_artifact: reviews/2026-02-17-reviewer-brewspec-v0.1.yaml

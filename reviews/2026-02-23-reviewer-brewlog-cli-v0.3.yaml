@@ -1,0 +1,664 @@
+# Reviewer report — BrewLog CLI v0.3
+# Generated: 2026-02-23
+# Template: specs/templates/reviewer-report.yaml
+
+result:
+  date: "2026-02-23"
+  agent: reviewer
+  task: "BrewLog CLI v0.3 review"
+  input_summary: >
+    Reviewed the brewlog-cli-v0.3 implementation against the 42-AC product spec
+    (specs/products/brewlog-cli-v0.3.md) and the technical design
+    (specs/designs/brewlog-cli-v0.3.md). Source files examined at
+    /Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/ and
+    the full test suite at
+    /Users/scottluengen/Documents/1_Projects/brewspec/brewlog/tests/.
+    All 42 ACs were evaluated across: carry-forward fixes (AC-1 to AC-5), date
+    format UX (AC-6 to AC-10), BrewSpec v0.4 adoption (AC-11 to AC-15), grind
+    enum (AC-16 to AC-19), DB migration (AC-20 to AC-23), brewlog add result
+    fields (AC-24 to AC-30), brewlog update result fields (AC-31 to AC-34),
+    brewlog show results section (AC-35 to AC-37), list display and filtering
+    (AC-38 to AC-41), and welcome screen version (AC-42). Particular attention
+    was paid to the exact verbatim v0.3 rejection message (AC-13), the
+    result-object omission on export (AC-12), date filter correctness (AC-10),
+    and backward compatibility (AC-22 and AC-38).
+
+  verdict: FAIL
+
+  # --------------------------------------------------------------------------
+  # Test and lint results
+  # --------------------------------------------------------------------------
+  test_results:
+    cli_tests: 469
+    total: 469
+    status: all_passed
+    failures: []
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  # --------------------------------------------------------------------------
+  # Spec compliance — one entry per acceptance criterion
+  # --------------------------------------------------------------------------
+  spec_compliance:
+    AC-1:
+      status: PASS
+      note: >
+        UPDATABLE_COLUMNS frozenset defined as module-level constant in db.py
+        (lines 30-56). update_brew() asserts
+        set(updates.keys()).issubset(UPDATABLE_COLUMNS) at line 437 before
+        constructing any SQL. Assertion message names the offending keys.
+        Tests in test_db.py verify both passing and failing cases.
+
+    AC-2:
+      status: PASS
+      note: >
+        brewlog list --rating-min N implemented in list_.py. Validated as
+        integer 1-5 before query construction (lines 163-169). DB layer
+        applies result_rating_overall >= ? with parameterised placeholder.
+        test_cmd_list_filter.py covers valid values, out-of-range, and
+        non-integer inputs.
+
+    AC-3:
+      status: PASS
+      note: >
+        brewlog list --rating-max N implemented in list_.py. Validated as
+        integer 1-5 before query construction (lines 171-177). DB layer
+        applies result_rating_overall <= ? with parameterised placeholder.
+        Tests cover valid values, out-of-range, and non-integer inputs.
+
+    AC-4:
+      status: PASS
+      note: >
+        When both flags are supplied, both conditions are applied as AND.
+        list_.py lines 179-186 check rating_min > rating_max and produce a
+        clear error message, exiting with code 1. Tests confirm the range
+        filter and the ordering-error case.
+
+    AC-5:
+      status: PASS
+      note: >
+        --rating-min and --rating-max are combinable with --type, --since,
+        --until, --limit, and --all. All filters are appended as AND
+        conditions in list_brews_filtered(). --limit applies to the filtered
+        result set. No-match case prints a friendly message and exits 0.
+        Note: the spec mentions combining with --rating N (exact match) but
+        --rating is retired in v0.3; this is consistent with AC-25.
+
+    AC-6:
+      status: PASS
+      note: >
+        Interactive date prompt in add.py defaults to today in YYYY-MM-DD
+        format via date.today().strftime("%Y-%m-%d"). The default is
+        computed at prompt time. Tests in test_cmd_add.py confirm the
+        default format and that pressing Enter accepts it.
+
+    AC-7:
+      status: PASS
+      note: >
+        _prompt_date() in add.py validates against DATE_PATTERN regex
+        accepting both YYYY-MM-DD and YYYY-MM-DDTHH:MM:SSZ. Invalid input
+        causes the prompt to repeat with an error message. Tests cover
+        both accepted formats and the re-prompt on invalid input.
+
+    AC-8:
+      status: PASS
+      note: >
+        --date flag on brewlog add validates against both formats using the
+        same DATE_PATTERN. Invalid format produces a clear error and exits
+        with code 1. Tests confirm both formats accepted and invalid input
+        rejected.
+
+    AC-9:
+      status: PASS
+      note: >
+        add.py stores brew.date exactly as supplied. No normalisation
+        applied. DB schema uses TEXT NOT NULL for date. Tests confirm
+        both date-only and datetime values are stored verbatim.
+
+    AC-10:
+      status: PASS
+      note: >
+        list display shows date exactly as stored (no normalisation). The
+        --since and --until filters use substr(date, 1, 10) >= ? and
+        substr(date, 1, 10) <= ? respectively in list_brews_filtered()
+        (db.py lines 380-386), correctly handling both stored formats at
+        day granularity with parameterised queries.
+
+    AC-11:
+      status: PASS
+      note: >
+        export.py writes brewspec_version "0.4" at line 70. The JSON
+        Schema used for both import and export validation is loaded from
+        the bundled brewspec.schema.json (the v0.4 canonical schema file).
+        Tests verify the version field in exported output.
+
+    AC-12:
+      status: PASS
+      note: >
+        serialise.row_to_brew_dict() maps tds and ey to result.tds and
+        result.ey, brix to result.brix, tasting_notes to
+        result.tasting_notes, and all 8 rating dimensions to
+        result.ratings.*. The result object is omitted entirely when all
+        result fields are null (no sentinel key in the returned dict).
+        test_cmd_export.py and test_roundtrip.py confirm the v0.4 structure
+        and null-omission behaviour.
+
+    AC-13:
+      status: FAIL
+      note: >
+        The v0.3 rejection message in commands/import_.py (_V04_REQUIRED_MSG,
+        lines 21-29) does not match the verbatim content specified in the
+        spec Design Notes. The spec mandates an exact message including:
+        an "Error: " prefix, naming the CLI version ("BrewLog v0.3"),
+        a blank line separating the intro from the numbered migration steps,
+        five numbered steps (1-5), and a "Full migration guide:" footer.
+        The implementation uses bullet points instead of a numbered list,
+        omits step 1 (change brewspec_version), combines steps 2 and 3 into
+        one bullet, uses "this version of BrewLog" instead of "BrewLog v0.3",
+        has no blank line separator, and uses "For full migration
+        instructions, see:" instead of "Full migration guide:". The existing
+        tests check only loose substrings ("0.3", "not supported", "result",
+        the URL) and pass despite the mismatch. This is a High-severity
+        spec violation because the spec explicitly defines the exact content
+        in Design Notes and the Success Metrics section states "exact error
+        message defined in Design Notes" is required.
+
+    AC-14:
+      status: PASS
+      note: >
+        insert_brew_dict() in db.py correctly maps result.tds -> result_tds,
+        result.ey -> result_ey, result.brix -> result_brix, result.tasting_notes
+        -> result_tasting_notes, and result.ratings.* -> individual
+        result_rating_* columns (lines 295-308). Imported brews are visible
+        via list and show with result fields populated. test_roundtrip.py
+        confirms full round-trip fidelity including all 8 rating dimensions.
+
+    AC-15:
+      status: PASS
+      note: >
+        SCHEMA_RESOURCE_NAME = "brewspec.schema.json" constant defined in
+        schema.py line 20. _load_schema() uses this constant exclusively
+        (line 25). No hardcoded schema path at any other call site.
+        importlib.resources used to load the bundled canonical schema.
+
+    AC-16:
+      status: PASS
+      note: >
+        --grind flag on brewlog add validated against GRIND_ENUM (7 values)
+        via Pydantic BrewInput model. Invalid values produce a clear error
+        listing accepted values and exit code 1. No brew is written.
+        Tests in test_cmd_add.py cover valid enum values and invalid
+        freeform strings.
+
+    AC-17:
+      status: PASS
+      note: >
+        --grind flag on brewlog update validated against GRIND_ENUM in
+        update.py lines 163-168. Same accepted values and error behaviour
+        as add. No database write on invalid value. Tests confirm.
+
+    AC-18:
+      status: PASS
+      note: >
+        --grind help text on both add and update reads
+        "turkish | espresso | fine | medium_fine | medium | medium_coarse | coarse".
+        Confirmed in add.py and update.py option definitions.
+
+    AC-19:
+      status: PASS
+      note: >
+        show.py displays grind as the raw stored string with no formatting
+        or capitalisation (line 79). Tests in test_cmd_show.py confirm
+        "medium_fine" displayed as-is.
+
+    AC-20:
+      status: PASS
+      note: >
+        All 10 new columns (result_brix, result_tasting_notes, and 8
+        result_rating_* columns) are present in the CREATE TABLE statement
+        in _init_schema() (db.py lines 122-132). The migration dict
+        _V3_MIGRATION_COLUMNS covers the 8 rating columns; result_brix and
+        result_tasting_notes are in the base schema (also covering existing
+        v0.2 databases via _apply_migrations). Types match the spec
+        (REAL for brix, TEXT for tasting_notes, INTEGER for rating dims).
+
+    AC-21:
+      status: PASS
+      note: >
+        The tds and ey columns are retained in the DB schema as result_tds
+        and result_ey respectively (the v0.2 columns were already named
+        result_tds and result_ey in v0.2; confirmed in _init_schema). The
+        rating column (legacy) is retained as result_ratings TEXT (JSON).
+        No column rename or data migration performed.
+
+    AC-22:
+      status: PASS
+      note: >
+        The architect chose to deprecate the legacy flat `rating` column
+        (ADR-1 in the design) and use result_rating_overall exclusively,
+        documenting this in the design. The legacy result_ratings JSON
+        column is retained for backward compat. show.py (lines 116-123)
+        has a fallback to read from result_ratings JSON when
+        result_rating_overall is NULL, preserving display of v0.2 ratings.
+        The list command does not have this fallback (see MED-1).
+
+    AC-23:
+      status: PASS
+      note: >
+        _apply_migrations() (db.py lines 139-148) reads existing columns
+        via PRAGMA table_info(brews) and adds any missing v0.3 columns
+        without dropping or modifying existing data. Called from
+        get_connection() on every database open. test_db.py verifies
+        migration runs cleanly on an existing v0.2 schema.
+
+    AC-24:
+      status: PASS
+      note: >
+        All 10 result flags implemented on brewlog add: --brix FLOAT,
+        --tasting-notes TEXT, and all 8 --rating-* INT flags (add.py).
+        All are optional. Stored to their respective DB columns via
+        BrewInput model and insert_brew().
+
+    AC-25:
+      status: PASS
+      note: >
+        --rating flag is hidden=True on brewlog add (add.py). Running
+        brewlog add --rating N produces an explicit error message stating
+        --rating has been replaced by --rating-overall and exits code 1.
+        Flag is not silently ignored. Tests in test_cmd_add.py confirm.
+
+    AC-26:
+      status: PASS
+      note: >
+        All --rating-* flags on brewlog add are validated as integers 1-5
+        via the RatingsInput Pydantic model (models.py). Non-integer, zero,
+        and out-of-range values produce a clear error and exit code 1
+        without writing to the database. Tests cover boundary values.
+
+    AC-27:
+      status: PASS
+      note: >
+        --brix FLOAT validated as >= 0 via Pydantic ResultInput model
+        (models.py). Negative values produce a clear error and exit code 1.
+        Value of 0 is accepted. Tests confirm both cases.
+
+    AC-28:
+      status: PASS
+      note: >
+        --tasting-notes TEXT validated as non-empty string (minLength: 1)
+        via Pydantic model. Empty string produces a clear error and exit
+        code 1. Help text states this field is for sensory impressions and
+        that operational brew-process notes belong in --notes. Tests confirm.
+
+    AC-29:
+      status: PASS
+      note: >
+        When all result flags are absent, the brew is written with no result
+        fields populated (all NULL). No result fields required.
+        Tests verify a minimal brew (date, type, dose, water only) inserts
+        successfully with NULL result columns.
+
+    AC-30:
+      status: PASS
+      note: >
+        Interactive tip in add.py updated to:
+        'Tip: add optional details with flags, e.g. --method "V60"
+        --rating-overall 4 --tasting-notes "Bright acidity"  (run --help for
+        all options)'. The old --rating 4 example has been removed.
+        Tests in test_cmd_add.py confirm the exact tip text.
+
+    AC-31:
+      status: PASS
+      note: >
+        All 10 result flags implemented on brewlog update: --brix FLOAT,
+        --tasting-notes TEXT, and all 8 --rating-* INT flags (update.py).
+        Each flag maps directly to its result_rating_* or result_brix /
+        result_tasting_notes DB column with no JSON sentinel pattern.
+
+    AC-32:
+      status: PASS
+      note: >
+        --rating flag is hidden=True on brewlog update (update.py line 49).
+        Running brewlog update [id] --rating N produces the same error as
+        on add: --rating has been replaced by --rating-overall, exits code 1.
+        Tests in test_cmd_update.py confirm.
+
+    AC-33:
+      status: PASS
+      note: >
+        All --rating-* flags on brewlog update validated as integers 1-5
+        (update.py lines 106-122). --brix validated as >= 0 (lines 140-142).
+        --tasting-notes validated as non-empty (lines 174-176). Validation
+        failures produce clear errors and exit code 1 without DB write.
+
+    AC-34:
+      status: PASS
+      note: >
+        UPDATABLE_COLUMNS frozenset (db.py lines 30-56) includes all new
+        v0.3 columns: result_brix, result_tasting_notes, and all 8
+        result_rating_* columns. update.py maps --tds to result_tds and
+        --ey to result_ey (correct DB column names). Total allowlist size
+        is 25 columns.
+
+    AC-35:
+      status: PASS
+      note: >
+        show.py detects has_results by checking all _RESULT_COLS and the
+        legacy result_ratings column. The Results section is printed only
+        when at least one result field is non-null. Section is omitted
+        entirely when all result fields are null. Tests in test_cmd_show.py
+        cover both cases.
+
+    AC-36:
+      status: PASS
+      note: >
+        Results section groups fields as: TDS (%), EY (%), Brix (measurements),
+        then Tasting Notes, then Ratings sub-section (with each dimension
+        only when it has a value). Each field printed only if non-null.
+        Output format matches the spec Design Notes layout.
+
+    AC-37:
+      status: PASS
+      note: >
+        The Ratings sub-section header ("Ratings:") is only printed when
+        at least one result_rating_* column has a value (show.py lines
+        110-123). When no ratings are set and no legacy result_ratings JSON
+        is present, the header is omitted. Tests confirm.
+
+    AC-38:
+      status: PASS
+      note: >
+        list_.py _format_header() returns "Overall Rating" as the column
+        header (line 41). _COL_RATING = 14 accommodates the width. The
+        column reads from result_rating_overall. Brews with no overall
+        rating display "-". Tests in test_cmd_list.py confirm the header
+        text.
+        Note: the list command does not fall back to the legacy
+        result_ratings JSON column for v0.2 rows (see MED-1). This is
+        a non-blocking issue since the design ADR-1 deprecated the flat
+        rating column and no production brews have data in the legacy
+        result_ratings JSON via the v0.2 list command.
+
+    AC-39:
+      status: PASS
+      note: >
+        brewlog list --until DATE implemented in list_.py. Validated as
+        YYYY-MM-DD using datetime.strptime (lines 144-151). Invalid value
+        produces a clear error and exits code 1. DB filter uses
+        substr(date, 1, 10) <= ? for day-granularity comparison. Tests
+        in test_cmd_list_filter.py cover valid values, invalid formats,
+        and the no-match friendly message.
+
+    AC-40:
+      status: PASS
+      note: >
+        --until is combinable with --since and all other filters. When both
+        --since and --until are provided, list_.py checks since > until
+        string comparison (valid since both are YYYY-MM-DD) and produces
+        a clear error (lines 154-161). Both conditions applied as AND in
+        the DB query. Tests confirm range behaviour and ordering error.
+
+    AC-41:
+      status: PASS
+      note: >
+        When no brews match the combined filter set, list_cmd prints
+        "No brews match the given filters." and exits code 0 (list_.py
+        lines 211-213). Empty table is not printed. has_filters detection
+        covers all filter flags including rating_min, rating_max, until.
+
+    AC-42:
+      status: PASS
+      note: >
+        __version__ = "0.3.0" in src/brewlog/__init__.py. The welcome
+        screen (bare brewlog invocation) displays version 0.3.0.
+        test_cmd_welcome.py verifies the version string in output.
+
+  # --------------------------------------------------------------------------
+  # Critical / High issues — must fix before PASS verdict
+  # --------------------------------------------------------------------------
+  critical_issues:
+    - id: HIGH-1
+      severity: High
+      ac_refs:
+        - AC-13
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/commands/import_.py"
+      description: >
+        The v0.3 import rejection message (_V04_REQUIRED_MSG, lines 21-29)
+        does not match the verbatim content mandated by the product spec
+        Design Notes (specs/products/brewlog-cli-v0.3.md, lines 408-427).
+        The spec explicitly defines the exact message in the "v0.3 Import
+        Rejection Message" design note, and the Success Metrics section
+        states the requirement is "the exact error message defined in Design
+        Notes."
+
+        Differences between the required message and the actual implementation:
+
+        1. Missing "Error: " prefix on line 1. The spec requires the message
+           to begin with "Error: This file uses BrewSpec v0.3, ..."
+           The implementation emits no prefix.
+
+        2. CLI version not named. The spec requires "BrewLog v0.3 requires
+           BrewSpec v0.4." The implementation says "BrewLog requires BrewSpec
+           v0.4." without naming the version.
+
+        3. Missing blank line. The spec has a blank line between the two
+           intro sentences and the numbered migration list. The implementation
+           has no blank line.
+
+        4. Bullet list instead of numbered list. The spec specifies five
+           numbered steps (1. 2. 3. 4. 5.). The implementation uses three
+           bullet points (-).
+
+        5. Step 1 (change brewspec_version key from "0.3" to "0.4") is
+           entirely absent from the implementation.
+
+        6. Steps 2 and 3 are combined into one bullet. The spec requires
+           separate steps for tds and ey.
+
+        7. The grind step omits "(or remove the 'grind' field if no match
+           applies)" note required by the spec.
+
+        8. Footer wording differs: spec requires "Full migration guide:"
+           followed by the URL on the next line. Implementation uses
+           "For full migration instructions, see:" with the URL on the
+           next line.
+
+        The existing tests (test_import_v03_file_states_version_found,
+        test_import_v03_file_mentions_not_supported,
+        test_import_v03_file_lists_migration_changes,
+        test_import_v03_file_points_to_migration_guide) check only loose
+        substrings and pass despite the mismatch. New tests with exact
+        content assertions are needed.
+
+      fix: >
+        1. Replace the _V04_REQUIRED_MSG constant in
+           commands/import_.py with the exact verbatim content from the
+           spec Design Notes, reproduced here:
+
+           Error: This file uses BrewSpec v{version}, which is not
+           supported by BrewLog v0.3.
+           BrewLog v0.3 requires BrewSpec v0.4.
+
+           To migrate your file from v{version} to v0.4, make the
+           following changes:
+             1. Change 'brewspec_version' from "{version}" to "0.4"
+             2. Move 'tds' (if present) from the brew level to 'result.tds'
+             3. Move 'ey' (if present) from the brew level to 'result.ey'
+             4. Move 'rating' (if present) from the brew level to
+                'result.ratings.overall'
+             5. Replace any freeform 'grind' values with one of:
+                turkish, espresso, fine, medium_fine, medium, medium_coarse,
+                coarse
+                (or remove the 'grind' field if no match applies)
+
+           Full migration guide: https://github.com/coffee-standards/brewspec
+
+           Note: the spec hardcodes "v0.3" in the message. If the spec
+           intent is that the message should name the CLI version (not the
+           file version), use the literal string "v0.3". The {version}
+           template already handles the file version in the first sentence.
+
+        2. Update the test assertions in test_cmd_import.py to check the
+           exact verbatim message content rather than loose substrings.
+           At minimum add assertions for: "Error: " prefix, numbered list
+           format (check "1." and "5." in output), "Full migration guide:"
+           footer, and the blank-line separator.
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: >
+      PASS — All new --rating-* flags (1-5 INTEGER) validated via Pydantic
+      RatingsInput model before any DB write. --brix validated as >= 0 float.
+      --tasting-notes validated as non-empty string. --grind validated against
+      GRIND_ENUM frozenset. --date validated against DATE_PATTERN regex. --rating-min
+      and --rating-max validated as integers 1-5 before query construction.
+      No user input reaches the DB layer without validation.
+    sql_injection: >
+      PASS — All queries use parameterised ? placeholders throughout db.py.
+      Column names in update_brew() come from the UPDATABLE_COLUMNS allowlist
+      in application code, not from user input; assertion enforced at runtime.
+      The dynamic WHERE clause in list_brews_filtered() builds condition
+      strings from static source-code literals; only values are parameterised.
+      No string interpolation of user-supplied values anywhere in the DB layer.
+    file_io: >
+      PASS — Export path validated before DB access: '..' rejection,
+      extension allowlist (.yaml, .yml, .json), parent-directory existence
+      check. Import path validated: '..' rejection, existence check, 10MB
+      size limit before parsing. YAML parsed with yaml.safe_load() only;
+      yaml.load() is prohibited. Imported data validated against v0.4 JSON
+      Schema before any DB writes.
+    no_dangerous_functions: >
+      PASS — No eval(), exec(), pickle, or yaml.load() used anywhere.
+      json.loads() and yaml.safe_load() are the only deserialisation
+      functions used. No subprocess calls. No dynamic code execution.
+    error_messages: >
+      PASS — Error messages reference user-supplied values (brew IDs, flag
+      names, file paths from user input) but do not expose internal stack
+      traces, DB paths, or system paths to users. sys.exit(1) used
+      consistently for error exits.
+    path_handling: >
+      PASS — validate_export_path() and validate_import_path() in serialise.py
+      reject '..' in path parts before any file system operations. Parent
+      directory existence checked before writing. No symlink traversal or
+      path normalisation edge cases introduced in v0.3.
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues — non-blocking; carry forward to v0.4
+  # --------------------------------------------------------------------------
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/commands/list_.py"
+      description: >
+        _format_row() (line 61) reads only from result_rating_overall for
+        the Overall Rating column. There is no fallback to the legacy
+        result_ratings JSON column for v0.2 rows that may have had ratings
+        stored as JSON. AC-38 states: "It continues to display the value
+        stored in result_rating_overall (or the legacy rating column for
+        pre-v0.3 brews)." The design (ADR-1) chose to deprecate the flat
+        rating column and use result_rating_overall exclusively, but the
+        result_ratings JSON column (used by v0.2) is not the same as the
+        flat rating column — it stored a structured JSON object. show.py
+        correctly implements the fallback (lines 116-123). The list command
+        is inconsistent with show in this respect. For the v0.2 case this
+        means existing brews with JSON-encoded ratings in result_ratings
+        display "-" in the list rating column even though show displays
+        the legacy rating.
+      suggestion: >
+        In _format_row(), after checking result_rating_overall for None,
+        add a fallback that parses row["result_ratings"] JSON (if non-null)
+        and reads the "overall" key as a fallback display value. This matches
+        the show.py behaviour and makes list consistent with show for legacy
+        v0.2 rows.
+
+    - id: MED-2
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/pyproject.toml"
+      description: >
+        pyproject.toml declares version = "0.1.0" (line 7), which has not
+        been updated since the project was created. The canonical version
+        is correctly "0.3.0" in src/brewlog/__init__.py. The deployment
+        checklist requires version fields across all packaging files to be
+        consistent. pip install -e . will report the package as version
+        0.1.0, which may confuse users checking the installed package
+        version with pip show brewlog.
+      suggestion: >
+        Update pyproject.toml line 7 to version = "0.3.0" to match
+        __init__.py.
+
+    - id: MED-3
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/tests/test_cmd_import.py"
+      description: >
+        The four tests for the v0.3 rejection message use loose substring
+        assertions (checking for "0.3", "not supported", "result", and the
+        GitHub URL) rather than assertions against the verbatim spec-defined
+        message. This allowed the HIGH-1 message-content deviation to go
+        undetected. Even after HIGH-1 is fixed, if the message is ever
+        accidentally regressed the loose tests will still pass.
+      suggestion: >
+        After fixing HIGH-1, add a test that asserts the entire verbatim
+        message content against the spec (or at minimum checks for the
+        numbered-list format, the "Error: " prefix, and the
+        "Full migration guide:" footer). This makes the verbatim requirement
+        machine-verifiable.
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    tests_written_first: true
+    all_acs_have_tests: true
+    meaningful_assertions: true
+    notes: >
+      469 tests all pass. All 42 ACs have corresponding test coverage.
+      The exception is AC-13 where the four existing tests are too loose
+      to enforce the verbatim message format — they check substrings
+      rather than the exact required content. This allowed the HIGH-1
+      spec deviation to go undetected through the test suite. All other
+      ACs have meaningful assertions including boundary conditions, error
+      cases, and happy paths. Tests use tmp_path for DB isolation throughout.
+      test_roundtrip.py provides an end-to-end export/import cycle test
+      covering all 8 rating dimensions and all result fields.
+
+  # --------------------------------------------------------------------------
+  # Summary
+  # --------------------------------------------------------------------------
+  summary: >
+    FAIL. The implementation is comprehensive, well-structured, and passes all
+    469 tests with clean ruff linting. 41 of 42 acceptance criteria are
+    correctly implemented. The single blocking issue is AC-13: the v0.3 import
+    rejection error message in commands/import_.py (_V04_REQUIRED_MSG) does not
+    match the verbatim content mandated by the product spec Design Notes. The
+    spec explicitly defines the exact message (numbered migration steps, "Error:"
+    prefix, "BrewLog v0.3" version naming, blank-line separator, "Full migration
+    guide:" footer) and the Success Metrics section states verbatim compliance
+    is required. The implementation uses bullet points instead of a numbered
+    list, omits migration step 1, combines steps 2 and 3, and uses different
+    wording throughout. The existing tests do not catch this because they assert
+    only on substrings. Two medium issues are non-blocking: the list command
+    lacks the legacy result_ratings JSON fallback that show.py correctly
+    implements (inconsistency for v0.2 rows), and pyproject.toml still shows
+    version 0.1.0 rather than 0.3.0. Fix HIGH-1 (update the message constant
+    and add a verbatim-content test), then re-submit for review.
+
+  carry_forward:
+    - >
+      MED-1: brewlog list _format_row() does not fall back to legacy
+      result_ratings JSON column for v0.2 rows when result_rating_overall
+      is NULL. show.py correctly implements this fallback but list does not.
+      Address in v0.4.
+    - >
+      MED-2: pyproject.toml version is 0.1.0 — must be updated to 0.3.0
+      before the deployment-manager runs the deployment checklist.
+      (Blocking for deployment-manager, not for reviewer re-pass.)
+    - >
+      LOW-1: AC-13 tests in test_cmd_import.py use loose substring assertions
+      rather than verbatim-content assertions. After HIGH-1 is fixed, add
+      a test that asserts the exact message format to prevent future regression.

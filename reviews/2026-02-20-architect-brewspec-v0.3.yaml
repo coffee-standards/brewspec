@@ -1,0 +1,37 @@
+result:
+  date: "2026-02-20"
+  agent: architect
+  task: "BrewSpec v0.3 technical design"
+  input_summary: >
+    Produce a technical design for BrewSpec v0.3 from specs/products/brewspec-v0.3.md.
+    Deliverables: JSON Schema diff, full v0.3 schema, test strategy with exact function
+    names, file layout, Pydantic model changes, spec document changes, edge case notes,
+    security considerations. Update manifest to ready_for_dev.
+  scores:
+    input_adherence: 3
+    format_compliance: 3
+    scope_discipline: 3
+    spec_traceability: 3
+    convention_compliance: 3
+    downstream_handoff: 3
+    testability: 3
+    security: 3
+  weighted_score: 1.0
+  passed: true
+  issues: []
+  remediation: null
+  notes: >
+    All 30 ACs addressed explicitly. Schema diff (Section 1) covers every changed field
+    with AC citation. Full verbatim v0.3 schema (Section 2) is copy-paste ready. Carry-
+    forward docstring fixes (Section 3) provide exact before/after text. Spec document
+    changes (Section 4) include all four required sections. Example file plan (Section 5)
+    covers all six valid updates and two new invalid files with exact target content.
+    Test strategy (Section 6) provides 16 new named test functions and a complete AC-to-
+    test map. Pydantic model changes (Section 7) include the new EquipmentInput class and
+    updated validators with a note on the field_validator name-access limitation. File
+    layout (Section 8) enumerates every file to modify or create with AC citations.
+    Edge cases (Section 9) address ey as computed vs recorded, empty equipment object
+    semantics, maxLength/minLength interaction, and additionalProperties security.
+    Security (Section 10) resolves the v0.2 review's flagged maxLength concern and
+    covers the trust boundary unchanged from v0.2. AC verification table (Section 11)
+    provides exhaustive traceability for all 30 ACs.

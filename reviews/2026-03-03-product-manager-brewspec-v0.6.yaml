@@ -1,0 +1,57 @@
+result:
+  date: "2026-03-03"
+  agent: "product-manager"
+  task: "Self-review of brewspec-v0.6 product spec against product-spec template"
+  input_summary: >
+    Reviewed specs/products/brewspec-v0.6.md against the product-spec template at
+    specs/templates/product-spec.md before handoff to architect. All template sections
+    are present and populated; all ACs are numbered and testable; security requirements
+    are documented.
+
+  scores:
+    input_adherence: 3        # All required template sections present: Problem Statement,
+                              # User Stories, Acceptance Criteria, Scope (In/Out), Design Notes,
+                              # Security Requirements, Dependencies, Success Metrics, Open Questions.
+    format_compliance: 3      # Follows template exactly. Status, Priority, Author, Created,
+                              # Last Updated header block present. All sections in template order.
+    scope_discipline: 3       # Design Notes section contains only content that clarifies intent
+                              # for the architect — no implementation decisions made.
+                              # Out of Scope items are explicit and justified.
+    spec_traceability: 3      # Every AC traces to a user story and a schema change. The four
+                              # breaking changes each have their own AC cluster. Carry-forward items
+                              # each have their own AC group with numbered ACs. Full data structure
+                              # provided in Design Notes for architect reference.
+    convention_compliance: 3  # Filename matches manifest task id (brewspec-v0.6.md). Status is
+                              # Ready. Priority is P2. Author is product-manager. Created and
+                              # Last Updated are both 2026-03-03.
+    downstream_handoff: 3     # Architect has: full field table for origins[] after v0.6 (Design
+                              # Notes), complete data structure YAML snippet, migration table with
+                              # before/after for all four breaking changes, grinder_setting encoding
+                              # convention fully described. One open question explicitly deferred to
+                              # architect (export.py target version for MED-4 / AC-27).
+    testability: 3            # AC-39 enumerates every specific test case required. All ACs are
+                              # phrased as "passes validation" or "fails validation" — directly
+                              # writable as pytest cases. AC numbers referenced in test descriptions.
+    security: 3               # Security Requirements section covers data sensitivity (no PII),
+                              # input validation for each new/changed field, file I/O constraints
+                              # (yaml.safe_load unchanged), and no secrets in examples.
+
+  weighted_score: 1.0
+  # Calculation:
+  # Dimensions and weights:
+  #   input_adherence:      3 * 3 = 9
+  #   format_compliance:    3 * 2 = 6
+  #   scope_discipline:     3 * 2 = 6
+  #   spec_traceability:    3 * 2 = 6
+  #   convention_compliance:3 * 1 = 3
+  #   downstream_handoff:   3 * 2 = 6
+  #   testability:          3 * 2 = 6
+  #   security:             3 * 2 = 6
+  # Sum(score * weight) = 9+6+6+6+3+6+6+6 = 48
+  # Sum(3 * weight)     = 9+6+6+6+3+6+6+6 = 48
+  # weighted_score = 48/48 = 1.0
+  passed: true
+
+  issues: []
+
+  remediation: null

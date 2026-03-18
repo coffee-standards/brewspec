@@ -1,0 +1,307 @@
+result:
+  date: "2026-02-22"
+  agent: reviewer
+  task: "BrewSpec v0.4 review"
+  input_summary: >
+    Validate the BrewSpec v0.4 implementation against all 43 acceptance criteria in
+    specs/products/brewspec-v0.4.md. Run test suites, ruff lint, verify schema
+    correctness, security, TDD compliance, examples, and spec document.
+
+  verdict: FAIL
+
+  test_results:
+    schema_tests: 103
+    brewlog_tests: 343
+    total: 446
+    status: all_passed
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+
+  # --------------------------------------------------------------------------
+  # Spec Compliance — per acceptance criterion
+  # --------------------------------------------------------------------------
+  spec_compliance:
+    # Schema Version Bump
+    AC-1:  { status: PASS, note: "brewspec_version const is '0.4'; title updated; v0.3 rejected." }
+
+    # Date Format
+    AC-2:  { status: PASS, note: "oneOf with two pattern sub-schemas accepted." }
+    AC-3:  { status: PASS, note: "'2026-02-21' date-only accepted." }
+    AC-4:  { status: PASS, note: "'2026-02-21T09:00:00Z' full datetime accepted." }
+    AC-5:  { status: PASS, note: "'2026-02-21T09:00:00' (no Z) rejected." }
+    AC-6:  { status: PASS, note: "'21-02-2026' wrong order rejected." }
+    AC-7:  { status: PASS, note: "Month 13 passes schema validation as expected." }
+    AC-8:  { status: PASS, note: "oneOf with two pattern alternatives implemented exactly as specified." }
+
+    # Grind Enum
+    AC-9:  { status: PASS, note: "grind is a strict enum with exactly 7 values." }
+    AC-10: { status: PASS, note: "medium, turkish, espresso all accepted." }
+    AC-11: { status: PASS, note: "medium_fine, coarse accepted." }
+    AC-12: { status: PASS, note: "'setting 15' rejected." }
+    AC-13: { status: PASS, note: "'Medium' wrong case rejected." }
+    AC-14: { status: PASS, note: "grind omitted passes." }
+
+    # result object
+    AC-15: { status: PASS, note: "result is optional object with additionalProperties: false." }
+    AC-16: { status: PASS, note: "result accepts tds, ey, brix, ratings, tasting_notes — no others." }
+    AC-17: { status: PASS, note: "brew without result passes." }
+    AC-18: { status: PASS, note: "result: {} (empty) passes." }
+    AC-19: { status: PASS, note: "result: {score: 95} rejected by additionalProperties: false." }
+
+    # tds and ey moved
+    AC-20: { status: PASS, note: "tds and ey removed from brew level; tds/ey at brew level fail; result.tds and result.ey both accepted." }
+
+    # brix
+    AC-21: { status: PASS, note: "brix: 0 passes; brix: 1.5 passes; brix: -1 fails (minimum: 0)." }
+
+    # ratings
+    AC-22: { status: PASS, note: "ratings is optional object with additionalProperties: false." }
+    AC-23: { status: PASS, note: "All 8 dimensions present, all optional integers 1-5." }
+    AC-24: { status: PASS, note: "Partial ratings (overall, acidity only) pass." }
+    AC-25: { status: PASS, note: "overall: 0 fails; overall: 6 fails; overall: 3.5 fails." }
+
+    # tasting_notes
+    AC-26: { status: PASS, note: "tasting_notes: 'Bright citrus' passes; empty string fails; 2001 chars fails; 2000 chars passes." }
+
+    # rating removed
+    AC-27: { status: PASS, note: "top-level rating: 4 rejected by additionalProperties: false." }
+
+    # notes documentation
+    AC-28: { status: PASS, note: "notes description in schema updated to 'Brew-process notes — operational observations about the preparation...'." }
+
+    # Examples
+    AC-29: { status: PASS, note: "All existing valid examples updated to brewspec_version 0.4; tds/ey/rating migrated to result." }
+    AC-30: { status: PASS, note: "pour_over_date_only.yaml uses date: '2026-02-21' (YYYY-MM-DD)." }
+    AC-31: { status: PASS, note: "pour_over.yaml, espresso.yaml and others use full datetime." }
+    AC-32: { status: PASS, note: "pour_over_date_only.yaml has result with tds, ey, and ratings." }
+    AC-33: { status: PASS, note: "pour_over.yaml and pour_over_date_only.yaml include result.tasting_notes." }
+    AC-34: { status: PASS, note: "espresso.yaml and pour_over_date_only.yaml include result.brix." }
+    AC-35: { status: PASS, note: "pour_over.yaml, pour_over_date_only.yaml, and others use grind enum." }
+    AC-36: { status: PASS, note: "examples/invalid/invalid_date_no_z.yaml exists and is correctly classified." }
+    AC-37: { status: PASS, note: "examples/invalid/invalid_grind_freeform.yaml exists and is correctly classified." }
+    AC-38: { status: PASS, note: "examples/invalid/invalid_tds_at_brew_level.yaml exists and is correctly classified." }
+
+    # Spec Document — BLOCKING FAILURES
+    AC-39: { status: FAIL, note: "brewspec-v0.4.md does NOT exist in the brewspec repo. The file brewspec-v0.3.md is present but no v0.4 spec document has been created." }
+    AC-40: { status: FAIL, note: "Cannot pass — brewspec-v0.4.md does not exist." }
+    AC-41: { status: FAIL, note: "Cannot pass — brewspec-v0.4.md does not exist." }
+    AC-42: { status: FAIL, note: "Cannot pass — brewspec-v0.4.md does not exist." }
+
+    # Test Suite
+    AC-43: { status: PASS, note: "All required test cases present across 103 schema tests and 343 brewlog tests. Parameterised grind enum, dual date format, result object, ratings range, brix, flat-level rejection, version const rejection all covered." }
+
+  # --------------------------------------------------------------------------
+  # Critical / High Issues — must fix
+  # --------------------------------------------------------------------------
+  critical_issues:
+    - id: CRIT-1
+      severity: Critical
+      ac_refs: [AC-39, AC-40, AC-41, AC-42]
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewspec-v0.4.md"
+      description: >
+        brewspec-v0.4.md is missing from the public brewspec repo. The design spec
+        (specs/designs/brewspec-v0.4.md Section 5) explicitly specifies the dev
+        must produce this file. It must contain: complete field reference tables
+        (Section 5.2), 'What Changed in v0.4' section (Section 5.3), 'Validation'
+        section (Section 5.4), and 'Backward Compatibility' section with migration
+        guide (Section 5.5). The design doc provides the exact content to write.
+        The file brewspec-v0.3.md must also be archived to versions/brewspec-v0.3.md
+        before brewspec-v0.4.md is written (consistent with how brewspec-v0.2.md was
+        archived to versions/brewspec-v0.2.md when v0.3 shipped).
+      fix: >
+        1. Archive brewspec-v0.3.md to versions/brewspec-v0.3.md (copy not delete —
+           the file at repo root will be replaced by the new spec doc, but the old
+           version is preserved in versions/ per the existing pattern).
+        2. Write brewspec-v0.4.md to the repo root following the content specified
+           in specs/designs/brewspec-v0.4.md Sections 5.1–5.5 exactly.
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: PASS — all user inputs go through Pydantic before DB write; grind enum enforced; ratings integer range enforced; brix minimum 0 enforced
+    sql_injection: PASS — parameterised queries throughout; no f-string column name interpolation with user data
+    file_io: PASS — yaml.safe_load() used; path validation unchanged; new invalid examples are plain YAML with no executable content
+    additional_properties: PASS — additionalProperties: false on result and ratings objects prevents unknown field injection
+    string_limits: PASS — maxLength: 2000 on tasting_notes; maxLength: 2000 on notes
+    no_dangerous_functions: PASS — no eval, exec, or pickle on user data
+    error_messages: PASS — no internal paths or stack traces exposed to CLI users
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues
+  # --------------------------------------------------------------------------
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/README.md"
+      description: >
+        README.md still references v0.2 throughout: the Quick Start brew example uses
+        brewspec_version: "0.2" with old v0.2 fields (rating, grind: "medium-fine",
+        flat tds) that are now invalid against the current schema; the Schema section
+        says "BrewSpec v0.2 uses JSON Schema Draft 2020-12"; the Spec Document section
+        links to brewspec-v0.2.md; the repository structure diagram lists brewspec-v0.2.md
+        as the human-readable spec. The README is the public face of the project and
+        currently advertises a schema that is two versions out of date. Not a spec AC,
+        but a correctness concern for the public repo.
+      fix: >
+        Update README.md: version references to 0.4; Quick Start example to v0.4 format
+        with result object and enum grind; spec doc link to brewspec-v0.4.md; repository
+        structure diagram updated. This is a deployment-manager task unless the dev picks
+        it up now. Note: AC-39 fix (creating brewspec-v0.4.md) is a prerequisite.
+
+  low_issues:
+    - id: LOW-1
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/examples/invalid/rating_out_of_range.yaml"
+      description: >
+        This existing invalid example declares brewspec_version: "0.2" and uses a flat
+        rating: 6. Against the v0.4 schema it fails for two reasons: version const
+        mismatch AND (if the version were corrected) additionalProperties rejection of
+        flat rating. The file is correctly classified as invalid and the test passes,
+        but the intent (testing out-of-range rating) is no longer accurately demonstrated
+        since flat rating is wholly removed in v0.4. The comment still says "Invalid: rating
+        exceeds maximum of 5" which misleads readers. Not blocking — the file still fails.
+      fix: >
+        Consider updating the comment to clarify the file now fails due to version mismatch
+        (and would also fail due to unknown field rating even if version were corrected).
+        Or replace with a new example demonstrating result.ratings.overall: 6 rejected.
+        Carry to v0.5.
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    verdict: PASS
+    notes: >
+      The test suite comprehensively covers all v0.4 acceptance criteria. Tests are
+      parameterised for the grind enum (7 values), cover boundary conditions (brix=0,
+      brix=-1; ratings 0/6/3.5; date with and without Z), and test each breaking change
+      explicitly (test_tds_at_brew_level_rejected, test_ey_at_brew_level_rejected,
+      test_rating_at_brew_level_rejected). Tests are named with AC references in their
+      docstrings. All 446 tests pass (103 standalone schema + 343 brewlog). Test coverage
+      would catch schema regressions for all validated behaviours.
+
+  # --------------------------------------------------------------------------
+  # Self-review scorecard
+  # --------------------------------------------------------------------------
+  self_review:
+    scores:
+      input_adherence: 3       # Every AC from AC-1 through AC-43 evaluated
+      format_compliance: 3     # Follows the 7-section report format exactly
+      scope_discipline: 3      # No findings outside spec scope introduced
+      spec_traceability: 3     # Every finding traces to a specific AC or security checklist item
+      convention_compliance: 3 # Checked against principles.md, TDD, ruff, parameterised queries
+      security: 3              # All security checklist items explicitly evaluated
+
+    weighted_score: 1.0
+    passed: true
+    dimensions_below_threshold: []
+
+  # --------------------------------------------------------------------------
+  # Non-blocking carry-forward for brewspec-v0.5
+  # --------------------------------------------------------------------------
+  review_carry_forward:
+    - "LOW-1: rating_out_of_range.yaml comment is misleading in v0.4 context. The file
+       fails due to version mismatch and unknown field; the comment still says 'rating
+       exceeds maximum of 5'. Update comment or replace with result.ratings.overall: 6
+       example."
+    - "MED-1: README.md references v0.2 throughout. Update Quick Start example,
+       schema version reference, spec doc link, and repository structure diagram to v0.4
+       as part of or after deploy."
+
+# --------------------------------------------------------------------------
+# Re-review pass — 2026-02-22 (CRIT-1 fix verification)
+# --------------------------------------------------------------------------
+re_review:
+  date: "2026-02-22"
+  trigger: "CRIT-1 fix: brewspec-v0.4.md written, brewspec-v0.3.md archived, README updated"
+
+  fixes_verified:
+    CRIT-1:
+      status: RESOLVED
+      evidence:
+        - "brewspec-v0.4.md exists at /Users/scottluengen/Documents/1_Projects/brewspec/brewspec-v0.4.md"
+        - "versions/brewspec-v0.3.md exists at /Users/scottluengen/Documents/1_Projects/brewspec/versions/brewspec-v0.3.md"
+        - "README.md Quick Start now uses brewspec_version 0.4 with v0.4 fields (result object, enum grind, no flat tds/rating)"
+        - "README.md Schema section now says 'BrewSpec v0.4 uses JSON Schema Draft 2020-12'"
+        - "README.md links to brewspec-v0.4.md"
+        - "README.md repository structure diagram updated to show brewspec-v0.4.md and versions/brewspec-v0.3.md"
+    MED-1:
+      status: RESOLVED
+      evidence:
+        - "README.md updated to v0.4 throughout — Quick Start, Schema section, spec doc link, and repo structure diagram"
+
+  ac_re_evaluation:
+    AC-39:
+      status: PASS
+      note: >
+        brewspec-v0.4.md exists. Field reference covers all objects: Top-Level Fields,
+        Brew Object (all 12 fields), Coffee Object (5 fields), Water Object (ppm),
+        Equipment Object (grinder, brewer), Result Object (tds, ey, brix, tasting_notes,
+        ratings), Ratings Object (all 8 SCA dimensions). Grind enum table with 7 values
+        documented. All field constraints and descriptions present.
+    AC-40:
+      status: PASS
+      note: >
+        'What Changed in v0.4' section present with summary table covering all breaking
+        and additive changes (version bump, date dual-format, grind enum, result object,
+        result.tds, result.ey, result.brix, result.tasting_notes, result.ratings, flat
+        tds removed, flat ey removed, flat rating removed, notes description). Detail
+        subsections for date, grind, result object, and notes/tasting_notes distinction.
+    AC-41:
+      status: PASS
+      note: >
+        'Validation' section present. Explicitly states "Tools implementing BrewSpec
+        should validate a brew document at storage time — before writing to any database
+        or file — not only at display or read time." Validation pipeline documented:
+        (1) safe parse with yaml.safe_load, (2) schema validation with Draft202012Validator,
+        (3) application logic. Code examples in Python and JavaScript. Matches the spec's
+        required pipeline exactly.
+    AC-42:
+      status: PASS
+      note: >
+        'Backward Compatibility' section present. Breaking changes table covers all four
+        breaking changes (flat tds, flat ey, flat rating, grind values). Additive changes
+        table present. Step-by-step migration guide covers all 6 steps: (1) version update,
+        (2) tds move, (3) ey move, (4) rating->ratings.overall, (5) grind enum mapping
+        with freeform-to-enum lookup table, (6) validate. Inline YAML before/after
+        examples for each step. Reference to archived v0.1/v0.2/v0.3 spec documents.
+
+  test_results:
+    schema_tests: 103
+    brewlog_tests: 343
+    total: 446
+    status: all_passed
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+
+  remaining_low_issues:
+    - id: LOW-1
+      status: CARRY_FORWARD
+      note: >
+        rating_out_of_range.yaml comment still says 'Invalid: rating exceeds maximum of 5'
+        but file fails due to version const mismatch (brewspec_version 0.2). Not blocking.
+    - id: LOW-2
+      status: NEW
+      note: >
+        README.md invalid examples list (in both the repository structure diagram and the
+        Examples section) does not include the three new v0.4 invalid examples:
+        invalid_date_no_z.yaml, invalid_grind_freeform.yaml, invalid_tds_at_brew_level.yaml.
+        The files exist and are tested. The README inventory is incomplete but not a
+        blocking AC. Carry to v0.5.
+
+  updated_verdict: PASS
+
+  updated_review_carry_forward:
+    - "LOW-1: rating_out_of_range.yaml comment misleading — says 'rating exceeds maximum
+       of 5' but file fails due to version const mismatch (brewspec_version 0.2). Update
+       comment or replace with result.ratings.overall: 6 example."
+    - "LOW-2: README.md invalid examples inventory omits the three new v0.4 invalid
+       examples (invalid_date_no_z.yaml, invalid_grind_freeform.yaml,
+       invalid_tds_at_brew_level.yaml). Update README examples list at next version."

@@ -1,0 +1,29 @@
+result:
+  date: "2026-03-01"
+  agent: "backend-dev"
+  task: "BrewSpec v0.5 — schema, CLI, models, tests, examples, spec doc"
+  input_summary: >
+    Implemented BrewSpec v0.5 per specs/designs/brewspec-v0.5.md: updated brewspec.schema.json
+    (version bump, brew_ratio, equipment.grinder_setting/notes, coffee.origins replacing
+    coffee.origin); updated Pydantic models (OriginInput, CoffeeInput.origins,
+    EquipmentInput.grinder_setting/notes, BrewInput.brew_ratio); updated CLI commands
+    (add, export, import, show) and DB/serialise layer; migrated all test fixtures to v0.5;
+    updated all tests; created new valid/invalid examples; archived brewspec-v0.4.md;
+    created brewspec-v0.5.md; updated README invalid examples inventory. All 651 tests pass,
+    ruff check passes with zero errors.
+
+  scores:
+    input_adherence: 3        # All ACs covered: schema changes, model changes, CLI changes, examples, spec doc, README
+    format_compliance: 3      # brewspec-v0.5.md follows spec doc template structure (5 sections in order)
+    scope_discipline: 3       # No unrequested additions; only changes specified in design doc
+    spec_traceability: 3      # Every change traces to design doc Section 1-9 or an explicit AC
+    convention_compliance: 3  # Parameterised queries, no eval, yaml.safe_load, Pydantic validation
+    tdd_compliance: 3         # Tests written/updated first, implementation follows; all 651 tests pass
+    security: 3               # Parameterised SQL, yaml.safe_load, Pydantic validates all origin fields before DB write
+
+  weighted_score: 1.0
+  passed: true
+
+  issues: []
+
+  remediation: null

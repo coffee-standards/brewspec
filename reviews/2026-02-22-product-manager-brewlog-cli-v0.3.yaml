@@ -1,0 +1,58 @@
+result:
+  date: "2026-02-22"
+  agent: "product-manager"
+  task: "Write product spec for BrewLog CLI v0.3"
+  input_summary: >
+    User approved scope proposal for brewlog-cli-v0.3 with four open question
+    decisions (OQ1: full 8-dimension ratings on add+update; OQ2: reject v0.3 imports
+    with actionable guidance; OQ3: raw enum display for grind; OQ4: rename list
+    column to Overall Rating). Produced complete product spec at
+    specs/products/brewlog-cli-v0.3.md covering all carry-forward items, BrewSpec
+    v0.4 schema adoption, date format UX, result fields, and list filtering additions.
+
+  scores:
+    input_adherence: 3        # All four OQ decisions incorporated; all carry-forward items
+                              # addressed (column allowlist, rating-min/max, date UX);
+                              # all agreed scope items covered with testable ACs.
+    format_compliance: 3      # Template followed exactly: Problem Statement, User Stories,
+                              # Acceptance Criteria (grouped by feature area), Scope (In/Out),
+                              # Design Notes, Security Requirements, Dependencies, Success
+                              # Metrics, Open Questions. No sections missing or reordered.
+    scope_discipline: 3       # No additions beyond agreed scope. Every AC traces to a
+                              # carry-forward item, a user OQ decision, or a feature confirmed
+                              # in the scope proposal. Deferred items enumerated in Out of Scope.
+    spec_traceability: 3      # Each AC maps to a source: manifest carry-forward items,
+                              # user OQ1-OQ4 decisions, BrewSpec v0.4 spec facts, or the
+                              # v0.2 baseline. Two open questions flagged for architect
+                              # (legacy rating column, freeform grind export handling) are
+                              # explicitly traced to ambiguities in the data model.
+    convention_compliance: 3  # AC language follows "User can / System should" pattern.
+                              # ACs numbered sequentially and grouped by feature area.
+                              # File placed in specs/products/ per document hierarchy.
+                              # No emojis. Absolute paths used throughout.
+    downstream_handoff: 3     # Architect has: full DB schema with column names and types;
+                              # exact SQL pattern for dual-format date filter; export
+                              # serialisation rules for result object; verbatim v0.3 rejection
+                              # message; column allowlist with code example; two open questions
+                              # explicitly flagged for architect decision with options and
+                              # recommendation. Developer can act without asking for
+                              # clarification on any AC.
+    testability: 3            # Every AC specifies observable inputs and outputs: exact CLI
+                              # flag names, accepted/rejected values, exit codes, error message
+                              # content, column names, and expected output sections. A developer
+                              # can write a failing test from each AC without asking questions.
+    security: 3               # Data sensitivity assessed per field type. Input validation
+                              # rules specified per new flag (rating-* as int 1-5, brix >= 0,
+                              # tasting-notes minLength 1, grind closed enum, date format).
+                              # SQL injection controls documented (parameterised queries,
+                              # column allowlist assertion with code pattern, static WHERE
+                              # clause strings). File I/O controls confirmed unchanged.
+                              # Freeform text handling explicitly noted (stored and displayed
+                              # as plain strings, never executed).
+
+  weighted_score: 1.0
+  passed: true
+
+  issues: []
+
+  remediation: null

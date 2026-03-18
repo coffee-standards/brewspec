@@ -1,0 +1,215 @@
+reviewer: orchestrator (reviewer agent rate-limited; review performed by orchestrator)
+date: "2026-02-21"
+task: brewlog-cli-v0.2
+verdict: PASS
+
+summary: >
+  All 290 tests pass. All 24 ACs are met by the implementation. SQL injection
+  surface for the dynamic list filter WHERE clause is structurally safe (static
+  condition strings, parameterised values only). No security issues found.
+
+test_results:
+  total: 290
+  passed: 290
+  failed: 0
+  command: >
+    /Users/scottluengen/Documents/1_Projects/brewspec/brewlog/venv/bin/pytest
+    /Users/scottluengen/Documents/1_Projects/brewspec/brewlog/tests/ -v
+
+ac_results:
+
+  - ac: AC-1
+    status: PASS
+    notes: >
+      commands/show.py line 36 uses click.echo(..., err=True).
+      test_show_not_found_goes_to_stderr verifies exit 1 and message.
+
+  - ac: AC-2
+    status: PASS
+    notes: >
+      serialise.py line 112 rejects paths where suffix not in
+      {.yaml, .yml, .json}; five new tests in test_cmd_export.py covering
+      no-extension, .csv, and all three valid extensions.
+
+  - ac: AC-3
+    status: PASS
+    notes: >
+      test_cmd_welcome.py asserts ".______." in result.output — unique
+      substring of the ASCII cup art, not a single character.
+
+  - ac: AC-4
+    status: PASS
+    notes: >
+      delete command shows "Delete brew #N?" prompt; n/Enter/arbitrary input
+      prints "Cancelled." and exits 0. No DB change on cancel. 5 tests.
+
+  - ac: AC-5
+    status: PASS
+    notes: >
+      Confirmed delete on y/Y prints "Brew #N deleted.", exits 0,
+      removes row from DB. 3 tests.
+
+  - ac: AC-6
+    status: PASS
+    notes: >
+      --force skips confirmation, deletes immediately, prints success.
+      --force on nonexistent ID exits 1. 3 tests.
+
+  - ac: AC-7
+    status: PASS
+    notes: >
+      Existence SELECT before prompt; nonexistent ID exits 1 without showing
+      the confirmation prompt. 2 tests.
+
+  - ac: AC-8
+    status: PASS
+    notes: >
+      brew_id <= 0 guard exits 1. Zero and negative ID tests confirm rejection.
+
+  - ac: AC-9
+    status: PASS
+    notes: >
+      cli.py registers the delete command; test_delete_shown_in_welcome_screen
+      confirms "delete" appears in bare `brewlog` output.
+
+  - ac: AC-10
+    status: PASS
+    notes: >
+      _prompt_brew_type() in add.py renders numbered menu in alphabetical order:
+      1) espresso, 2) hybrid, 3) immersion, 4) pour_over.
+
+  - ac: AC-11
+    status: PASS
+    notes: >
+      Non-integer, out-of-range, and empty inputs re-prompt with error message.
+      3 re-prompt tests.
+
+  - ac: AC-12
+    status: PASS
+    notes: >
+      --type flag bypasses the menu entirely. All existing flag-driven tests pass
+      (no regression).
+
+  - ac: AC-13
+    status: PASS
+    notes: >
+      Menu selection stores the enum string (e.g. "pour_over"), not the integer.
+      test_brew_type_menu_stores_string verifies DB value.
+
+  - ac: AC-14
+    status: PASS
+    notes: >
+      --ey, --grinder, --brewer options declared on add command. All three
+      wired through EquipmentInput and BrewInput to DB.
+
+  - ac: AC-15
+    status: PASS
+    notes: >
+      --ey validated as float > 0 via EquipmentInput/BrewInput Pydantic model.
+      test_ey_zero_rejected and test_ey_negative_rejected pass.
+
+  - ac: AC-16
+    status: PASS
+    notes: >
+      --grinder and --brewer stored in equipment_grinder/equipment_brewer columns.
+      Empty string validation enforced by EquipmentInput minLength.
+
+  - ac: AC-17
+    status: PASS
+    notes: >
+      test_ey_grinder_brewer_all_stored verifies single-operation write with
+      all three fields in DB without a follow-up update.
+
+  - ac: AC-18
+    status: PASS
+    notes: >
+      --type validated against BREW_TYPE_ENUM before DB access. Invalid type
+      exits 1 with message. All four valid values accepted. 5 tests.
+
+  - ac: AC-19
+    status: PASS
+    notes: >
+      --rating validated as 1 <= N <= 5. Zero, six, and negative rejected with
+      exit 1. 7 tests.
+
+  - ac: AC-20
+    status: PASS
+    notes: >
+      --since validated via datetime.strptime before DB access. Day-granularity
+      comparison uses since + "T00:00:00Z" lower bound, correct for ISO 8601
+      lexicographic ordering in SQLite. Same-day brew included. 5 tests.
+
+  - ac: AC-21
+    status: PASS
+    notes: >
+      All three filters combinable as AND via list_brews_filtered(). Two
+      combination tests: type+rating and all three together. Only brews matching
+      every supplied filter returned.
+
+  - ac: AC-22
+    status: PASS
+    notes: >
+      Filtered empty result prints "No brews match the given filters." and exits
+      0. No table header emitted. 2 tests.
+
+  - ac: AC-23
+    status: PASS
+    notes: >
+      --limit applies to filtered result set (LIMIT ? after WHERE). --all ignores
+      limit. 3 tests including limit-applies-after-filter cross-check.
+
+  - ac: AC-24
+    status: PASS
+    notes: >
+      Without filter flags, list_brews() is called unchanged. Default 20-row
+      limit and empty-DB message unaffected. 2 regression tests.
+
+security_findings:
+
+  - area: SQL injection — delete
+    status: CLEAN
+    notes: >
+      DELETE FROM brews WHERE id = ? with (brew_id,) tuple. No string
+      interpolation. brew_id validated as positive integer before DB access.
+
+  - area: SQL injection — list filter (dynamic WHERE)
+    status: CLEAN
+    notes: >
+      Condition strings are compile-time literals ("type = ?", "rating = ?",
+      "date >= ?"). User-supplied values are collected in a separate params list
+      and passed as the second argument to conn.execute(). No user input is ever
+      interpolated into the SQL string. Injection is structurally impossible.
+
+  - area: Input validation — filter flags
+    status: CLEAN
+    notes: >
+      All three filter values validated before reaching DB layer: --type against
+      BREW_TYPE_ENUM set, --rating as 1-5 integer, --since as parseable
+      YYYY-MM-DD. Invalid values exit 1 before any SQL is executed.
+
+  - area: Input validation — add flag parity
+    status: CLEAN
+    notes: >
+      --ey validated as float > 0 by Pydantic model. --grinder and --brewer
+      validated as non-empty by EquipmentInput minLength constraint. Consistent
+      with update command behaviour.
+
+  - area: No secrets
+    status: CLEAN
+    notes: No API keys, credentials, or tokens in source or test fixtures.
+
+  - area: Path traversal
+    status: CLEAN
+    notes: Existing .. rejection in serialise.py unchanged and verified passing.
+
+blocking_issues: []
+
+recommendations:
+  - >
+    For future versions: the update command's column names in update_brew() are
+    passed as dict keys from application code (not user input), so the f-string
+    in that function is safe — but consider adding a column allowlist assertion
+    as defence-in-depth.
+  - >
+    Consider adding a --rating-min/--rating-max range filter to list in a future
+    version to complement the current exact-match rating filter.

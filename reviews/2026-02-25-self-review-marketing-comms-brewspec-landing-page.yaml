@@ -1,0 +1,58 @@
+result:
+  date: "2026-02-25"
+  agent: marketing-comms
+  task: "Produce BrewSpec brand guidelines and landing page copy for brewspec.org"
+  input_summary: >
+    Approved positioning (two-layer audience: tool builders + brew-literate coffee
+    professionals), hero headline Option C ("Coffee brewing, precisely described."),
+    five-group field structure (Brew / Coffee / Water / Equipment / Result), code
+    examples (minimal pour over + full espresso), voice (confident, clear, human),
+    visual direction (neutral and modern, off-white, sans serif). "A standard" not
+    "the standard" throughout.
+  scores:
+    input_adherence: 3
+    format_compliance: 2
+    scope_discipline: 3
+    spec_traceability: 3
+    convention_compliance: 2
+  evidence:
+    input_adherence: >
+      All requirements met. Hero headline updated to approved Option C. Five-group
+      field structure (Brew / Coffee / Water / Equipment / Result) implemented
+      correctly. Both artifact files written. Manifest updated to ready_for_design
+      with artifact paths. Self-review file also written by agent.
+    format_compliance: >
+      Copy doc follows the expected template structure (Surface Brief, Copy by Section,
+      Microcopy, SEO). Brand guidelines properly structured with Audience, Positioning,
+      Voice, Tone, Visual Language, Language Reference, and Do/Don't sections. Minor
+      issue: the intro line for Section 3 says "A full record with everything populated"
+      but the espresso example only shows 5 of 8 SCA rating dimensions (fragrance,
+      aroma, and sweetness are absent). The claim doesn't match the example.
+    scope_discipline: >
+      Exactly the requested surfaces — one brand guidelines doc and one landing page
+      copy doc. No extra surfaces, pages, or content added beyond what was approved.
+    spec_traceability: >
+      Every copy decision traces to explicit user approval: headline (Option C approved),
+      field groups (five-group structure approved), audience framing (checkpoint 1
+      approved), code examples (checkpoint 5 approved), "a standard" framing (explicitly
+      requested by user), voice register (checkpoint 6 approved).
+    convention_compliance: >
+      No banned words found ("elevate", "unlock", "seamless", "revolutionise", etc.
+      all absent). "A standard" not "the standard" applied correctly throughout. Copy
+      principles followed — specific over generic, earn every word. Minor issue: same
+      as format_compliance — "everything populated" in Section 3 intro overstates the
+      espresso example (5/8 rating dimensions shown).
+  weighted_score: 0.90
+  passed: true
+  issues:
+    - "LOW: Section 3 intro line reads 'A full record with everything populated' but the
+      espresso example only includes 5 of 8 SCA rating dimensions (overall, flavour,
+      acidity, aftertaste, mouthfeel). Fragrance, aroma, and sweetness are absent.
+      Either add the missing dimensions to the example or soften the intro to 'A full
+      record with all brew fields populated' — noting that ratings are illustrative,
+      not exhaustive."
+  remediation: >
+    LOW-severity only. Does not block handoff to architect. Architect should be
+    aware: either the espresso YAML example needs fragrance, aroma, and sweetness
+    added under ratings, or the intro line needs softening. Recommend fixing in
+    the copy doc before the site build begins.

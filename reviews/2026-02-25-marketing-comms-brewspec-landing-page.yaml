@@ -1,0 +1,58 @@
+result:
+  date: "2026-02-25"
+  agent: "marketing-comms"
+  task: "BrewSpec brand guidelines and landing page copy"
+  input_summary: >
+    Produced BrewSpec brand guidelines (voice, tone, visual language, do/don't examples,
+    language reference) and full approved landing page copy for brewspec.org (hero, what
+    it covers, examples, who it's for, the standard, footer, microcopy, SEO), incorporating
+    two rounds of user feedback before writing final artifacts to disk.
+
+  scores:
+    input_adherence: 3
+    # Both requested artifacts produced in full. All six copy sections present. Both
+    # five-group field structure and approved headline (Option C) incorporated correctly.
+    # Manifest updated with correct status, cleared assigned_to, and both artifact paths.
+
+    audience_fit: 3
+    # Copy works for both layers: tool builders (schema link, JSON Schema framing,
+    # versioning/migration language) and brew-literate coffee professionals (dose, grind,
+    # extraction yield, SCA dimensions used without qualification). Neither audience
+    # talked down to.
+
+    brand_coherence: 3
+    # Voice is consistent across both documents — direct, specific, human, no banned words.
+    # "An open format" (not "the open standard") applied correctly throughout. Field names
+    # and vocabulary match the spec exactly. Do/don't examples in guidelines directly
+    # reflect the copy produced.
+
+    scope_discipline: 3
+    # No surfaces added beyond the landing page. BrewLog mentioned once (in the "who it's
+    # for" section) as a concrete try-it path — appropriate level of prominence per
+    # approved feedback. No Calibrate Coffee mentions. No spec-revision content.
+
+    copy_principles: 3
+    # Specific over generic throughout. Headlines earn their weight. No banned words
+    # (elevate, journey, unlock, seamless, revolutionise, world-class, game-changing).
+    # Code examples use real field names and plausible values. Closing line on "what it
+    # covers" section carries functional information, not decoration.
+
+    downstream_handoff: 3
+    # Copy doc is section-by-section with purpose, copy, and notes on every section.
+    # Code blocks include exact YAML. Microcopy table covers all nav, CTA, and label
+    # elements. SEO table complete. Brand guidelines give the architect colour direction,
+    # type direction, spacing principles, and imagery rules — enough to make layout and
+    # component decisions without ambiguity.
+
+    user_approval: 3
+    # Three explicit checkpoints: positioning + brand direction draft (approved with
+    # feedback), copy draft (approved with two change requests), revised headline options
+    # + field groups (approved with headline selection). Final artifacts written only after
+    # explicit user sign-off at every stage. No brand direction decision was finalized
+    # without user confirmation.
+
+  weighted_score: 1.0
+  passed: true
+
+  issues: []
+  remediation: null

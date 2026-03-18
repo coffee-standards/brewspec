@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrewSpec — Brand Identity Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #F7F5F2;
+      --text:      #1A1814;
+      --text-muted:#6B6460;
+      --accent:    #C47B2B;
+      --border:    #E8E4E0;
+      --surface:   #EDEAE6;
+      --code-bg:   #1E1E1E;
+
+      --font-head: 'DM Sans', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-data: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .page-wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+
+    section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+
+    .section-label {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    h1, h2, h3 { font-family: var(--font-head); font-weight: 600; }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; margin-left: auto; }
+    .nav-links a {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 0 64px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-eyebrow {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 600;
+      line-height: 1.08;
+      color: var(--text);
+      margin-bottom: 24px;
+      max-width: 700px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      font-family: var(--font-body);
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.65;
+    }
+
+    /* ── Palette ── */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .swatch {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .swatch-color { height: 80px; }
+    .swatch-info {
+      padding: 12px 14px;
+      background: var(--surface);
+    }
+    .swatch-name {
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .swatch-hex {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .swatch-role {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Typography ── */
+    .type-specimen + .type-specimen { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--border); }
+    .type-meta {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .type-sample-head {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .type-sample-label {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .type-sample-body {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.65;
+      max-width: 520px;
+      margin-bottom: 8px;
+    }
+    .type-sample-secondary {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .data-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .data-value {
+      font-family: var(--font-data);
+      font-size: 36px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+    }
+    .data-label {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ── Schema / Code panel ── */
+    .schema-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 680px) { .schema-wrap { grid-template-columns: 1fr; } }
+
+    .code-panel {
+      background: var(--code-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+    .code-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid #333;
+    }
+    .code-panel-title {
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8A8A8A;
+    }
+    .code-panel-badge {
+      font-family: var(--font-data);
+      font-size: 10px;
+      color: #8A8A8A;
+      background: #2A2A2A;
+      border: 1px solid #3A3A3A;
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .code-body {
+      padding: 20px;
+      overflow-x: auto;
+    }
+    pre {
+      font-family: var(--font-data);
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 0;
+      white-space: pre;
+      color: #D4D4D4;
+    }
+
+    /* YAML syntax tokens */
+    .y-key   { color: #9CDCFE; }
+    .y-str   { color: #CE9178; }
+    .y-num   { color: #B5CEA8; }
+    .y-bool  { color: #569CD6; }
+    .y-cmt   { color: #6A9955; }
+    .y-doc   { color: #569CD6; }
+    .y-null  { color: #569CD6; }
+
+    /* JSON Schema syntax tokens */
+    .j-key   { color: #9CDCFE; }
+    .j-str   { color: #CE9178; }
+    .j-num   { color: #B5CEA8; }
+    .j-bool  { color: #569CD6; }
+    .j-punc  { color: #D4D4D4; }
+    .j-cmt   { color: #6A9955; }
+
+    .schema-desc {
+      padding-top: 8px;
+    }
+    .schema-desc h3 {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .schema-desc p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .schema-desc .field-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 16px;
+    }
+    .field-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 7px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .field-name {
+      font-family: var(--font-data);
+      font-size: 12px;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .field-type {
+      font-family: var(--font-head);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      flex-shrink: 0;
+    }
+    .field-desc {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Panel toggle tabs */
+    .panel-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .panel-tab {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .panel-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .panel-tab:hover:not(.active) {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    .panel-view { display: none; }
+    .panel-view.visible { display: block; }
+
+    /* ── Voice examples ── */
+    .voice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .voice-grid { grid-template-columns: 1fr; } }
+    .voice-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .voice-card-label {
+      font-family: var(--font-head);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .voice-card-label.dont { color: #B94040; }
+    .voice-card-label.do   { color: #3D8A58; }
+    .voice-card p {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .voice-card p + p {
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    /* ── Misc utils ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+    .pill {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin: 4px 4px 4px 0;
+    }
+
+    .positioning-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-top: 8px;
+    }
+    .positioning-card p {
+      font-family: var(--font-body);
+      font-size: 17px;
+      color: var(--text);
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .positioning-card .elevator {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 15px;
+      font-style: normal;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Brew<span>Spec</span></span>
+  <div class="nav-links">
+    <a href="#positioning">Positioning</a>
+    <a href="#palette">Palette</a>
+    <a href="#type">Type</a>
+    <a href="#schema">Schema</a>
+    <a href="#voice">Voice</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- ── Hero ── -->
+  <section class="hero" style="border-bottom:1px solid var(--border);">
+    <div class="hero-eyebrow">Brand Identity Demo · 2026-03-10</div>
+    <h1>Clean, precise,<br><span>and portable.</span></h1>
+    <p class="hero-sub">A visual system for the open data format for coffee brews. Not a startup aesthetic. Not a coffee-shop menu. A technical artifact presented with care.</p>
+  </section>
+
+  <!-- ── Positioning ── -->
+  <section id="positioning">
+    <div class="section-label">Positioning</div>
+    <div class="positioning-card">
+      <p>"BrewSpec is an open data format for describing coffee brews — a shared schema that lets tools exchange, store, and analyse brew data without building their own from scratch."</p>
+      <p class="elevator">BrewSpec is an open, versioned data format for describing a coffee brew — method, dose, water, grind, duration, extraction, result. It's free, Apache 2.0, and built on JSON Schema. If you're building a tool that handles brew data, this is a shared format your data can travel in.</p>
+    </div>
+    <div style="margin-top: 24px;">
+      <span class="pill">open format</span>
+      <span class="pill">Apache 2.0</span>
+      <span class="pill">JSON Schema</span>
+      <span class="pill">version-controlled</span>
+      <span class="pill">interoperable</span>
+      <span class="pill">tool builders</span>
+    </div>
+  </section>
+
+  <!-- ── Colour Palette ── -->
+  <section id="palette">
+    <div class="section-label">Colour Palette</div>
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F7F5F2; border-bottom:1px solid var(--border);"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background</div>
+          <div class="swatch-hex">#F7F5F2</div>
+          <div class="swatch-role">Page background</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1A1814;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text</div>
+          <div class="swatch-hex">#1A1814</div>
+          <div class="swatch-role">Primary text</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#6B6460;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text Muted</div>
+          <div class="swatch-hex">#6B6460</div>
+          <div class="swatch-role">Secondary text, metadata</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C47B2B;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Accent</div>
+          <div class="swatch-hex">#C47B2B</div>
+          <div class="swatch-role">CTAs, active states</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E8E4E0; border-bottom:1px solid #D0CCC8;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Border</div>
+          <div class="swatch-hex">#E8E4E0</div>
+          <div class="swatch-role">Dividers, component edges</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#EDEAE6; border-bottom:1px solid #D0CCC8;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Surface</div>
+          <div class="swatch-hex">#EDEAE6</div>
+          <div class="swatch-role">Cards, panels</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1E1E1E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Code Background</div>
+          <div class="swatch-hex">#1E1E1E</div>
+          <div class="swatch-role">Code blocks</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Typography ── -->
+  <section id="type">
+    <div class="section-label">Typography</div>
+
+    <div class="type-specimen">
+      <div class="type-meta">DM Sans — Headings &amp; UI Labels</div>
+      <div class="type-sample-head">Every brew, recorded. Every detail, portable.</div>
+      <div class="type-sample-label">Schema &nbsp;·&nbsp; Format &nbsp;·&nbsp; Validation &nbsp;·&nbsp; Version</div>
+      <div class="type-sample-secondary">v0.4 schema · Apache 2.0 · JSON Schema</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Inter — Body &amp; Prose</div>
+      <div class="type-sample-body">BrewSpec is built on JSON Schema. Any tool that reads the format can consume a brew record — no custom parsers, no proprietary export. The schema is the contract; data written against v0.3 follows a documented migration path to v0.4.</div>
+      <div class="type-sample-secondary">Covers method, dose, water, grind, TDS, and extraction yield.</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">JetBrains Mono — Data Values (field names and instrument readings)</div>
+      <div class="data-row">
+        <div>
+          <div class="data-value">20.0</div>
+          <div class="data-label">dose_g</div>
+        </div>
+        <div>
+          <div class="data-value">320</div>
+          <div class="data-label">water_g</div>
+        </div>
+        <div>
+          <div class="data-value">21.4%</div>
+          <div class="data-label">ext_yield</div>
+        </div>
+        <div>
+          <div class="data-value">1.38</div>
+          <div class="data-label">tds</div>
+        </div>
+        <div>
+          <div class="data-value">3:20</div>
+          <div class="data-label">duration</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── UI Pattern — Schema / Code ── -->
+  <section id="schema">
+    <div class="section-label">UI Pattern — Schema &amp; Code</div>
+
+    <div class="panel-tabs" id="panelTabs">
+      <button class="panel-tab active" data-panel="yaml">Brew record (YAML)</button>
+      <button class="panel-tab" data-panel="jsonschema">Schema fragment (JSON Schema)</button>
+    </div>
+
+    <div class="schema-wrap">
+
+      <!-- Left: code panel -->
+      <div>
+        <!-- YAML panel -->
+        <div class="panel-view visible" id="panel-yaml">
+          <div class="code-panel">
+            <div class="code-panel-header">
+              <span class="code-panel-title">pour-over-2026-03-10.yaml</span>
+              <span class="code-panel-badge">BrewSpec v0.4</span>
+            </div>
+            <div class="code-body">
+<pre><span class="y-doc">---</span>
+<span class="y-key">brewspec_version</span>: <span class="y-str">"0.4"</span>
+<span class="y-key">id</span>: <span class="y-str">"brew-20260310-001"</span>
+<span class="y-key">timestamp</span>: <span class="y-str">"2026-03-10T07:42:00+10:00"</span>
+
+<span class="y-key">method</span>: <span class="y-str">"pour_over"</span>
+<span class="y-key">brewer</span>: <span class="y-str">"Hario V60-02"</span>
+
+<span class="y-key">coffee</span>:
+  <span class="y-key">name</span>: <span class="y-str">"Yirgacheffe Kochere"</span>
+  <span class="y-key">roaster</span>: <span class="y-str">"Toby's Estate"</span>
+  <span class="y-key">process</span>: <span class="y-str">"washed"</span>
+  <span class="y-key">roast_date</span>: <span class="y-str">"2026-02-28"</span>
+
+<span class="y-key">dose_g</span>: <span class="y-num">20.0</span>
+<span class="y-key">water_g</span>: <span class="y-num">320</span>
+<span class="y-key">water_temp_c</span>: <span class="y-num">94</span>
+<span class="y-key">grind_setting</span>: <span class="y-str">"Comandante 28 clicks"</span>
+<span class="y-key">duration_seconds</span>: <span class="y-num">200</span>
+
+<span class="y-key">tds</span>: <span class="y-num">1.38</span>
+<span class="y-key">extraction_yield_pct</span>: <span class="y-num">21.4</span>
+
+<span class="y-key">result</span>:
+  <span class="y-key">rating</span>: <span class="y-num">8</span>
+  <span class="y-key">notes</span>: <span class="y-str">"Jasmine, peach, clean finish."</span>
+  <span class="y-key">sca_aroma</span>: <span class="y-num">8</span>
+  <span class="y-key">sca_flavour</span>: <span class="y-num">7</span>
+  <span class="y-key">sca_aftertaste</span>: <span class="y-num">7</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- JSON Schema panel -->
+        <div class="panel-view" id="panel-jsonschema">
+          <div class="code-panel">
+            <div class="code-panel-header">
+              <span class="code-panel-title">brewspec-v0.4.schema.json (fragment)</span>
+              <span class="code-panel-badge">JSON Schema draft-07</span>
+            </div>
+            <div class="code-body">
+<pre><span class="j-punc">{</span>
+  <span class="j-key">"$schema"</span><span class="j-punc">:</span> <span class="j-str">"http://json-schema.org/draft-07/schema#"</span><span class="j-punc">,</span>
+  <span class="j-key">"title"</span><span class="j-punc">:</span> <span class="j-str">"BrewRecord"</span><span class="j-punc">,</span>
+  <span class="j-key">"required"</span><span class="j-punc">: [</span>
+    <span class="j-str">"brewspec_version"</span><span class="j-punc">,</span>
+    <span class="j-str">"id"</span><span class="j-punc">,</span>
+    <span class="j-str">"timestamp"</span><span class="j-punc">,</span>
+    <span class="j-str">"method"</span><span class="j-punc">,</span>
+    <span class="j-str">"dose_g"</span><span class="j-punc">,</span>
+    <span class="j-str">"water_g"</span>
+  <span class="j-punc">],</span>
+  <span class="j-key">"properties"</span><span class="j-punc">: {</span>
+    <span class="j-key">"dose_g"</span><span class="j-punc">: {</span>
+      <span class="j-key">"type"</span><span class="j-punc">:</span> <span class="j-str">"number"</span><span class="j-punc">,</span>
+      <span class="j-key">"minimum"</span><span class="j-punc">:</span> <span class="j-num">0</span><span class="j-punc">,</span>
+      <span class="j-key">"exclusiveMinimum"</span><span class="j-punc">:</span> <span class="j-bool">true</span>
+    <span class="j-punc">},</span>
+    <span class="j-key">"water_g"</span><span class="j-punc">: {</span>
+      <span class="j-key">"type"</span><span class="j-punc">:</span> <span class="j-str">"number"</span><span class="j-punc">,</span>
+      <span class="j-key">"minimum"</span><span class="j-punc">:</span> <span class="j-num">0</span><span class="j-punc">,</span>
+      <span class="j-key">"exclusiveMinimum"</span><span class="j-punc">:</span> <span class="j-bool">true</span>
+    <span class="j-punc">},</span>
+    <span class="j-key">"tds"</span><span class="j-punc">: {</span>
+      <span class="j-key">"type"</span><span class="j-punc">:</span> <span class="j-str">"number"</span><span class="j-punc">,</span>
+      <span class="j-key">"minimum"</span><span class="j-punc">:</span> <span class="j-num">0</span><span class="j-punc">,</span>
+      <span class="j-key">"maximum"</span><span class="j-punc">:</span> <span class="j-num">25</span>
+    <span class="j-punc">},</span>
+    <span class="j-key">"extraction_yield_pct"</span><span class="j-punc">: {</span>
+      <span class="j-key">"type"</span><span class="j-punc">:</span> <span class="j-str">"number"</span><span class="j-punc">,</span>
+      <span class="j-key">"minimum"</span><span class="j-punc">:</span> <span class="j-num">0</span><span class="j-punc">,</span>
+      <span class="j-key">"maximum"</span><span class="j-punc">:</span> <span class="j-num">100</span>
+    <span class="j-punc">},</span>
+    <span class="j-key">"method"</span><span class="j-punc">: {</span>
+      <span class="j-key">"type"</span><span class="j-punc">:</span> <span class="j-str">"string"</span><span class="j-punc">,</span>
+      <span class="j-key">"enum"</span><span class="j-punc">: [</span>
+        <span class="j-str">"espresso"</span><span class="j-punc">,</span>
+        <span class="j-str">"pour_over"</span><span class="j-punc">,</span>
+        <span class="j-str">"aeropress"</span><span class="j-punc">,</span>
+        <span class="j-str">"french_press"</span><span class="j-punc">,</span>
+        <span class="j-str">"cold_brew"</span><span class="j-punc">,</span>
+        <span class="j-str">"other"</span>
+      <span class="j-punc">]</span>
+    <span class="j-punc">}</span>
+  <span class="j-punc">}</span>
+<span class="j-punc">}</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: description -->
+      <div class="schema-desc">
+        <h3>Structured data. Validated schema.</h3>
+        <p>A BrewSpec file is a YAML or JSON document describing a single brew record. The schema defines which fields are required, which are optional, and what values are valid — using standard JSON Schema. Any conforming validator can check a brew record against it.</p>
+        <p>This is what BrewSpec does: give tool builders a shared format with a defined contract, so data produced by one tool can be read by any other without custom parsing.</p>
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-name">dose_g</span>
+            <span class="field-type">number</span>
+            <span class="field-desc">Coffee dose in grams. Required. Must be &gt; 0.</span>
+          </div>
+          <div class="field-row">
+            <span class="field-name">water_g</span>
+            <span class="field-type">number</span>
+            <span class="field-desc">Water weight in grams. Required. Must be &gt; 0.</span>
+          </div>
+          <div class="field-row">
+            <span class="field-name">tds</span>
+            <span class="field-type">number</span>
+            <span class="field-desc">Total dissolved solids as percentage. Optional.</span>
+          </div>
+          <div class="field-row">
+            <span class="field-name">extraction_yield_pct</span>
+            <span class="field-type">number</span>
+            <span class="field-desc">Extraction yield percentage. Optional. 0–100.</span>
+          </div>
+          <div class="field-row">
+            <span class="field-name">method</span>
+            <span class="field-type">enum</span>
+            <span class="field-desc">Brew method. Required. One of the defined values.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Voice & Tone ── -->
+  <section id="voice">
+    <div class="section-label">Voice &amp; Tone</div>
+    <div class="voice-grid">
+      <div class="voice-card">
+        <div class="voice-card-label dont">Don't</div>
+        <p>Elevate your coffee data experience with BrewSpec.</p>
+        <p>The world's most seamless brew tracking standard.</p>
+        <p>Unlock the power of your brew data.</p>
+        <p>A revolutionary open format for the modern barista.</p>
+      </div>
+      <div class="voice-card">
+        <div class="voice-card-label do">Do</div>
+        <p>Coffee brewing, precisely described.</p>
+        <p>Every brew, recorded. Every detail, portable.</p>
+        <p>Log the brew. Keep the data.</p>
+        <p>Apache 2.0. Version-controlled. Breaking changes follow a documented migration path.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div class="section-label" style="margin-bottom:16px;">Words we use</div>
+      <span class="pill">open format</span>
+      <span class="pill">schema</span>
+      <span class="pill">brew record</span>
+      <span class="pill">portable</span>
+      <span class="pill">validate</span>
+      <span class="pill">interoperable</span>
+      <span class="pill">tool builders</span>
+      <span class="pill">BrewSpec-compliant</span>
+      <span class="pill">extraction yield</span>
+      <span class="pill">TDS</span>
+      <span class="pill">dose</span>
+      <span class="pill">grind setting</span>
+      <span class="pill">migration path</span>
+      <span class="pill">JSON Schema</span>
+      <span class="pill">Apache 2.0</span>
+    </div>
+
+    <div style="margin-top:32px;">
+      <div class="section-label" style="margin-bottom:16px;">CTA language</div>
+      <div class="voice-grid">
+        <div class="voice-card">
+          <div class="voice-card-label dont">Don't</div>
+          <p>Get started today!</p>
+          <p>Unlock BrewSpec</p>
+          <p>Join the revolution</p>
+        </div>
+        <div class="voice-card">
+          <div class="voice-card-label do">Do</div>
+          <p>View the schema</p>
+          <p>Read the spec</p>
+          <p>Browse examples</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end page-wrap -->
+
+<script>
+  /* ── Panel tab toggle ── */
+  document.getElementById('panelTabs').addEventListener('click', function(e) {
+    var btn = e.target.closest('.panel-tab');
+    if (!btn) return;
+    document.querySelectorAll('.panel-tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var target = btn.dataset.panel;
+    document.querySelectorAll('.panel-view').forEach(function(v) {
+      v.classList.toggle('visible', v.id === 'panel-' + target);
+    });
+  });
+</script>
+</body>
+</html>

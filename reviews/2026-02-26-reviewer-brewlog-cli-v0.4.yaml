@@ -1,0 +1,188 @@
+# Reviewer report — BrewLog CLI v0.4 (express-tier carry-forward task)
+# Generated: 2026-02-26
+
+result:
+  date: "2026-02-26"
+  agent: reviewer
+  task: "BrewLog CLI v0.4 review (express-tier carry-forward)"
+  input_summary: >
+    Express-tier review of BrewLog CLI v0.4. No new product spec or design doc
+    exists for this tier — the spec is the five carry-forward items from the
+    v0.3 review. Files examined: src/brewlog/commands/list_.py,
+    src/brewlog/commands/delete.py, src/brewlog/commands/update.py,
+    src/brewlog/commands/export.py, src/brewlog/serialise.py, src/brewlog/cli.py,
+    src/brewlog/__init__.py, pyproject.toml, and the full test suite
+    (tests/test_cmd_v04.py plus all pre-existing test files). Tests were executed
+    with pytest and ruff check was run from the brewlog package root.
+
+  verdict: PASS
+
+  # --------------------------------------------------------------------------
+  # Test and lint results
+  # --------------------------------------------------------------------------
+  test_results:
+    schema_tests: 76          # test_brewspec_schema.py
+    cli_tests: 429            # all remaining test files
+    total: 505
+    status: all_passed
+    failures: []
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  # --------------------------------------------------------------------------
+  # Carry-forward compliance — one entry per item
+  # --------------------------------------------------------------------------
+  spec_compliance:
+    CF-1:
+      status: PASS
+      note: >
+        list_.py defines _get_overall_rating() (lines 32-50) that checks
+        result_rating_overall first, then falls back to JSON parsing of
+        result_ratings['overall'], then returns None. _has_any_rating() uses
+        this helper for column-visibility detection (line 98). _render_table()
+        calls _get_overall_rating() per row (line 155). Five tests in
+        TestListLegacyRatingFallback cover: legacy row shows rating, legacy row
+        does not show dash, modern row unaffected, null row shows dash, and
+        JSON without 'overall' key shows dash. All five pass.
+
+    CF-2:
+      status: PASS
+      note: >
+        The update command's BREW_ID argument docstring reads "BREW_ID is
+        optional; defaults to the last brew when omitted." (update.py lines
+        93-95). The carry-forward required the phrase "defaults to the last
+        brew" to appear in full. Verified via `brewlog update --help` and
+        confirmed by TestUpdateHelpText tests (test_update_help_contains_last_brew
+        and test_update_help_description_not_truncated), both passing.
+
+    CF-3:
+      status: PASS
+      note: >
+        delete.py docstring (lines 23-26) reads: "Note: brew IDs are permanent
+        and are not reassigned after deletion. Gaps in the ID sequence are
+        expected and normal behaviour." Verified via `brewlog delete --help`.
+        TestDeleteIdGapNote::test_delete_help_mentions_permanent_ids checks for
+        "permanent" or synonymous terms and passes. The note is in the command
+        docstring (shown in --help), satisfying "help text or post-delete output"
+        requirement.
+
+    CF-4:
+      status: PASS
+      note: >
+        list_.py fetches all filtered rows first (via db.list_brews_filtered),
+        then calls _has_any_method(rows) and _has_any_rating(rows) over the
+        complete result set before building the table (lines 108-109). Column
+        headers are conditionally appended (lines 123-135). Eight tests in
+        TestListColumnVisibility cover: method hidden when absent, method shown
+        when present, rating hidden when absent, rating shown when present,
+        always-visible columns, legacy rating column triggers visibility,
+        mixed-row set, and empty DB. All pass.
+
+    CF-5:
+      status: PASS
+      note: >
+        export.py implements CSV via _rows_to_csv() (lines 24-49): flat dict
+        per row, all DB columns as headers, nulls as empty strings, uses
+        csv.DictWriter. validate_export_path() in serialise.py adds ".csv" to
+        allowed_extensions only when fmt=="csv" (lines 177-178), so .csv without
+        --format csv is rejected (exit 1). Overwrite protection and --force apply
+        to CSV identically to YAML/JSON (lines 85-92). Thirteen tests in
+        TestCsvExport cover: file created, header row present, required headers,
+        one-row-per-brew, values match DB, nulls as empty string, .csv accepted
+        with flag, .csv rejected without flag, empty DB, overwrite protection,
+        --force, dotdot rejected, missing parent rejected, valid CSV parseable,
+        success message, yaml/json regression, optional fields in CSV. All pass.
+        Existing test_export_wrong_extension_rejected in test_cmd_export.py
+        confirms .csv without --format csv still gives exit 1, preserving prior
+        behavior.
+
+    CF-6:
+      status: PASS
+      note: >
+        pyproject.toml version = "0.4.0" (line 7). src/brewlog/__init__.py
+        __version__ = "0.4.0" (line 3). cli.py reads __version__ for both the
+        welcome screen (f"BrewLog v{__version__}") and the --version flag.
+        TestVersionBump confirms both welcome screen and --version flag output
+        "0.4.0". Both tests pass.
+
+  # --------------------------------------------------------------------------
+  # Critical / High issues
+  # --------------------------------------------------------------------------
+  critical_issues: []
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: >
+      PASS — No new user-facing input paths were introduced. CSV export reads
+      from DB rows only; no user-supplied content enters CSV serialisation.
+      Path validation in serialise.validate_export_path() rejects dotdot
+      traversal and non-existent parent directories before any DB access.
+    sql_injection: >
+      PASS — No new queries were added. CSV export reads all brews via the
+      existing db.get_all_brews() helper, which uses parameterised queries.
+      No string interpolation into SQL anywhere in v0.4 changes.
+    file_io: >
+      PASS — CSV writes via pathlib Path.write_text() to a validated path.
+      The 10 MB import size limit is unchanged. Export path validated before
+      DB access. No new file-read paths added.
+    no_dangerous_functions: >
+      PASS — No eval(), exec(), or pickle usage. json.loads() in
+      _get_overall_rating() is wrapped in a try/except (JSONDecodeError,
+      AttributeError), preventing crashes on malformed legacy data.
+    error_messages: >
+      PASS — Error messages are user-facing strings only (no stack traces,
+      no internal paths beyond the export destination). Error output goes to
+      stderr via err=True on click.echo calls.
+    path_handling: >
+      PASS — validate_export_path() checks for ".." in path parts and
+      verifies parent directory existence. Both checks apply equally to
+      --format csv paths.
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues
+  # --------------------------------------------------------------------------
+  medium_issues: []
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    tests_written_first: unknown
+    all_acs_have_tests: true
+    meaningful_assertions: true
+    notes: >
+      tests/test_cmd_v04.py is a dedicated v0.4 test file covering all five
+      carry-forward items across six test classes (TestListLegacyRatingFallback,
+      TestUpdateHelpText, TestDeleteIdGapNote, TestListColumnVisibility,
+      TestCsvExport, TestVersionBump). 38 new tests total. Assertions are
+      substantive: they check specific output strings, column header presence or
+      absence, CSV parseability, row counts, value fidelity, and null handling.
+      Error cases are covered: JSON without 'overall' key, null rows, .csv
+      without --format csv, dotdot paths, missing parent dirs, overwrite
+      protection. No trivially True assertions observed.
+      Cannot confirm write-first ordering from artifacts alone (no git history
+      showing test commits preceding implementation commits), so tests_written_first
+      is marked unknown.
+
+  # --------------------------------------------------------------------------
+  # Summary
+  # --------------------------------------------------------------------------
+  summary: >
+    PASS. All five carry-forward items from the v0.3 review are correctly
+    implemented and fully tested. The test suite is 505 tests with zero
+    failures. Ruff reports zero lint errors. Each carry-forward item has
+    dedicated tests in test_cmd_v04.py with meaningful assertions covering
+    happy paths, error cases, and edge cases (legacy JSON fallback, null
+    rows, column visibility, CSV format validation). Security posture is
+    unchanged: no new injection vectors, path traversal is guarded, and error
+    messages do not expose internals. Version is correctly bumped to 0.4.0 in
+    pyproject.toml, __init__.py, welcome screen, and --version output.
+    No blocking issues found. Ready to proceed to deployment-manager.
+
+  carry_forward: []

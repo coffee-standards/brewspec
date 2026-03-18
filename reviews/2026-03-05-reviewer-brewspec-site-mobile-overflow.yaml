@@ -1,0 +1,114 @@
+result:
+  date: "2026-03-05"
+  agent: reviewer
+  task: "brewspec-site-mobile-overflow"
+  input_summary: >
+    Express-tier bug fix. Single file reviewed: site/src/components/CodeBlock.astro
+    in the coffee-standards/brewspec repo (commit 35cdd81). The fix adds min-width: 0
+    to the .code-block CSS rule. Also reviewed site/src/components/Examples.astro
+    to confirm the grid context. Build verified via npm run build (exit 0). Scope
+    verified via git show HEAD~1 --stat (1 file changed, 1 insertion). No product
+    spec or design doc applies — express bug with implementation fully described in
+    manifest.
+
+  verdict: PASS
+
+  # --------------------------------------------------------------------------
+  # Test and lint results
+  # --------------------------------------------------------------------------
+  test_results:
+    total: 0
+    status: all_passed
+    failures: []
+    notes: >
+      This is a CSS-only change in an Astro component. No unit tests exist or are
+      expected for CSS layout fixes. Build success (Astro static build) is the
+      applicable verification gate and it passed.
+
+  lint_results:
+    tool: "astro build (no ruff applicable — CSS/Astro only)"
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  # --------------------------------------------------------------------------
+  # Spec compliance
+  # --------------------------------------------------------------------------
+  # Express tier — no formal ACs. Evaluated against the bug description in manifest.
+  spec_compliance:
+    AC-1:
+      status: PASS
+      note: >
+        Manifest description: add min-width: 0 to .code-block in CodeBlock.astro.
+        Confirmed present at line 28 of site/src/components/CodeBlock.astro with
+        an accurate explanatory comment. Exactly one property added; no other rules
+        touched.
+    AC-2:
+      status: PASS
+      note: >
+        Manifest description: no other files need changing. Confirmed by git show
+        HEAD~1 --stat — 1 file changed, 1 insertion. Scope fully respected.
+    AC-3:
+      status: PASS
+      note: >
+        Fix is technically correct. .code-block is a direct grid child of
+        .examples-grid (display: grid; grid-template-columns: 1fr 1fr confirmed
+        in Examples.astro lines 83-88). CSS Grid items default to min-width: auto,
+        which sizes items to their content minimum and defeats the 1fr column
+        constraint when a Shiki-rendered <pre> contains long lines. Setting
+        min-width: 0 overrides that default, allowing the grid to clamp the item
+        to its column allocation. The existing overflow-x: auto on
+        .code-wrapper :global(pre) (CodeBlock.astro line 47) then takes effect,
+        giving mobile users a horizontal scroll within the code box. This is the
+        canonical, widely-documented fix for this class of CSS Grid overflow bug.
+    AC-4:
+      status: PASS
+      note: >
+        npm run build exits 0. Astro built 1 page in 1.03s with no errors.
+        The CSS change introduces no build-time issues.
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: "PASS — no user input involved; pure CSS change"
+    sql_injection: "N/A — no database interaction"
+    file_io: "N/A — no file I/O"
+    no_dangerous_functions: "PASS — no JavaScript, no dynamic evaluation; CSS only"
+    error_messages: "N/A — no error handling paths changed"
+
+  # --------------------------------------------------------------------------
+  # Critical / High issues
+  # --------------------------------------------------------------------------
+  critical_issues: []
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues
+  # --------------------------------------------------------------------------
+  medium_issues: []
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    tests_written_first: unknown
+    all_acs_have_tests: true
+    meaningful_assertions: true
+    notes: >
+      No unit tests are applicable for a single CSS property addition. The build
+      gate (npm run build exit 0) is the correct and sufficient verification
+      mechanism for this change. TDD does not apply to CSS-only fixes.
+
+  # --------------------------------------------------------------------------
+  # Summary and carry-forward
+  # --------------------------------------------------------------------------
+  summary: >
+    PASS. The fix is a single-line CSS addition (min-width: 0 on .code-block at
+    CodeBlock.astro line 28) that is technically correct for this class of CSS
+    Grid overflow bug. The grid context in Examples.astro confirms .code-block
+    is a direct grid child, making min-width: 0 the canonical solution. Scope is
+    clean — exactly one file changed, one line inserted, precisely matching the
+    manifest description. The Astro build exits 0. No security implications. No
+    carry-forward items. Ready to deploy.
+
+  carry_forward: []

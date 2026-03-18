@@ -1,0 +1,38 @@
+result:
+  date: "2026-02-20"
+  agent: product-manager
+  task: "Update manifest.yaml and specs/products/brewlog.md for v0.1.1 and v0.2 planning"
+  input_summary: >
+    Record v0.1.1 as shipped (flag tip hint + update command, 232 tests passing).
+    Add brewlog-cli-v0.1.1 completed task to manifest. Move brewlog-cli-v0.2 to
+    ready_for_spec with updated description covering carry-forward fixes and confirmed
+    new features. Update brewlog.md as a living doc: drop version from title, update
+    header, add update user story, add ACs 37-52 (v0.1.1 shipped + v0.2 planned),
+    fix AC-8 (three missing add flags), fix AC-9 (water-ppm >= 0), update scope
+    sections, update DB schema with ey/equipment_grinder/equipment_brewer, update
+    BrewSpec data structure reference to v0.3, update open questions.
+
+  scores:
+    input_adherence: 3
+    format_compliance: 3
+    scope_discipline: 3
+    spec_traceability: 3
+    convention_compliance: 3
+    downstream_handoff: 3
+    testability: 3
+    security: 3
+
+  weighted_score: 1.0
+  passed: true
+
+  issues: []
+
+  remediation: null
+
+  notes: >
+    All 16 new ACs (AC-37 through AC-52) written with exact output strings, exit codes,
+    flag names, and validation ranges. v0.2 ACs tagged [v0.2]. Shipped ACs untagged.
+    DB schema note clarifies that ey/equipment_grinder/equipment_brewer are already
+    live — no migration needed for v0.2. Open question on import deduplication closed;
+    new open question on delete range behaviour added. Security section updated to
+    include v0.3 freeform fields in the input validation list.

@@ -1,0 +1,116 @@
+result:
+  date: "2026-03-17"
+  agent: reviewer
+  task: "BrewSpec v0.7 review"
+  input_summary: >
+    Reviewed BrewSpec v0.7 implementation against specs/products/brewspec-v0.7.md (10 ACs).
+    Examined brewspec.schema.json, brewlog CLI source (models.py, db.py, serialise.py,
+    import_.py, show.py, commands/export.py), tests/test_v07.py, examples, and spec doc.
+    Ran ruff check and pytest in /Users/scottluengen/Documents/1_Projects/brewspec/brewlog.
+
+  verdict: FAIL
+
+  test_results:
+    schema_tests: 192
+    cli_tests: 506
+    total: 698
+    status: all_passed
+    failures: []
+
+  lint_results:
+    tool: ruff
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  spec_compliance:
+    AC-1:  { status: PASS, note: "yield_g added to $defs/result with type: number, exclusiveMinimum: 0." }
+    AC-2:  { status: PASS, note: "yield_g is optional; existing v0.6 documents without it pass v0.7 validation." }
+    AC-3:  { status: PASS, note: "yield_g validator in ResultInput enforces > 0; negative and zero values rejected." }
+    AC-4:  { status: FAIL, note: "CRIT-1: SQLite DDL in db.py retains NOT NULL on date, type, dose_g, water_weight_g. Importing a partial brew (any of these fields absent) fails with a NOT NULL constraint violation. No test covers this path." }
+    AC-5:  { status: PASS, note: "All v0.6-valid documents pass v0.7 schema validation. Non-regression confirmed by existing test suite." }
+    AC-6:  { status: FAIL, note: "HIGH-1: brewspec-v0.7.md Field Reference entry for result.yield_g is missing the required espresso dual-role note (recipe target vs measured result; BrewSpec represents result only; consuming tools may store target separately)." }
+    AC-7:  { status: PASS, note: "brewspec_version const updated to '0.7' in schema and CLI." }
+    AC-8:  { status: PASS, note: "required array removed from $defs/brew; top-level required: [brewspec_version, brews] unchanged." }
+    AC-9:  { status: PASS, note: "valid_yield_g.yaml example present with result.yield_g: 36 (espresso). Minimal brew example present with no previously-required fields." }
+    AC-10: { status: PASS, note: "v0.6 archived to versions/brewspec-v0.6.md. brewspec-v0.7.md present at repo root." }
+
+  critical_issues:
+    - id: CRIT-1
+      severity: Critical
+      ac_refs: [AC-4]
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewlog/src/brewlog/db.py"
+      description: >
+        _init_schema() DDL retains NOT NULL on the four previously-required fields: date,
+        type, dose_g, water_weight_g. When a partial v0.7 brew document is imported (any of
+        these fields absent), insert_brew_dict() passes None to the SQL INSERT and SQLite raises
+        a NOT NULL constraint violation. The schema change makes these fields optional in
+        BrewSpec, but the CLI storage layer does not honour that. No test in test_v07.py covers
+        import of a partial brew — all import tests supply all four fields.
+      fix: >
+        1. Remove NOT NULL from date, type, dose_g, water_weight_g column definitions in
+           _init_schema() DDL.
+        2. Add date, type, dose_g, water_weight_g to _V7_MIGRATION_COLUMNS as nullable
+           columns (ALTER TABLE ADD COLUMN without NOT NULL) so existing databases are
+           upgraded correctly. Note: SQLite cannot alter an existing column's nullability —
+           the migration must handle new DBs (DDL change) and existing DBs separately.
+           For existing DBs the columns already exist but with NOT NULL — a table-rebuild
+           migration is required or, simpler, accept that partial imports only work on
+           fresh DBs in v0.7 and document the limitation. Discuss with orchestrator if
+           the table-rebuild scope is too large for this version.
+        3. Add null guards in serialise.row_to_brew_dict() for these four fields.
+        4. Add a test: import a minimal v0.7 YAML with no date/type/dose_g/water_weight_g,
+           confirm it stores and round-trips correctly.
+
+    - id: HIGH-1
+      severity: High
+      ac_refs: [AC-6]
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewspec-v0.7.md"
+      description: >
+        The Field Reference entry for result.yield_g omits the espresso dual-role note
+        required by AC-6 and the product spec Design Notes. The note must explain: yield_g
+        functions as both a recipe target (espresso process card) and a measured result;
+        BrewSpec represents it solely as a result field; consuming tools such as Calibrate
+        may choose to store a target yield on their process card as an application-level
+        concern outside BrewSpec's scope.
+      fix: >
+        Add a Notes column to the result.yield_g row in the Field Reference table (or a
+        paragraph immediately after the table) with the dual-role explanation. Match the
+        style of other field notes in the document.
+
+  security:
+    input_validation: "PASS — yield_g validated via Pydantic field_validator (> 0). All brew fields validated at import time. YAML safe_load used throughout."
+    sql_injection: "PASS — parameterised queries used in all INSERT/SELECT statements. No string interpolation in SQL."
+    file_io: "PASS — file paths handled via pathlib; no user-controlled path traversal."
+    no_dangerous_functions: "PASS — no eval, exec, pickle, or shell injection vectors found."
+    error_messages: "PASS — validation errors surface field names and constraints without exposing internal state."
+
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/brewspec-v0.6.md"
+      description: >
+        brewspec-v0.6.md still exists in the brewspec repo root after archiving to
+        versions/brewspec-v0.6.md. The repo root should only contain the current version's
+        spec doc.
+      suggestion: "git rm brewspec-v0.6.md"
+
+  tdd_compliance:
+    tests_written_first: unknown
+    all_acs_have_tests: false
+    meaningful_assertions: true
+    notes: >
+      Tests for yield_g (schema validation, Pydantic model, CLI show output, export
+      round-trip) are present and meaningful. AC-4 partial brew import is not tested —
+      this is the root cause of CRIT-1 going undetected. All 698 existing tests pass.
+
+  summary: >
+    FAIL. The schema changes and Pydantic model are correct. 698/698 tests pass and ruff
+    is clean. Two blocking issues prevent a PASS: CRIT-1 (SQLite NOT NULL constraints
+    retained on previously-required fields mean partial brew imports will fail at the
+    storage layer) and HIGH-1 (spec doc missing the required espresso dual-role note for
+    yield_g). MED-1 (stale brewspec-v0.6.md in repo root) is non-blocking. Dev must fix
+    CRIT-1 and HIGH-1, then submit for re-review.
+
+  carry_forward:
+    - "MED-1: Remove brewspec-v0.6.md from brewspec repo root (git rm brewspec-v0.6.md) — file was archived to versions/ but not removed from root."

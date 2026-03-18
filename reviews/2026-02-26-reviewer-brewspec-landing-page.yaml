@@ -1,0 +1,240 @@
+result:
+  date: "2026-02-26"
+  agent: reviewer
+  task: "BrewSpec Landing Page — brewspec.coffee static site"
+  input_summary: >
+    Reviewed the BrewSpec landing page implementation on the brewspec-landing-page branch
+    of the coffee-standards/brewspec repo at /Users/scottluengen/Documents/1_Projects/brewspec/site/.
+    Inputs: design doc at specs/designs/brewspec-landing-page.md, approved copy at
+    specs/brand/brewspec/copy/landing-page.md, dev self-review at
+    reviews/2026-02-25-backend-dev-brewspec-landing-page.yaml. All 7 ACs from Section 7
+    of the design doc were executed as explicit test commands against the built output
+    (dist/). Copy accuracy was verified verbatim for all six sections, all microcopy
+    elements, and all SEO tags. Domain consistency, component structure, workflow,
+    security, and accent colour contrast were also verified.
+
+  verdict: PASS
+
+  # --------------------------------------------------------------------------
+  # Test and lint results
+  # --------------------------------------------------------------------------
+  test_results:
+    schema_tests: 1       # espresso YAML validated against dist/schema/v0.4.json
+    cli_tests: 0          # not applicable — static site
+    total: 1
+    status: all_passed
+    failures: []
+
+  lint_results:
+    tool: "N/A — Astro/JS project, not Python. Ruff not applicable."
+    errors: 0
+    status: clean
+    errors_detail: []
+
+  # --------------------------------------------------------------------------
+  # Spec compliance — one entry per acceptance criterion
+  # --------------------------------------------------------------------------
+  spec_compliance:
+    AC-1:
+      status: PASS
+      note: >
+        npm run build exits 0. dist/index.html and dist/schema/v0.4.json both
+        present after build. Verified by running astro build locally in site/.
+    AC-2:
+      status: PASS
+      note: >
+        dist/schema/v0.4.json is valid JSON (verified via python3 json.load).
+        $id is exactly "https://brewspec.coffee/schema/v0.4.json" (verified via
+        jq '."$id"'). Canonical source brewspec.schema.json also carries the
+        updated $id. jq patch step in deploy-site.yml matches the design spec
+        exactly.
+    AC-3:
+      status: PASS
+      note: >
+        All four anchor IDs confirmed present in dist/index.html via grep:
+        id="what-it-covers", id="examples", id="who-its-for", id="the-standard".
+        Each traces to the correct section component.
+    AC-4:
+      status: PASS
+      note: >
+        All 8 SCA rating dimension names present in dist/index.html: overall,
+        fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel.
+        The espresso YAML in Examples.astro uses the corrected example from design
+        doc Section 1.3 (all 8 dimensions). YAML parsed and validated against
+        dist/schema/v0.4.json using jsonschema — validation passes with no errors.
+    AC-5:
+      status: PASS
+      note: >
+        main, nav, and footer landmarks all present in dist/index.html.
+        aria-expanded="false" present on the nav toggle button; script correctly
+        updates it to String(isOpen) on click. Page title is exactly
+        "BrewSpec — An open format for coffee brews" per copy doc SEO section.
+        Accent colour #C47B2B on #F7F5F2 = 3.10:1 contrast — does not meet AA
+        for small text (4.5:1 required) but the accent variable is defined in
+        global.css and never applied to any element (confirmed by grep of all
+        component files). Body text uses #1A1814 on #F7F5F2 at 16.29:1 — well
+        above AA. Design doc explicitly flagged this contrast concern and the
+        implementation correctly mitigates it by not using the accent on body text.
+    AC-6:
+      status: PASS
+      note: >
+        Exactly 1 script tag in dist/index.html. Script content (minified by
+        Astro): nav-toggle click handler that toggles nav--open class and updates
+        aria-expanded. Consistent with the 5-line pattern in design doc Section
+        1.6. All section content is present in static HTML — no JS-rendered content.
+    AC-7:
+      status: PASS
+      note: >
+        dist/CNAME exists and contains exactly "brewspec.coffee". Source is
+        site/public/CNAME which is copied verbatim by Astro to dist/. File is
+        not a build artifact — it is correctly committed to the repo.
+
+  # --------------------------------------------------------------------------
+  # Critical / High issues
+  # --------------------------------------------------------------------------
+  critical_issues: []
+
+  # --------------------------------------------------------------------------
+  # Security findings
+  # --------------------------------------------------------------------------
+  security:
+    input_validation: >
+      PASS — Fully static site. No user input anywhere. No form submission, no
+      query parameters, no dynamic rendering. Attack surface is minimal.
+    sql_injection: >
+      N/A — No database. No queries. Marked PASS as not applicable.
+    file_io: >
+      PASS — Build pipeline reads brewspec.schema.json (version-controlled) and
+      writes site/public/schema/v0.4.json using a deterministic jq one-liner.
+      The jq command does not execute user input. Output is a static JSON file.
+      GitHub Actions workflow uses least-privilege permissions: contents: read,
+      pages: write, id-token: write. No secrets required.
+    no_dangerous_functions: >
+      PASS — No eval(), exec(), or pickle anywhere in the codebase. The single
+      script block (nav toggle) only calls classList.toggle() and setAttribute()
+      on known DOM elements. No innerHTML assignments.
+    error_messages: >
+      PASS — No server-side code, no error messages exposed to users. Static
+      HTML only.
+    external_links: >
+      PASS — All external links verified: Schema nav link (target="_blank",
+      rel="noopener noreferrer"), Spec nav link (rel="noopener noreferrer"),
+      GitHub nav link (rel="noopener noreferrer"), tool builder card schema URL
+      (rel="noopener noreferrer"), TheStandard GitHub link (rel="noopener noreferrer"),
+      Footer Try BrewLog link (rel="noopener noreferrer"), footer attribution link
+      (rel="noopener noreferrer"). No external link is missing the rel attribute.
+    content_security: >
+      PASS — No user content reflected on page. All copy is authored at build time.
+      No cookies, no localStorage, no tracking pixels. Google Fonts is the only
+      external resource — loaded via link element, not script execution.
+    domain_consistency: >
+      PASS — All URL references use brewspec.coffee. Verified in: CNAME, astro.config.mjs
+      site URL, deploy-site.yml jq patch, brewspec.schema.json $id, WhoItsFor.astro tool
+      builder card URL, Footer.astro CTA subtext, dist/index.html, dist/schema/v0.4.json.
+      No references to brewspec.org remain in source or built output. A fix commit
+      (de1b32e) corrected a domain error present in the initial commit (b595d24).
+
+  # --------------------------------------------------------------------------
+  # Medium / Low issues
+  # --------------------------------------------------------------------------
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: "/Users/scottluengen/Documents/1_Projects/calibrate-coffee/specs/templates/deployment-checklist.md"
+      description: >
+        The "BrewSpec Landing Page" section of the deployment checklist (lines 140 and 142)
+        references brewspec.org in two places: "astro.config.mjs site URL is set to
+        https://brewspec.org" and "DNS for brewspec.org points to GitHub Pages". The
+        correct domain is brewspec.coffee. This is a documentation error in the checklist
+        template — it does not affect the implementation, which uses the correct domain
+        throughout. Any deployment manager following the checklist verbatim would check
+        the wrong domain.
+      suggestion: >
+        Update lines 140 and 142 of specs/templates/deployment-checklist.md to replace
+        brewspec.org with brewspec.coffee. These are the only two occurrences.
+
+    - id: MED-2
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/brewspec/site/src/styles/global.css"
+      description: >
+        The --color-accent custom property (#C47B2B) is defined in global.css at line 11
+        but is never applied to any element in any component. The --color-accent-hover
+        property is similarly defined but unused. While this is intentional (the accent
+        was consciously excluded from body text due to its 3.10:1 contrast ratio), an
+        unused CSS variable creates ambiguity for future contributors who may not
+        understand why the variable exists if it is never used.
+      suggestion: >
+        Either: (a) remove --color-accent and --color-accent-hover from global.css and
+        add a comment explaining the contrast decision, or (b) keep them with an
+        explanatory comment that reads "/* Defined for future use on large text or
+        non-text decorative elements only — 3.10:1 contrast, fails AA for small text */"
+        so the intent is clear. Option (b) is appropriate if the design anticipates
+        using the accent in a future section.
+
+    - id: MED-3
+      severity: Low
+      file: "/Users/scottluengen/Documents/1_Projects/calibrate-coffee/manifest.yaml"
+      description: >
+        The manifest artifact reference for the dev self-review is
+        "reviews/2026-02-26-backend-dev-brewspec-landing-page.yaml" but the actual file
+        is named "reviews/2026-02-25-backend-dev-brewspec-landing-page.yaml" (dated
+        2026-02-25, matching the file's creation date). The manifest references a file
+        that does not exist under that name.
+      suggestion: >
+        Update the manifest self_review artifact path to
+        "reviews/2026-02-25-backend-dev-brewspec-landing-page.yaml" to match the
+        actual file.
+
+  # --------------------------------------------------------------------------
+  # TDD compliance
+  # --------------------------------------------------------------------------
+  tdd_compliance:
+    tests_written_first: true
+    all_acs_have_tests: true
+    meaningful_assertions: true
+    notes: >
+      TDD for a static site follows the adapted process defined in design doc Section 9.
+      The dev documented following the specified order: skeleton → AC-7 → AC-2 → AC-3
+      checks before sections implemented → sections implemented → AC-4 through AC-6.
+      No pytest suite applies (no Python code); tests are shell commands (grep, jq,
+      python3) executed against dist/ output. This is the correct and only practical
+      approach for a build-time static site. The dev correctly scored TDD at 2/3 in
+      their self-review, acknowledging the limitation. All 7 ACs are covered by
+      explicit, verifiable test commands matching Section 7 of the design doc exactly.
+
+  # --------------------------------------------------------------------------
+  # Summary and carry-forward
+  # --------------------------------------------------------------------------
+  summary: >
+    PASS. The BrewSpec landing page implementation satisfies all 7 acceptance criteria
+    from the design doc. npm run build exits 0 and produces the correct output artifacts.
+    The schema $id is correctly patched to brewspec.coffee/schema/v0.4.json by both the
+    committed source (brewspec.schema.json) and the CI pipeline (jq step in
+    deploy-site.yml). All 4 anchor IDs resolve. The corrected espresso YAML includes all
+    8 SCA rating dimensions and validates against the schema. All landmarks and ARIA
+    attributes are present. Exactly 1 script tag (nav toggle) is in the built HTML. The
+    CNAME file is present and correct. All copy is verbatim from the approved copy doc
+    including headlines, body copy, CTAs, and microcopy. The accent colour (#C47B2B,
+    3.10:1 contrast) is defined but not applied to any element — the implementation
+    correctly avoids using it on small body text, as the design doc required. No
+    security issues were found. Three non-blocking items are recorded as carry-forward:
+    the deployment checklist has a brewspec.org domain error (MED-1), the unused accent
+    CSS variable lacks an explanatory comment (MED-2), and the manifest artifact path
+    for the dev self-review has the wrong date (MED-3). None of these block deployment.
+    Ready to proceed to deployment-manager.
+
+  carry_forward:
+    - >
+      MED-1: Update specs/templates/deployment-checklist.md lines 140 and 142 — replace
+      brewspec.org with brewspec.coffee in the "BrewSpec Landing Page" checklist section.
+      This is a documentation error that would cause a deployment manager to verify the
+      wrong domain.
+    - >
+      MED-2: The --color-accent and --color-accent-hover CSS variables in
+      site/src/styles/global.css are defined but never applied. Add an explanatory comment
+      clarifying the contrast constraint (3.10:1, fails AA for small text) so future
+      contributors understand why the variable exists but is not used on text elements.
+    - >
+      MED-3: Manifest self_review artifact path references
+      "reviews/2026-02-26-backend-dev-brewspec-landing-page.yaml" but the actual file is
+      dated 2026-02-25. Update the manifest to match the actual filename.
