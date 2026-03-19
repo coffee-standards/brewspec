@@ -155,6 +155,25 @@ Every task runs one of three pipelines. The `tier` field in `manifest.yaml` cont
 **Discovery** — exploratory spikes, proof-of-concept work
 - **Eligible:** work to validate a direction before committing to building it
 - **Pipeline:** `backend-dev` only — output may not ship
+- **Exit:** promote to Standard (write a spec from what was learned) or discard
+
+### Task Types
+
+The `type` field classifies tasks in `manifest.yaml`. Feature and chore tasks live in the `tasks:` section; bugs and refactors live in the `maintenance:` section.
+
+| Type | Section | Default tier | Pipeline |
+|---|---|---|---|
+| `feature` (default) | `tasks:` | standard | Full pipeline or as specified by `tier` |
+| `bug` | `maintenance:` | express | dev → reviewer → deploy |
+| `refactor` | `maintenance:` | steward-sourced | steward → dev → reviewer (or + architect) |
+| `chore` | `tasks:` | n/a | Human-driven, no agent pipeline |
+
+**When to create a `type: bug` maintenance item:**
+- A reviewer records a non-blocking finding and there is no upcoming feature version to bundle it into
+- A defect or usability issue is found during real use that can be fixed independently
+- A carry-forward item on a completed task was not absorbed into the next scheduled version
+
+Use `source_task` to link a maintenance item back to the task where it was originally surfaced.
 
 ### Bug Tracking
 
@@ -189,7 +208,20 @@ Agents are invoked via natural language in Claude Code conversations:
 - **backend-dev** — Build Python code with TDD. Runs `ruff check .` alongside tests; code must be lint-clean before handoff
 - **reviewer** — Final gate: spec compliance, security review, TDD verification, and test execution
 - **deployment-manager** — Runs after reviewer PASS only. Commits, tags, pushes, and marks the task done
-- **system-steward** — On-demand health monitor. Checks architecture principles, ADR staleness, design-to-code gaps, dependency health, and test health
+- **system-steward** — On-demand health monitor. Run via `/system-health`. Checks architecture principles, ADR staleness, design-to-code gaps, dependency health, and test health. Writes a health report to `reviews/` and writes `type: refactor` tasks to `maintenance:` in `manifest.yaml`. Does not write code or specs — signal only.
+
+### Slash Commands (Skills)
+
+These are invoked via `/command` in conversations:
+
+| Command | Purpose | When to use |
+|---|---|---|
+| `/start-task` | Begin a manifest task — reads manifest, selects pipeline, starts execution | Starting any new task from the backlog |
+| `/pipeline-status` | Show current status of all active tasks in the manifest | Checking what's in flight |
+| `/self-review` | Run a self-review on a spec or design doc before handoff to the next agent | Standard tier: after PM spec (before architect), after design (before dev) |
+| `/release-notes` | Generate formatted release notes for a completed task | After a task reaches `done` — for GitHub releases |
+| `/bug` | File a new bug report from a template | When a defect is found during use or review |
+| `/system-health` | Run the system-steward health check | On-demand or periodic (weekly/fortnightly) |
 
 ### Deployment Rules
 
@@ -214,7 +246,38 @@ Everything else runs through without interruption. Do not ask for approval betwe
 
 ### Pipeline execution
 
-Read `manifest.yaml` to determine where a task is and where to start. Never redo a completed stage — resume from the current status.
+Read `manifest.yaml` to determine where a task is and where to start. Never redo a completed stage — resume from the current status. Check the `tier` field (default: `standard`) to select the right pipeline.
+
+**Standard tier:**
+
+| Manifest status | Orchestrator action |
+|---|---|
+| `backlog` | Not ready — wait for strategist to prioritise |
+| `ready_for_spec` | Invoke product-manager (with PM conversation loop) |
+| `ready_for_design` | Run `/self-review` on the product spec → invoke architect |
+| `ready_for_dev` | Run `/self-review` on the design doc → invoke backend-dev |
+| `ready_for_review` | Invoke reviewer |
+| `ready_for_deploy` | Invoke deployment-manager |
+| `done` | Nothing to do |
+
+**Express tier** (`tier: express` in manifest):
+
+| Manifest status | Orchestrator action |
+|---|---|
+| `ready_for_dev` | Invoke backend-dev directly — no self-review, no spec/design required |
+| `ready_for_review` | Invoke reviewer |
+| `ready_for_deploy` | Invoke deployment-manager |
+
+**Discovery tier** (`tier: discovery` in manifest):
+
+| Manifest status | Orchestrator action |
+|---|---|
+| `ready_for_dev` | Invoke backend-dev — output may not ship |
+| `done` or discarded | Close out the task; promote to Standard if continuing |
+
+**Maintenance items** (`maintenance:` section in manifest):
+
+Check both `tasks:` and `maintenance:` when scanning for work. Maintenance items follow the same status flow but skip spec and design stages. `type: bug` defaults to `tier: express`; `type: refactor` follows the steward → dev → reviewer pipeline. Maintenance items can be run independently or held and bundled into the next feature version — orchestrator uses judgement based on priority and whether a related feature task is already in flight.
 
 Update the manifest status at each handoff. The manifest is the source of truth — if a pipeline breaks and restarts, read it and continue from where it stopped.
 
@@ -249,6 +312,7 @@ specs/
   templates/               # Source-of-truth templates
 
 manifest.yaml              # Task backlog and coordination
+roadmap.md                 # Ideation backlog — human-authored, input to PM
 reviews/                   # Agent review artifacts
 bugs/                      # Bug tracker
 ```
@@ -264,8 +328,9 @@ bugs/                      # Bug tracker
 | `specs/arch/principles.md` | How we build — technical principles | architect |
 | `specs/decisions/ADR-*.md` | Why we built it this way | architect |
 | `specs/designs/*.md` | How to build this task — schemas, models, test strategy | architect |
+| `roadmap.md` | Ideation backlog — loose product ideas, feature thoughts, sequencing intuitions | user |
 | `manifest.yaml` | Task backlog — status, assignments, artifacts | all agents |
-| `bugs/BUG-NNN-*.md` | Bug reports | dev + reviewer |
+| `bugs/BUG-NNN-*.md` | Bug reports — reproduction, root cause, fix, regression test | dev + reviewer |
 
 ## Parallel Build Streams (Worktrees)
 
