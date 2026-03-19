@@ -121,7 +121,7 @@ def test_migration_idempotent(tmp_path):
 def test_import_v07_doc_with_yield_stores_result_yield_g(tmp_path):
     """AC: importing a v0.7 document with result.yield_g stores it in DB."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - date: "2026-03-16"
     type: "espresso"
@@ -154,7 +154,7 @@ brews:
 def test_import_v07_doc_without_yield_stores_null(tmp_path):
     """AC: importing a v0.7 document without result.yield_g stores NULL."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - date: "2026-03-16"
     type: "pour_over"
@@ -238,7 +238,7 @@ def test_export_document_version_is_07(tmp_path):
     conn.close()
 
     doc = rows_to_brewspec_document(rows)
-    assert doc["brewspec_version"] == "0.7"
+    assert doc["brewspec_version"] == "0.8"
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +248,7 @@ def test_export_document_version_is_07(tmp_path):
 def test_import_export_roundtrip_with_yield(tmp_path):
     """AC: yield_g survives import → DB → export with same value."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - date: "2026-03-16"
     type: "espresso"
@@ -320,20 +320,20 @@ def test_show_brew_without_yield_omits_yield_line(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Import: v0.7 version message updated
+# Import: v0.8 version message updated
 # ---------------------------------------------------------------------------
 
-def test_import_v07_file_accepted(tmp_path):
-    """AC: importing a file with brewspec_version '0.7' succeeds."""
+def test_import_v08_file_accepted(tmp_path):
+    """AC: importing a file with brewspec_version '0.8' succeeds."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - date: "2026-03-16"
     type: "pour_over"
     dose_g: 20.0
     water_weight_g: 320.0
 """
-    doc_path = tmp_path / "v07.yaml"
+    doc_path = tmp_path / "v08.yaml"
     doc_path.write_text(yaml_content)
     db_path = tmp_path / "test.db"
 
@@ -343,8 +343,8 @@ brews:
     assert "1 brews added" in result.output
 
 
-def test_import_v06_file_rejected_with_v07_message(tmp_path):
-    """AC: importing a file with brewspec_version '0.6' is rejected with v0.7 error."""
+def test_import_v06_file_rejected_with_v08_message(tmp_path):
+    """AC: importing a file with brewspec_version '0.6' is rejected with v0.8 error."""
     yaml_content = """
 brewspec_version: "0.6"
 brews:
@@ -361,11 +361,11 @@ brews:
     result = runner.invoke(cli, ["--db", str(db_path), "import", str(doc_path)])
     assert result.exit_code == 1
     assert "0.6" in result.output
-    assert "not supported" in result.output.lower() or "v0.7" in result.output
+    assert "not supported" in result.output.lower() or "v0.8" in result.output
 
 
-def test_import_exact_v07_rejection_message(tmp_path):
-    """AC: v0.6 rejection message is exact and references v0.7."""
+def test_import_exact_v06_rejection_message(tmp_path):
+    """AC: v0.6 rejection message is exact and references v0.8."""
     yaml_content = """
 brewspec_version: "0.6"
 brews:
@@ -382,8 +382,8 @@ brews:
     result = runner.invoke(cli, ["--db", str(db_path), "import", str(doc_path)])
     assert result.exit_code == 1
     expected = (
-        "Error: This file uses BrewSpec v0.6, which is not supported by BrewLog v0.7.\n"
-        "BrewLog v0.7 requires BrewSpec v0.7."
+        "Error: This file uses BrewSpec v0.6, which is not supported by BrewLog v0.8.\n"
+        "BrewLog v0.8 requires BrewSpec v0.8."
     )
     assert expected in result.output
 
@@ -392,15 +392,15 @@ brews:
 # Bundled schema version
 # ---------------------------------------------------------------------------
 
-def test_bundled_schema_is_v07():
-    """AC: brewlog/src/brewlog/brewspec.schema.json must declare version 0.7."""
+def test_bundled_schema_is_v08():
+    """AC: brewlog/src/brewlog/brewspec.schema.json must declare version 0.8."""
     import importlib.resources
     with importlib.resources.files("brewlog").joinpath("brewspec.schema.json").open(
         "r", encoding="utf-8"
     ) as f:
         import json as json_mod
         schema = json_mod.load(f)
-    assert schema["properties"]["brewspec_version"]["const"] == "0.7"
+    assert schema["properties"]["brewspec_version"]["const"] == "0.8"
 
 
 # ---------------------------------------------------------------------------
@@ -411,7 +411,7 @@ def test_import_minimal_v07_brew_no_required_fields_stores_without_error(tmp_pat
     """AC-4: importing a v0.7 brew with none of the four formerly-required fields
     (date, type, dose_g, water_weight_g) succeeds and stores a row with NULLs."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - notes: "partial brew, no required fields"
 """
@@ -441,7 +441,7 @@ def test_import_minimal_v07_brew_round_trips(tmp_path):
     """AC-4: partial brew (no date/type/dose_g/water_weight_g) round-trips through
     import → DB → export without error and preserves present fields."""
     yaml_content = """
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - notes: "espresso experiment"
     result:
@@ -461,7 +461,7 @@ brews:
     doc = rows_to_brewspec_document(rows)
     conn.close()
 
-    assert doc["brewspec_version"] == "0.7"
+    assert doc["brewspec_version"] == "0.8"
     brew = doc["brews"][0]
     assert brew.get("notes") == "espresso experiment"
     assert brew["result"]["yield_g"] == 42.0

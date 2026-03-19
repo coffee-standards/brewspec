@@ -18,6 +18,7 @@ from brewlog.models import (
     BREW_TYPE_ENUM,
     COFFEE_TYPE_ENUM,
     GRIND_ENUM,
+    ROAST_LEVEL_ENUM,
     ROAST_DATE_PATTERN,
 )
 from brewlog.prompts import prompt_brew_type
@@ -79,6 +80,10 @@ from brewlog.prompts import prompt_brew_type
               help="Coffee classification: single_origin or blend.")
 @click.option("--coffee-name", "coffee_name",  type=str,   default=None,
               help="Coffee product name or descriptive label.")
+@click.option("--roaster",     "roaster",      type=str,   default=None,
+              help="Roaster name (company or person who roasted the coffee).")
+@click.option("--roast-level", "roast_level",  type=str,   default=None,
+              help="Roast level: light, medium, or dark.")
 @click.option("--origin",      "origin",       type=str,   default=None,
               multiple=True,
               help="Coffee origin (may be repeated). Legacy flag.")
@@ -123,6 +128,7 @@ def update(
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
     roast_date, coffee_type, coffee_name,
+    roaster, roast_level,
     origin,
     origin_name, origin_country, origin_region, origin_subregion,
     origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
@@ -217,6 +223,17 @@ def update(
 
     if coffee_name is not None and not coffee_name.strip():
         click.echo("Error: --coffee-name must not be empty.", err=True)
+        sys.exit(1)
+
+    if roast_level is not None and roast_level not in ROAST_LEVEL_ENUM:
+        click.echo(
+            f"Error: --roast-level must be one of: {sorted(ROAST_LEVEL_ENUM)}",
+            err=True,
+        )
+        sys.exit(1)
+
+    if roaster is not None and (len(roaster.strip()) == 0 or len(roaster) > 100):
+        click.echo("Error: --roaster must be 1-100 characters", err=True)
         sys.exit(1)
 
     if water_ppm is not None and water_ppm < 0:
@@ -362,6 +379,10 @@ def update(
         updates["coffee_type"] = coffee_type
     if coffee_name is not None:
         updates["coffee_name"] = coffee_name
+    if roaster is not None:
+        updates["coffee_roaster"] = roaster
+    if roast_level is not None:
+        updates["coffee_roast_level"] = roast_level
     if origins_json is not None:
         updates["coffee_origins"] = origins_json
     if varietal is not None:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-BREWSPEC_VERSION = "0.7"
+BREWSPEC_VERSION = "0.8"
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ _RATING_DIMS = [
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.7 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v0.8 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).
@@ -94,6 +94,10 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         coffee["type"] = r["coffee_type"]
     if r.get("coffee_name") is not None:
         coffee["name"] = r["coffee_name"]
+    if r.get("coffee_roaster") is not None:
+        coffee["roaster"] = r["coffee_roaster"]
+    if r.get("coffee_roast_level") is not None:
+        coffee["roast_level"] = r["coffee_roast_level"]
     if r.get("coffee_origins") is not None:
         coffee["origins"] = json.loads(r["coffee_origins"])
     elif r.get("coffee_origin") is not None:
@@ -155,8 +159,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.7 document dict.
-    Returns {"brewspec_version": "0.7", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec v0.8 document dict.
+    Returns {"brewspec_version": "0.8", "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.

@@ -7,7 +7,7 @@ These models serve two purposes:
   2. Secondary validation layer — after JSON Schema validation on import, each
      brew can optionally be run through BrewInput for additional checks.
 
-Field names mirror BrewSpec v0.7 snake_case names exactly.
+Field names mirror BrewSpec v0.8 snake_case names exactly.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ GRIND_ENUM = frozenset({
     "turkish", "espresso", "fine", "medium_fine",
     "medium", "medium_coarse", "coarse"
 })
+ROAST_LEVEL_ENUM = frozenset({"light", "medium", "dark"})
 ROAST_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATE_PATTERN = re.compile(
     r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z|\d{4}-\d{2}-\d{2})$"
@@ -50,6 +51,7 @@ class OriginInput(BaseModel):
     lot: Optional[str] = None
     harvest_year: Optional[int] = None
     varietal: Optional[str] = None  # new in v0.6
+    elevation_masl: Optional[int] = None  # new in v0.8
 
     @field_validator("name", "country", "region", "subregion", "producer", "process", "lot", "varietal")
     @classmethod
@@ -68,6 +70,13 @@ class OriginInput(BaseModel):
             raise ValueError("harvest_year must be between 1900 and 2100 inclusive")
         return v
 
+    @field_validator("elevation_masl")
+    @classmethod
+    def validate_elevation_masl(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and v <= 0:
+            raise ValueError("elevation_masl must be greater than 0")
+        return v
+
 
 # ---------------------------------------------------------------------------
 # CoffeeInput
@@ -77,6 +86,8 @@ class CoffeeInput(BaseModel):
     """Optional coffee ingredient descriptor. All fields optional."""
 
     name: Optional[str] = None          # new in v0.6; branded or descriptive label
+    roaster: Optional[str] = None       # new in v0.8; company/person who roasted
+    roast_level: Optional[str] = None   # new in v0.8; light | medium | dark
     roast_date: Optional[str] = None
     type: Optional[str] = None          # "single_origin" | "blend"
     origins: Optional[list[OriginInput]] = None
@@ -91,6 +102,25 @@ class CoffeeInput(BaseModel):
                 raise ValueError("value must not be empty")
             if len(v) > 150:
                 raise ValueError("value must not exceed 150 characters")
+        return v
+
+    @field_validator("roaster")
+    @classmethod
+    def validate_roaster(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            if len(v.strip()) == 0:
+                raise ValueError("roaster must not be empty when provided")
+            if len(v) > 100:
+                raise ValueError("roaster must not exceed 100 characters")
+        return v
+
+    @field_validator("roast_level")
+    @classmethod
+    def validate_roast_level(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ROAST_LEVEL_ENUM:
+            raise ValueError(
+                f"roast_level must be one of: {sorted(ROAST_LEVEL_ENUM)}"
+            )
         return v
 
     @field_validator("roast_date")
@@ -255,7 +285,7 @@ class ResultInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 class BrewInput(BaseModel):
-    """Primary model for a brew log entry. Validates all BrewSpec v0.7 constraints."""
+    """Primary model for a brew log entry. Validates all BrewSpec v0.8 constraints."""
 
     # In v0.7 these four fields are optional at the schema level.
     # The CLI add/update commands still collect them interactively.
@@ -335,8 +365,14 @@ class BrewInput(BaseModel):
     @field_validator("water_temp_c")
     @classmethod
     def validate_water_temp(cls, v: Optional[float]) -> Optional[float]:
-        if v is not None and not (0 <= v <= 100):
-            raise ValueError("water_temp_c must be between 0 and 100 inclusive")
+        if v is not None:
+            if not (0 <= v <= 100):
+                raise ValueError("water_temp_c must be between 0 and 100 inclusive")
+            # v0.8: values must have at most 1 decimal place (multipleOf 0.1)
+            if round(v, 1) != v:
+                raise ValueError(
+                    "water_temp_c must not have more than 1 decimal place (e.g. 96.1, not 96.15)"
+                )
         return v
 
     @field_validator("duration_s")

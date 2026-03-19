@@ -29,15 +29,16 @@ def _print_origin_field(label: str, value) -> None:
 def _display_origins(origins: list[dict]) -> None:
     """Display structured origin data in show output (AC-48)."""
     _ORIGIN_FIELDS = [
-        ("name",         "Name:"),
-        ("country",      "Country:"),
-        ("region",       "Region:"),
-        ("subregion",    "Subregion:"),
-        ("producer",     "Producer:"),
-        ("process",      "Process:"),
-        ("varietal",     "Varietal:"),
-        ("lot",          "Lot:"),
-        ("harvest_year", "Harvest Year:"),
+        ("name",           "Name:"),
+        ("country",        "Country:"),
+        ("region",         "Region:"),
+        ("subregion",      "Subregion:"),
+        ("producer",       "Producer:"),
+        ("process",        "Process:"),
+        ("varietal",       "Varietal:"),
+        ("lot",            "Lot:"),
+        ("harvest_year",   "Harvest Year:"),
+        ("elevation_masl", "Elevation (m):"),
     ]
 
     if len(origins) == 1:
@@ -165,7 +166,10 @@ def show(ctx: click.Context, id: int) -> None:
     # -- Coffee section --
     has_coffee = any(
         row[f] is not None
-        for f in ("coffee_roast_date", "coffee_type", "coffee_name", "coffee_origins")
+        for f in (
+            "coffee_roast_date", "coffee_type", "coffee_name", "coffee_origins",
+            "coffee_roaster", "coffee_roast_level",
+        )
     )
     if has_coffee:
         click.echo("")
@@ -173,6 +177,10 @@ def show(ctx: click.Context, id: int) -> None:
         click.echo("------")
         if row["coffee_name"] is not None:
             _print_field("Name:", row["coffee_name"])
+        if row["coffee_roaster"] is not None:
+            _print_field("Roaster:", row["coffee_roaster"])
+        if row["coffee_roast_level"] is not None:
+            _print_field("Roast Level:", row["coffee_roast_level"])
         if row["coffee_roast_date"] is not None:
             _print_field("Roast date:", row["coffee_roast_date"])
         if row["coffee_type"] is not None:
