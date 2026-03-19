@@ -35,11 +35,10 @@ What actually happens. Include error messages verbatim, console output, or scree
 
 ## Environment
 
-- **URL:** e.g. `https://calibrate-drab.vercel.app/`
-- **Screen / flow:** e.g. Brew detail panel, edit mode
-- **Auth state:** signed in | guest | signed out
 - **Browser:** e.g. Safari 18, Chrome 131
 - **Device:** e.g. MacBook Pro, iPhone 15
+- **Python version:** e.g. 3.11.8
+- **OS:** e.g. macOS 15.3, Ubuntu 24.04
 
 ## Affected spec
 
@@ -77,7 +76,7 @@ A bug fix is not complete without a test that would have caught it.
 If this bug revealed a gap in the product spec, update it.
 
 - **Updated:** yes | no | not applicable
-- **File + section:** e.g. `specs/products/calibrate-coffee-v1.md` § "Brew editing"
+- **File + section:** e.g. `specs/products/brewspec-v0.8.md` § "Acceptance Criteria"
 - **Change:** brief description of what was added or corrected
 
 ### Architectural implication

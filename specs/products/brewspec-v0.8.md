@@ -238,7 +238,7 @@ Fields changed in v0.8: `water_temp_c` (added `multipleOf: 0.1`).
 ## Dependencies
 
 - **Depends on:** `brewspec-v0.7` (done) — this version builds on the v0.7 schema
-- **Blocks:** BrewLog CLI v0.8 (must adopt v0.8 schema); Calibrate Coffee (roaster and roast level fields needed for coffee card model)
+- **Blocks:** BrewLog CLI v0.8 (must adopt v0.8 schema); downstream tools needing roaster and roast level fields
 
 ---
 

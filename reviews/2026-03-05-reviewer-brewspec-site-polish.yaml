@@ -82,7 +82,7 @@ result:
   medium_issues:
     - id: MED-1
       severity: Low
-      file: "/Users/scottluengen/Documents/1_Projects/calibrate-coffee/specs/templates/deployment-checklist.md"
+      file: "specs/templates/deployment-checklist.md"
       description: >
         The BrewSpec Landing Page SEO/Meta checklist section lists only three OG tags to
         verify (og:title, og:description, og:url). With this task shipping og:image,

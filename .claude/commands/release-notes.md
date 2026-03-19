@@ -87,7 +87,6 @@ Ready to post: GitHub release at tag [tag] on [repo]
 - Written for the audience of that product:
   - **BrewSpec** — tool builders and developers: precise, technical, complete
   - **BrewLog CLI** — home brewers and coffee professionals: plain language, outcome-focused
-  - **Calibrate Coffee** — consumers and cafe operators: friendly, benefit-led
 - Past tense for what changed ("Added", "Fixed", "Removed")
 - No jargon that isn't in the product spec or strategy docs
 - Breaking changes get a full sentence of explanation — never just a bullet point

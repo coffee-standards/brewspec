@@ -86,13 +86,25 @@ git push origin --delete <feature-branch>
 
 If the remote branch doesn't exist (was never pushed or already deleted), skip the remote delete without error.
 
-### 8. Update the manifest
+### 8. Archive previous version spec (schema deploys only)
+
+For BrewSpec schema version bumps, the previous spec doc must be removed from root after the new one is written:
+- Verify `versions/brewspec-vX.Y.md` exists (the dev should have copied it)
+- Delete `brewspec-vX.Y.md` from root (the old version)
+- The new `brewspec-vX.Z.md` should be the only spec doc in root
+
+### 9. Record review carry-forward items
+
+If the reviewer flagged any non-blocking issues, add them as `review_carry_forward` on the **completed task** in `manifest.yaml`. These items are picked up by the next version's backlog.
+
+### 10. Update the manifest
 
 In `manifest.yaml`:
 - Set the task `status` to `done`
 - Set `completed_date` to today's date
 - Clear `assigned_to`
 - Add any missing artifact paths
+- Confirm `review_carry_forward` is populated (if the reviewer flagged non-blocking items)
 
 Commit the manifest update to `main`.
 

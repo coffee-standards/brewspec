@@ -11,7 +11,7 @@
 
 ## Overview
 
-BrewSpec v0.7 makes two targeted changes to the schema. First, it adds `result.yield_g` — an optional positive number representing the output weight of a brew in grams. This field primarily serves espresso (where yield is a first-class recipe metric distinct from water input) but is valid for any brew type. Second, it removes the `required` array from the brew object, making `date`, `type`, `dose_g`, and `water_weight_g` optional. This unblocks partial BrewSpec exports — such as a Calibrate component card representing only coffee or equipment metadata — without requiring fabricated field values.
+BrewSpec v0.7 makes two targeted changes to the schema. First, it adds `result.yield_g` — an optional positive number representing the output weight of a brew in grams. This field primarily serves espresso (where yield is a first-class recipe metric distinct from water input) but is valid for any brew type. Second, it removes the `required` array from the brew object, making `date`, `type`, `dose_g`, and `water_weight_g` optional. This unblocks partial BrewSpec exports — such as a tool exporting only coffee or equipment metadata — without requiring fabricated field values.
 
 The yield addition is a non-breaking additive change. The removal of required constraints is a breaking change for validators (compiled schemas must be updated) but is not a breaking change for existing documents — all v0.6-valid documents remain valid under v0.7 with only a `brewspec_version` bump.
 
@@ -319,7 +319,7 @@ Insert this row after `brix` and before `tasting_notes`.
 
 Under the `yield_g` field in the spec document, include this note:
 
-> For espresso, brewers set a target yield as part of the recipe (e.g., "18 g in, 36 g out" → 2:1 ratio). The measured output weight at brew time is the value stored in `result.yield_g`. The separation between `water_weight_g` (input) and `result.yield_g` (output) accounts for puck absorption, typically 2–4 g for espresso. Tools that implement a process card model (such as Calibrate) may additionally store a target yield on their internal process card — that is an application-level concern beyond the scope of BrewSpec.
+> For espresso, brewers set a target yield as part of the recipe (e.g., "18 g in, 36 g out" → 2:1 ratio). The measured output weight at brew time is the value stored in `result.yield_g`. The separation between `water_weight_g` (input) and `result.yield_g` (output) accounts for puck absorption, typically 2–4 g for espresso. Consuming tools may additionally store a target yield in their own data model — that is an application-level concern beyond the scope of BrewSpec.
 
 ### 5.4 What Changed in v0.7
 

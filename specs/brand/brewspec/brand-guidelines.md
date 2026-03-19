@@ -16,7 +16,7 @@
 
 **What they want:** A well-maintained, correctly designed data format they can adopt as a dependency without worrying it will be abandoned or arbitrarily changed.
 
-**What they're not:** Casual home brewers who have never heard of a schema. That's Calibrate Coffee's audience. BrewSpec.org does not explain what a data format is.
+**What they're not:** Casual home brewers who have never heard of a schema. The BrewSpec site does not explain what a data format is — it assumes the reader already knows.
 
 ### Secondary Audience
 

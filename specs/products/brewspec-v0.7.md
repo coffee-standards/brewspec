@@ -10,13 +10,13 @@
 
 ## Problem Statement
 
-Two gaps in BrewSpec v0.6 block the next Calibrate Coffee iteration:
+Two gaps in BrewSpec v0.6 limit its fitness as a general-purpose interchange format:
 
-1. **No yield field.** Espresso brewing treats output weight (`yield_g`) as a first-class recipe metric — it defines the recipe alongside dose. Without a standard field for it, espresso brews cannot be fully described in BrewSpec, and Calibrate's component card model cannot represent the espresso process card correctly.
+1. **No yield field.** Espresso brewing treats output weight (`yield_g`) as a first-class recipe metric — it defines the recipe alongside dose. Without a standard field for it, espresso brews cannot be fully described in BrewSpec, and downstream tools cannot represent the espresso process correctly.
 
-2. **Four required fields make partial exports invalid.** The Calibrate component card model decomposes a brew into reusable cards (Coffee, Process, Equipment, Water) and a Brew Record. A BrewSpec export representing only a subset of those cards — for example, just a Coffee Card or just a Process Card — fails v0.6 validation because `date`, `type`, `dose_g`, and `water_weight_g` are required. The schema must allow partial representations.
+2. **Four required fields make partial exports invalid.** Tools that decompose a brew into reusable components (e.g. coffee metadata, process parameters, equipment) cannot export a subset as a valid BrewSpec document because `date`, `type`, `dose_g`, and `water_weight_g` are required. The schema must allow partial representations.
 
-These changes unblock the Tool Builder persona (building Calibrate on top of BrewSpec) and improve the schema's fitness as a general-purpose interchange format for the Coffee Professional persona.
+These changes unblock the Tool Builder persona and improve the schema's fitness as a general-purpose interchange format for the Coffee Professional persona.
 
 ---
 
@@ -41,7 +41,7 @@ These changes unblock the Tool Builder persona (building Calibrate on top of Bre
 
 **AC-5:** A brew document that was valid under v0.6 (with all four required fields present and correct) is also valid under v0.7 with only a `brewspec_version` bump. No v0.6 valid document is broken by this change.
 
-**AC-6:** The spec document describes the espresso use case for `yield_g`: that it functions as both a recipe target (what the brewer aims for) and a measured result (what was actually produced), and that BrewSpec represents it solely as a result field in `result.yield_g`. The placement in BrewSpec does not imply where consuming tools (such as Calibrate) store or display it.
+**AC-6:** The spec document describes the espresso use case for `yield_g`: that it functions as both a recipe target (what the brewer aims for) and a measured result (what was actually produced), and that BrewSpec represents it solely as a result field in `result.yield_g`. The placement in BrewSpec does not imply where consuming tools store or display it.
 
 **AC-7:** The "What Changed in v0.7" section of the spec document identifies the removal of required constraints on `date`, `type`, `dose_g`, and `water_weight_g` as a breaking change, with a migration note explaining that existing v0.6-valid documents require only a version bump and no structural changes.
 
@@ -68,7 +68,7 @@ These changes unblock the Tool Builder persona (building Calibrate on top of Bre
 
 ### Out of Scope
 
-- Any Calibrate-side data model changes (component card model is a separate task)
+- Any downstream tool data model changes
 - Extended water chemistry fields (`ph`, bicarbonate, mineral breakdown) — deferred since v0.5
 - Pour schedules or step-by-step timing
 - A migration tool or script for upgrading v0.6 documents (manual bump of `brewspec_version` is sufficient)
@@ -81,11 +81,11 @@ These changes unblock the Tool Builder persona (building Calibrate on top of Bre
 
 ### `result.yield_g` placement
 
-`yield_g` belongs in the `result` object, not at the brew level. The `result` object groups measured brew outcomes; yield is a measured output (the weight of liquid in the cup). For espresso specifically, yield is also used as a recipe target, but that concern is handled by the consuming application (Calibrate's Process Card), not by BrewSpec. The schema stays simple: one field, one location.
+`yield_g` belongs in the `result` object, not at the brew level. The `result` object groups measured brew outcomes; yield is a measured output (the weight of liquid in the cup). For espresso specifically, yield is also used as a recipe target, but that concern is handled by the consuming application, not by BrewSpec. The schema stays simple: one field, one location.
 
 ### Espresso context note (for the spec doc)
 
-The spec document should include a note under `result.yield_g` explaining: for espresso, brewers set a target yield as part of the recipe (e.g. "18 g in, 36 g out"). The measured output weight at brew time is the value stored here. Tools that implement a process card model (such as Calibrate) may additionally store a target yield on their internal process card — that is an application-level concern beyond the scope of BrewSpec.
+The spec document should include a note under `result.yield_g` explaining: for espresso, brewers set a target yield as part of the recipe (e.g. "18 g in, 36 g out"). The measured output weight at brew time is the value stored here. Consuming tools may additionally store a target yield in their own data model — that is an application-level concern beyond the scope of BrewSpec.
 
 ### Making fields optional — what "breaking" means here
 
@@ -109,7 +109,7 @@ In v0.6, the brew object schema has: `required: [date, type, dose_g, water_weigh
 ## Dependencies
 
 - **Depends on:** `brewspec-v0.6` (done) — this version builds on the v0.6 schema
-- **Blocks:** Calibrate component card model implementation (the next Calibrate iteration requires v0.7 for partial-export validity and espresso yield representation)
+- **Blocks:** Downstream tools requiring partial-export validity and espresso yield representation
 
 ---
 
@@ -126,4 +126,4 @@ In v0.6, the brew object schema has: `required: [date, type, dose_g, water_weigh
 
 ## Open Questions
 
-None. Both changes are fully specified. Domain assumptions about espresso yield validated against the component card mapping document (`specs/designs/component-card-mapping.md`).
+None. Both changes are fully specified.

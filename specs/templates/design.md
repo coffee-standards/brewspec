@@ -123,15 +123,15 @@ The spec document must include these sections in order:
 
 ## 6. File Manifest
 
-Complete list of every file the dev must create or modify. Include the repo (calibrate-coffee vs brewspec) and the operation (create / modify / archive).
+Complete list of every file the dev must create or modify.
 
-| File | Repo | Operation | Notes |
-|------|------|-----------|-------|
-| `brewspec.schema.json` | brewspec | Modify | Schema changes per Section 1 |
-| `brewspec-vX.Y.md` | brewspec | Create | Per Section 5 |
-| `versions/brewspec-vX.(Y-1).md` | brewspec | Archive | Copy before overwriting root spec |
-| `examples/valid/example.yaml` | brewspec | Modify | Update to new version |
-| `tests/test_brewspec_schema.py` | brewspec | Modify | Add test cases per Section 7 |
+| File | Operation | Notes |
+|------|-----------|-------|
+| `brewspec.schema.json` | Modify | Schema changes per Section 1 |
+| `brewspec-vX.Y.md` | Create | Per Section 5 |
+| `versions/brewspec-vX.(Y-1).md` | Archive | Copy before overwriting root spec |
+| `examples/valid/example.yaml` | Modify | Update to new version |
+| `tests/test_brewspec_schema.py` | Modify | Add test cases per Section 7 |
 
 ---
 

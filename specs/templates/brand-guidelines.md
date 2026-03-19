@@ -1,6 +1,6 @@
 # Brand Guidelines: [Product Name]
 
-**Product:** [BrewSpec | Calibrate Coffee]
+**Product:** [BrewSpec | BrewLog CLI]
 **Author:** marketing-comms
 **Created:** [date]
 **Status:** Draft | Approved

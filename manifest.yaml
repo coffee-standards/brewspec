@@ -40,7 +40,7 @@
 #   - Tasks at different stages progress in parallel
 #
 # Cross-repo dependencies:
-#   When a downstream product (e.g. Calibrate Coffee) needs a schema change,
+#   When a downstream product needs a schema change,
 #   file a task here with type: feature and a description of the requirement.
 #   Evaluate on its merits as a spec improvement. The spec leads, products follow.
 

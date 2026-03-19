@@ -287,7 +287,7 @@ git worktree add .worktrees/<task-name> -b <task-name>
 
 ## Cross-Repo Dependencies
 
-BrewSpec and BrewLog are open source tools. A commercial product (Calibrate Coffee, managed in a separate private repo) uses BrewSpec as its data interchange format.
+BrewSpec and BrewLog are open source tools. Downstream products (managed in separate repos) may use BrewSpec as their data interchange format.
 
 **When a downstream product needs a schema change:**
 - File a task in this manifest with a description of the requirement

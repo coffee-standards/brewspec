@@ -140,7 +140,7 @@ result:
   medium_issues:
     - id: MED-1
       severity: Medium
-      file: "/Users/scottluengen/Documents/1_Projects/calibrate-coffee/specs/templates/deployment-checklist.md"
+      file: "specs/templates/deployment-checklist.md"
       description: >
         The "BrewSpec Landing Page" section of the deployment checklist (lines 140 and 142)
         references brewspec.org in two places: "astro.config.mjs site URL is set to
@@ -173,7 +173,7 @@ result:
 
     - id: MED-3
       severity: Low
-      file: "/Users/scottluengen/Documents/1_Projects/calibrate-coffee/manifest.yaml"
+      file: "manifest.yaml"
       description: >
         The manifest artifact reference for the dev self-review is
         "reviews/2026-02-26-backend-dev-brewspec-landing-page.yaml" but the actual file

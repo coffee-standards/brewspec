@@ -70,7 +70,7 @@ result:
         The Field Reference entry for result.yield_g omits the espresso dual-role note
         required by AC-6 and the product spec Design Notes. The note must explain: yield_g
         functions as both a recipe target (espresso process card) and a measured result;
-        BrewSpec represents it solely as a result field; consuming tools such as Calibrate
+        BrewSpec represents it solely as a result field; consuming tools
         may choose to store a target yield on their process card as an application-level
         concern outside BrewSpec's scope.
       fix: >

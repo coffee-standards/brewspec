@@ -3,7 +3,7 @@
 **Date:** YYYY-MM-DD
 **Status:** Proposed | Accepted | Deprecated | Superseded by [ADR-NNN]
 **Decider:** [architect | user | both]
-**Affects:** [BrewSpec | BrewLog CLI | Calibrate Coffee | All products]
+**Affects:** [BrewSpec | BrewLog CLI | All products]
 
 ---
 

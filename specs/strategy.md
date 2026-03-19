@@ -66,7 +66,7 @@ Public website describing BrewSpec, linking to the repo and schema, and giving t
 2. **Move fast and learn.** Ship quickly, see how people use it, discover what matters before committing to polish.
 3. **Enable the ecosystem.** BrewSpec is designed to be adopted by any coffee tool. If other apps adopt the format, that's a win — ecosystem adoption validates the standard.
 
-**Downstream consumers:** Commercial products (e.g. Calibrate Coffee) use BrewSpec as their data interchange format. Requirements from those products may drive schema changes, which are evaluated and implemented here on their merits as spec improvements — not as product-specific features.
+**Downstream consumers:** Commercial products may use BrewSpec as their data interchange format. Requirements from those products may drive schema changes, which are evaluated and implemented here on their merits as spec improvements — not as product-specific features.
 
 ---
 

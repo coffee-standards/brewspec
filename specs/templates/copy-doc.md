@@ -1,6 +1,6 @@
 # Copy: [Product] — [Surface]
 
-**Product:** [BrewSpec | Calibrate Coffee]
+**Product:** [BrewSpec | BrewLog CLI]
 **Surface:** [e.g. Landing page | Onboarding | Feature page — [feature name]]
 **Author:** marketing-comms
 **Created:** [date]

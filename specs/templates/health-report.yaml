@@ -21,7 +21,7 @@ report:
     [Two to four sentences. Overall health signal: how many findings, at what severity,
     and what the dominant theme is. Do not repeat individual findings here — synthesize
     them. e.g. "System health is good. One high-severity ADR staleness issue requires
-    attention before the next Calibrate Coffee design cycle. Dependency versions are
+    attention before the next design cycle. Dependency versions are
     current."]
 
   finding_count:
@@ -100,7 +100,7 @@ report:
         package: "[package name]"
         current_version: "[x.y.z]"
         latest_version: "[x.y.z]"
-        product: "[BrewSpec | BrewLog CLI | Calibrate Coffee]"
+        product: "[BrewSpec | BrewLog CLI]"
         description: >
           [Why this is worth flagging: major version behind, unmaintained,
           doing more than one job and removable. Do not flag minor patch/minor
