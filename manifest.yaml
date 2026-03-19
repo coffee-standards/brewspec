@@ -60,7 +60,7 @@ products:
     status: "in_progress"
     description: "Open source standard for describing coffee brews (YAML/JSON). The trust anchor — free and open forever."
     spec: specs/products/brewspec.md
-    current_version: "0.7"
+    current_version: "0.8"
   - name: "BrewLog CLI"
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
@@ -75,6 +75,41 @@ tasks:
   # BrewSpec Schema
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewspec-v0.8
+    name: "BrewSpec v0.8"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: standard
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-19"
+    review_verdict: PASS
+    review_date: "2026-03-19"
+    review: reviews/2026-03-19-reviewer-brewspec-v0.8.yaml
+    tag: v0.8
+    artifacts:
+      spec: specs/products/brewspec-v0.8.md
+      design: specs/designs/brewspec-v0.8.md
+    depends_on:
+      - brewspec-v0.7
+    description: >
+      Four targeted additions to the BrewSpec schema.
+
+      1. Add coffee.roaster field. Freeform string identifying who roasted the coffee
+         (e.g. "Onyx", "Tim Wendelboe"). Critical for tracking and comparing across roasters.
+
+      2. Add coffee.roast_level field. Enum: light, medium, dark. Widely used descriptor
+         that affects grind and brew parameters.
+
+      3. Add origin.elevation_masl field. Positive integer for growing altitude in meters
+         above sea level. Common on specialty bags, correlates with density and flavour.
+
+      4. Add multipleOf: 0.1 precision constraint to water_temp_c. Pragmatic data validation —
+         no consumer thermometer measures beyond 0.1°C precision.
+
+      All changes are additive and non-breaking.
 
   - id: brewspec-v0.7
     name: "BrewSpec v0.7"

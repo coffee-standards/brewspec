@@ -1,7 +1,7 @@
 # Valid: demonstrates that all four previously-required brew fields are now
 # optional in v0.7. This brew contains no date, type, dose_g, or water_weight_g.
 # It is valid because the brew object required constraint was removed in v0.7.
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - method: "AeroPress"
     notes: "Component card export — coffee metadata only"

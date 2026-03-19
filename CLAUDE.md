@@ -18,7 +18,7 @@ Strategy in `specs/strategy.md`. Principles in `specs/principles.md`.
 
 ```
 brewspec.schema.json       # Current JSON Schema (source of truth)
-brewspec-v0.7.md           # Current spec document (living)
+brewspec-v0.8.md           # Current spec document (living)
 versions/                  # Archived previous spec versions
 examples/
   valid/                   # Valid BrewSpec example files

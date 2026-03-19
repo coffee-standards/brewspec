@@ -1,0 +1,115 @@
+review_date: "2026-03-19"
+task_id: brewspec-v0.8
+reviewer: reviewer
+verdict: PASS
+test_results:
+  passed: 222
+  failed: 0
+  lint: pass
+blocking_issues: []
+non_blocking_issues:
+  - "examples/invalid/invalid_type_enum.yaml still has brewspec_version '0.2' instead of '0.8'. Per the design doc (Section 3.5), invalid examples testing structural errors (not version-related failures) should be bumped to '0.8'. The test still passes because the version mismatch itself causes rejection, but the example is no longer testing the intended failure (bad type enum). Carry forward to the next version."
+ac_results:
+  - ac: AC-1
+    status: PASS
+    notes: "Schema title is 'BrewSpec v0.8', const is '0.8'. Tests verify v0.7 is rejected (test_version_const_rejects_v0_7), v0.8 is accepted (test_version_must_be_0_8), and all prior versions v0.1-v0.6 are rejected."
+  - ac: AC-2
+    status: PASS
+    notes: "coffee.roaster is optional. test_roaster_omitted_passes confirms omission is valid. Schema has no required array on coffee object."
+  - ac: AC-3
+    status: PASS
+    notes: "test_roaster_valid_accepted confirms 'Onyx' passes. Schema defines roaster as string with minLength 1, maxLength 100."
+  - ac: AC-4
+    status: PASS
+    notes: "test_roaster_empty_string_rejected confirms empty string fails validation (minLength: 1)."
+  - ac: AC-5
+    status: PASS
+    notes: "test_roast_level_omitted_passes confirms omission is valid."
+  - ac: AC-6
+    status: PASS
+    notes: "test_roast_level_light_accepted confirms 'light' passes."
+  - ac: AC-7
+    status: PASS
+    notes: "test_roast_level_medium_accepted confirms 'medium' passes."
+  - ac: AC-8
+    status: PASS
+    notes: "test_roast_level_dark_accepted confirms 'dark' passes."
+  - ac: AC-9
+    status: PASS
+    notes: "test_roast_level_medium_light_rejected confirms 'medium_light' is rejected (not in enum)."
+  - ac: AC-10
+    status: PASS
+    notes: "test_roast_level_capitalized_rejected confirms 'Light' (capitalised) is rejected."
+  - ac: AC-11
+    status: PASS
+    notes: "test_elevation_masl_omitted_passes confirms omission is valid. Schema defines elevation_masl as optional integer with exclusiveMinimum 0."
+  - ac: AC-12
+    status: PASS
+    notes: "test_elevation_masl_valid_accepted confirms 1950 passes. Origin entry includes country and elevation_masl."
+  - ac: AC-13
+    status: PASS
+    notes: "test_elevation_masl_zero_rejected confirms 0 fails (exclusiveMinimum: 0)."
+  - ac: AC-14
+    status: PASS
+    notes: "test_elevation_masl_negative_rejected confirms -100 fails."
+  - ac: AC-15
+    status: PASS
+    notes: "test_elevation_masl_float_rejected confirms 1950.5 fails (type: integer)."
+  - ac: AC-16
+    status: PASS
+    notes: "test_water_temp_c_96_0_passes confirms 96.0 passes with Decimal conversion."
+  - ac: AC-17
+    status: PASS
+    notes: "test_water_temp_c_96_5_passes confirms 96.5 passes with Decimal conversion."
+  - ac: AC-18
+    status: PASS
+    notes: "test_water_temp_c_integer_passes confirms 93 (integer) passes without Decimal conversion."
+  - ac: AC-19
+    status: PASS
+    notes: "test_water_temp_c_96_15_rejected confirms 96.15 fails with Decimal conversion."
+  - ac: AC-20
+    status: PASS
+    notes: "test_water_temp_c_96_123_rejected confirms 96.123 fails with Decimal conversion."
+  - ac: AC-21
+    status: PASS
+    notes: "brewspec-v0.8.md 'Breaking Changes' section documents water_temp_c multipleOf 0.1 as a breaking change with migration guidance (round to one decimal place). Backward Compatibility section reiterates the migration steps."
+  - ac: AC-22
+    status: PASS
+    notes: "examples/valid/light_roast_ethiopian.yaml exists with roaster ('Onyx'), roast_level ('light'), and elevation_masl (1950). test_light_roast_ethiopian_example_passes confirms it validates."
+  - ac: AC-23
+    status: PASS
+    notes: "examples/invalid/invalid_roast_level.yaml exists with roast_level 'medium_light'. test_invalid_roast_level_example_fails confirms it is rejected."
+  - ac: AC-24
+    status: PASS
+    notes: "examples/invalid/invalid_water_temp_precision.yaml exists with water_temp_c 96.15. test_invalid_water_temp_precision_example_fails confirms it is rejected."
+  - ac: AC-25
+    status: PASS
+    notes: "All 17 valid examples (16 YAML + 1 JSON) have brewspec_version '0.8'. All pass validation via parametrized test_valid_examples_pass. No water_temp_c values needed rounding (all were integers)."
+  - ac: AC-26
+    status: PASS
+    notes: "brewspec-v0.8.md exists at repo root with complete field reference covering all objects (brew, coffee, origin, water, equipment, result, ratings) including the three new fields."
+  - ac: AC-27
+    status: PASS
+    notes: "brewspec-v0.8.md contains 'What Changed in v0.8' section with 'New Fields (additive, non-breaking)' subsection listing all three new fields, and 'Breaking Changes' subsection documenting the water_temp_c precision constraint."
+  - ac: AC-28
+    status: PASS
+    notes: "brewspec-v0.8.md contains 'Backward Compatibility' section documenting: three additive fields need no migration; water_temp_c values with more than one decimal place must be rounded. Migration steps are listed."
+  - ac: AC-29
+    status: PASS
+    notes: "Test suite covers all listed test cases. Roaster: valid/omitted/empty tests. Roast level: light/medium/dark/omitted/medium_light/Light tests. Elevation: 1950/omitted/0/-100/1950.5 tests. Water temp: 96.0/96.5/93/96.15/96.123 tests plus IEEE 754 edge cases (96.1, 93.3, 0.1, 99.9). Version rejection: v0.7 test present. Schema structure verification: 4 tests checking properties directly. Decimal parsing correctly used throughout."
+notes: |
+  BrewSpec v0.8 implementation is complete and correct. All 29 acceptance criteria are satisfied.
+
+  Schema correctness: brewspec_version const is "0.8", title is "BrewSpec v0.8". coffee.roaster (string, minLength 1, maxLength 100), coffee.roast_level (enum ["light", "medium", "dark"]), origin.elevation_masl (integer, exclusiveMinimum 0), and water_temp_c multipleOf 0.1 are all correctly defined. additionalProperties: false is enforced on coffee, origin, and all other objects.
+
+  Test coverage: 222 tests, all passing. Comprehensive coverage of all new fields with positive and negative cases. Decimal parsing is correctly implemented via _to_decimal() helper and schema fixture uses parse_float=decimal.Decimal. IEEE 754 edge cases (96.1, 93.3, 0.1, 99.9) are explicitly tested.
+
+  Spec document: brewspec-v0.8.md contains complete field reference, What Changed section with additive/breaking separation, Backward Compatibility section with migration steps, and floating-point implementer note in the Validation section.
+
+  Security: No injection risks. All new fields are schema-validated (bounded string, closed enum, positive integer). yaml.safe_load used for YAML parsing. No secrets or PII in examples. Roaster names are well-known specialty coffee companies.
+
+  TDD compliance: Test file is well-organized by AC with clear docstrings referencing specific ACs. Helpers (_to_decimal, _load_yaml_example, _load_example_file) follow the design doc's recommended approach.
+
+  One non-blocking issue: examples/invalid/invalid_type_enum.yaml was not bumped from v0.2 to v0.8. It still fails validation (version mismatch causes rejection), so no test breakage, but it is no longer testing its intended failure (bad type enum). Recommend carrying forward as a minor fix.
+
+  Lint: ruff check passes clean.

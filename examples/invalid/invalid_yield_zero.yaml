@@ -1,6 +1,6 @@
 # Invalid: result.yield_g value of 0 is rejected (exclusiveMinimum: 0).
 # yield_g must be strictly greater than 0 when present.
-brewspec_version: "0.7"
+brewspec_version: "0.8"
 brews:
   - date: "2026-03-16"
     type: "espresso"
