@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
+  "title": "BrewSpec v0.8",
+  "description": "An open standard for describing coffee brews.",
+  "type": "object",
+  "required": ["brewspec_version", "brews"],
+  "additionalProperties": false,
+  "properties": {
+    "brewspec_version": {
+      "const": "0.8",
+      "description": "The BrewSpec version. Must be \"0.8\"."
+    },
+    "brews": {
+      "type": "array",
+      "description": "Array of brew records. At least one brew is required.",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/brew"
+      }
+    }
+  },
+  "$defs": {
+    "brew": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "oneOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "description": "Full ISO 8601 UTC datetime."
+            },
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Date-only in YYYY-MM-DD format."
+            }
+          ],
+          "description": "Brew date. Accepts YYYY-MM-DD (date-only) or YYYY-MM-DDTHH:MM:SSZ (full UTC datetime).",
+          "examples": ["2026-02-21", "2026-02-15T08:30:00Z"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["immersion", "pour_over", "espresso", "hybrid"],
+          "description": "Brew method category."
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Freeform brewer description.",
+          "examples": ["Hario V60", "French press", "AeroPress inverted"]
+        },
+        "dose_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Coffee dose in grams. Must be > 0."
+        },
+        "water_weight_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Water weight in grams. Must be > 0."
+        },
+        "brew_ratio": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Water-to-coffee ratio expressed as a single float (grams of water per gram of coffee). e.g. 15.5 represents 15.5:1 or approximately 64g/L. Can be computed from water_weight_g / dose_g. When both are present, tools should validate consistency; mismatches should be surfaced as a warning, not a schema error."
+        },
+        "water_temp_c": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "multipleOf": 0.1,
+          "description": "Water temperature in celsius. Optional. Range 0-100 inclusive. Constrained to 0.1-degree precision (multipleOf: 0.1). New constraint in v0.8."
+        },
+        "coffee": {
+          "$ref": "#/$defs/coffee"
+        },
+        "water": {
+          "$ref": "#/$defs/water"
+        },
+        "equipment": {
+          "$ref": "#/$defs/equipment"
+        },
+        "grind": {
+          "type": "string",
+          "enum": ["turkish", "espresso", "fine", "medium_fine", "medium", "medium_coarse", "coarse"],
+          "description": "Grind size. Standard vocabulary from finest to coarsest: turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse."
+        },
+        "duration_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Brew duration in seconds. Must be > 0."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Brew-process notes — operational observations about the preparation (e.g. 'washed filter paper', 'water from Brita filter', 'grinder re-calibrated'). For sensory description, use result.tasting_notes."
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        }
+      }
+    },
+    "coffee": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional coffee ingredient descriptor. All fields optional.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150,
+          "description": "A branded product name or human-readable descriptive label for the coffee (e.g. 'Ethiopia Yirgacheffe', 'Blue Bottle Hayes Valley Espresso', 'Estate'). Optional. Not required even when origins[] is populated. New in v0.6.",
+          "examples": ["Ethiopia Yirgacheffe", "Blue Bottle Hayes Valley Espresso", "Estate"]
+        },
+        "roaster": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "The company or person who roasted the coffee. Applies to the coffee as a whole, not to individual origin components.",
+          "examples": ["Onyx", "Tim Wendelboe", "George Howell"]
+        },
+        "roast_level": {
+          "type": "string",
+          "enum": ["light", "medium", "dark"],
+          "description": "Roast level category. Deliberately coarse — three values cover the labels on the majority of retail bags. For finer roast detail, use the brew-level notes field. New in v0.8."
+        },
+        "roast_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Roast date in YYYY-MM-DD format. Plain date; no time component.",
+          "examples": ["2026-01-20"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["single_origin", "blend"],
+          "description": "Whether the coffee is a single origin or a blend."
+        },
+        "origins": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/origin"
+          },
+          "description": "Structured origin records. Array to support blends. Each entry is an origin object with all fields optional. minItems: 1 — omit the field entirely to record no origin data."
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A single origin record within a coffee.origins array. All fields optional. Supports single-origin and blend records.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Descriptive name for this origin component. Plays the same role at the component level as coffee.name does at the coffee level. For single-origin coffees it will typically match coffee.name; for blends it is the name of this specific component (e.g. 'Brazil Natural', 'Colombia Washed').",
+          "examples": ["Ethiopia Yirgacheffe Natural", "Brazil Natural", "Colombia Washed"]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Country of production.",
+          "examples": ["Ethiopia", "Colombia", "Brazil"]
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "State, province, or named growing region within the country.",
+          "examples": ["Yirgacheffe", "Huila", "Minas Gerais"]
+        },
+        "subregion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "District, zone, or sub-area within the region.",
+          "examples": ["Kochere", "Pitalito"]
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Farm, estate, cooperative, or washing station name.",
+          "examples": ["Daye Bensa Washing Station", "Fazenda Santa Ines"]
+        },
+        "process": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Green coffee processing method at origin. Distinct from the removed brew-level coffee.process field.",
+          "examples": ["Washed", "Natural", "Honey"]
+        },
+        "lot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Lot or batch identifier from the producer.",
+          "examples": ["Lot 42", "Export Grade 1"]
+        },
+        "harvest_year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100,
+          "description": "Year the crop was harvested. Four-digit integer.",
+          "examples": [2025, 2024]
+        },
+        "varietal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Coffee varietal for this origin entry. Freeform. Records the coffee variety or cultivar specific to this component (e.g. Heirloom, Gesha, Bourbon). New in v0.6.",
+          "examples": ["Heirloom", "Gesha", "Bourbon", "Catuai", "SL28"]
+        },
+        "elevation_masl": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Growing elevation in meters above sea level. Unit is embedded in the field name, following the established convention (dose_g, water_weight_g, water_temp_c, duration_s, yield_g). New in v0.8.",
+          "examples": [1950, 1200, 2100]
+        }
+      }
+    },
+    "water": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional water ingredient descriptor. All fields optional.",
+      "properties": {
+        "ppm": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Water total dissolved solids in parts per million. Must be >= 0 if present."
+        }
+      }
+    },
+    "equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional equipment descriptor. All fields optional.",
+      "properties": {
+        "grinder": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Grinder model. Freeform.",
+          "examples": ["Comandante C40 MK4", "Baratza Encore ESP"]
+        },
+        "brewer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Brewer or brewing vessel. Freeform.",
+          "examples": ["Hario V60 02", "AeroPress Original", "Moka Pot"]
+        },
+        "grinder_setting": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Grinder dial position or click setting used for this brew. Must be a positive number. Encoding convention: integer for primary increment grinders (e.g. 21 on a Comandante C40); decimal tenths for grinders with sub-steps between primary positions (e.g. 5.2 on a Fellow Ode Gen 2 means primary position 5, second sub-step). The schema does not enforce decimal precision — this convention is guidance for consistent encoding, not a constraint."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Equipment state notes — observations about maintenance, calibration, filter type, or burr age. Distinct from brew-level notes, which record preparation observations.",
+          "examples": ["Burrs replaced 2026-01", "AeroPress rubber seal replaced"]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional brew outcome descriptor. Groups measurements and sensory evaluation. All fields optional.",
+      "properties": {
+        "tds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Total dissolved solids percentage of the finished brew. Must be > 0 if present."
+        },
+        "ey": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Extraction yield as a percentage (e.g., 20.1 for 20.1%). Must be > 0 if present. No maximum enforced."
+        },
+        "brix": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Dissolved sugar content in degrees Brix. A value of 0 is valid (distilled water). Must be >= 0 if present."
+        },
+        "yield_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Output weight of the brew in grams. For espresso, this is the liquid collected in the cup (distinct from water_weight_g, which is the input water). For other brew types, yield_g may approximate water_weight_g less absorbed water. Must be > 0 if present."
+        },
+        "tasting_notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Sensory description of the brew (e.g. 'Bright citrus acidity, caramel sweetness, clean finish'). For brew-process notes, use the top-level notes field."
+        },
+        "ratings": {
+          "$ref": "#/$defs/ratings"
+        }
+      }
+    },
+    "ratings": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional multi-dimensional sensory ratings. Dimensions align with SCA cupping protocol. All fields optional integers 1-5.",
+      "properties": {
+        "overall": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Holistic impression. 1 = poor, 5 = excellent."
+        },
+        "fragrance": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Dry grounds aroma before water is added."
+        },
+        "aroma": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Wet aroma after water is added."
+        },
+        "flavour": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Taste and aroma experienced during drinking."
+        },
+        "aftertaste": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Length and quality of positive flavour attributes after swallowing."
+        },
+        "acidity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Quality (not quantity) of acidity; brightness."
+        },
+        "sweetness": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Perceived sweetness."
+        },
+        "mouthfeel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Tactile sensation; body and texture."
+        }
+      }
+    }
+  }
+}

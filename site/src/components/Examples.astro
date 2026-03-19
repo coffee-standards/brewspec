@@ -5,7 +5,7 @@
 // fragrance, aroma, and sweetness.
 import CodeBlock from './CodeBlock.astro';
 
-const pourOverYaml = `brewspec_version: "0.7"
+const pourOverYaml = `brewspec_version: "0.8"
 brews:
   - date: "2026-02-25"
     type: "pour_over"
@@ -14,8 +14,8 @@ brews:
 
 // Full espresso example — all 8 SCA rating dimensions present:
 // overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel
-// v0.7: result.yield_g added; all brew-level fields now optional.
-const espressoYaml = `brewspec_version: "0.7"
+// v0.8: roaster, roast_level, and elevation_masl added.
+const espressoYaml = `brewspec_version: "0.8"
 brews:
   - date: "2026-02-25T08:30:00Z"
     type: "espresso"
@@ -28,12 +28,15 @@ brews:
     notes: "Re-calibrated grinder after three weeks"
     coffee:
       name: "El Paraiso Washed Castillo"
+      roaster: "Onyx"
+      roast_level: "medium"
       roast_date: "2026-02-10"
       type: "single_origin"
       origins:
         - country: "Colombia"
           region: "Huila"
           varietal: "Castillo"
+          elevation_masl: 1800
     water:
       ppm: 120
     equipment:
