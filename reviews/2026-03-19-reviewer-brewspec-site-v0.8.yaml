@@ -1,0 +1,46 @@
+result:
+  date: "2026-03-19"
+  agent: reviewer
+  task: "BrewSpec Site v0.8 update"
+  verdict: PASS
+
+  summary: >
+    PASS (round 2). All stale v0.7 references fixed in Nav.astro, Footer.astro,
+    and WhoItsFor.astro. All 9 checklist items pass. Schema file matches root
+    exactly. Hero eyebrow reads v0.8. Both YAML examples declare brewspec_version
+    "0.8"; espresso example demonstrates all three v0.8 fields with valid values.
+    WhatItCovers lists all three new fields. No stale v0.7 references remain.
+    Build exits 0. One medium non-blocking finding: deploy-site.yml CI workflow
+    still references v0.4.json in the jq patch step.
+
+  spec_compliance:
+    AC-1_schema_file: PASS
+    AC-2_hero_version: PASS
+    AC-3_examples_v08: PASS
+    AC-4_what_it_covers: PASS
+    AC-5_no_stale_refs: PASS
+    AC-6_nav_links: PASS
+    AC-7_footer_links: PASS
+    AC-8_who_its_for: PASS
+    AC-9_build: PASS
+
+  critical_issues: []
+
+  medium_issues:
+    - id: MED-1
+      severity: Medium
+      file: ".github/workflows/deploy-site.yml"
+      description: >
+        The deploy-site.yml CI workflow still patches the schema $id as
+        v0.4.json (lines 40-41). This step has not been updated since the
+        initial landing page launch. Creates an orphaned v0.4.json in every
+        CI deployment. Does not block deployment — v0.8.json deploys correctly
+        from committed source.
+      suggestion: >
+        Remove the jq step or update it to v0.8. Remove the stale v0.4.json
+        reference either way.
+
+  carry_forward:
+    - >
+      MED-1: Update .github/workflows/deploy-site.yml — jq patch step still
+      references v0.4.json (lines 40-41). Either update or remove.
