@@ -1,19 +1,14 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="1024" height="1024" fill="#F7F5F2"/>
+  <!-- Dark rounded square background -->
+  <rect width="1024" height="1024" rx="192" fill="#1A1814"/>
 
-  <!-- Concentric Rings -->
-  <circle cx="512" cy="512" r="320"
+  <!-- Accent ring -->
+  <circle cx="512" cy="512" r="300"
           fill="none"
-          stroke="#1A1814"
-          stroke-width="28"/>
+          stroke="#C47B2B"
+          stroke-width="80"/>
 
-  <circle cx="512" cy="512" r="220"
-          fill="none"
-          stroke="#1A1814"
-          stroke-width="20"/>
-
-  <!-- Centre Dot -->
-  <circle cx="512" cy="512" r="64"
+  <!-- Centre dot -->
+  <circle cx="512" cy="512" r="120"
           fill="#C47B2B"/>
 </svg>
