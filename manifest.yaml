@@ -65,7 +65,7 @@ products:
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
     spec: specs/products/brewlog.md
-    current_version: "0.6"
+    current_version: "0.7"
   - name: "BrewSpec Site"
     status: "active"
     description: "Public landing page at brewspec.coffee — describes the spec, links to the repo and schema."
@@ -75,6 +75,29 @@ tasks:
   # BrewSpec Schema
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewspec-site-v0.8
+    name: "BrewSpec Site — v0.8 Update"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-19"
+    review_verdict: PASS
+    review_date: "2026-03-19"
+    review: reviews/2026-03-19-reviewer-brewspec-site-v0.8.yaml
+    depends_on:
+      - brewspec-v0.8
+    description: >
+      Update brewspec.coffee landing page for v0.8. Bump version references
+      from 0.7 to 0.8 in Hero eyebrow and schema link. Update Examples section
+      YAML to show v0.8 features (roaster, roast_level, elevation_masl).
+      Update WhatItCovers section to list new coffee fields (roaster, roast level)
+      and origin field (elevation). Add v0.8 schema to site/public/schema/.
+    review_carry_forward:
+      - "MED-1: deploy-site.yml CI workflow still references v0.4.json in jq patch step (lines 40-41) — update or remove"
 
   - id: brewspec-v0.8
     name: "BrewSpec v0.8"
@@ -297,6 +320,34 @@ tasks:
   # BrewLog CLI
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewlog-cli-v0.7
+    name: "BrewLog CLI v0.7"
+    type: feature
+    product: "BrewLog CLI"
+    priority: P1
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-19"
+    review_verdict: PASS
+    review_date: "2026-03-19"
+    review: reviews/2026-03-19-reviewer-brewlog-cli-v0.7.yaml
+    tag: brewlog-v0.7
+    depends_on:
+      - brewlog-cli-v0.6
+      - brewspec-v0.8
+    description: >
+      BrewSpec v0.8 adoption. Bump schema version to 0.8 and bundle updated
+      schema. Add support for three new fields: coffee.roaster (string, max 100),
+      coffee.roast_level (enum: light/medium/dark), and origin.elevation_masl
+      (positive integer). Add water_temp_c multipleOf 0.1 precision validation
+      in the Pydantic model. New DB columns: coffee_roaster (TEXT),
+      coffee_roast_level (TEXT). Update models, db, serialise, prompts, add,
+      update, show, export, and import commands. Update bundled schema. TDD.
+    review_carry_forward:
+      - "_rebuild_brews_table in db.py does not include coffee_roaster/coffee_roast_level — correct by design but add a comment explaining v0.8+ columns are excluded because _apply_migrations adds them after rebuild"
+      - "test_v08.py checks result.output for stderr messages — add comment or set mix_stderr=True explicitly"
 
   - id: brewlog-cli-v0.6
     name: "BrewLog CLI v0.6"
