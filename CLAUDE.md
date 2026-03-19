@@ -229,6 +229,7 @@ Update the manifest status at each handoff. The manifest is the source of truth 
 specs/
   strategy.md              # Business & product strategy
   principles.md            # Product and engineering principles
+  infrastructure.md        # Domains, hosting, email — operational reference
   arch/
     principles.md          # Architecture principles — technical decisions, system design
   decisions/               # Architecture Decision Records (ADRs)
@@ -258,6 +259,7 @@ bugs/                      # Bug tracker
 |----------|---------|-------|
 | `specs/strategy.md` | Why we're building, what products, for whom | strategist |
 | `specs/principles.md` | Overarching decision-making principles | strategist + architect |
+| `specs/infrastructure.md` | Domains, hosting, email — operational reference | orchestrator |
 | `specs/products/*.md` | What to build — user stories, ACs, scope | product-manager |
 | `specs/arch/principles.md` | How we build — technical principles | architect |
 | `specs/decisions/ADR-*.md` | Why we built it this way | architect |
