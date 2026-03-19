@@ -24,6 +24,7 @@ from brewlog.models import (
     EquipmentInput,
     ResultInput,
     RatingsInput,
+    ROAST_LEVEL_ENUM,
     DATE_PATTERN,
 )
 from brewlog.prompts import prompt_brew_type
@@ -79,24 +80,34 @@ def _build_origins_from_flags(
     origin_year: tuple,
     origin_varietal: tuple,
     origin_plain: tuple,
+    elevation_masl: int | None = None,
 ) -> list[OriginInput] | None:
     """
     Build a list of OriginInput objects from the positional-parallel flag tuples.
 
     The structured --origin-* flags take precedence over plain --origin flags.
     If no structured origin flags are given but --origin is, fall back to plain string origins.
+    elevation_masl applies to the first origin entry when provided.
     """
     has_structured = any([
         origin_name, origin_country, origin_region, origin_subregion,
         origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
     ])
 
-    if not has_structured and not origin_plain:
+    if not has_structured and not origin_plain and elevation_masl is None:
         return None
+
+    if not has_structured and not origin_plain and elevation_masl is not None:
+        # Only elevation_masl given — create a single origin with just that field
+        return [OriginInput(elevation_masl=elevation_masl)]
 
     if not has_structured and origin_plain:
         # Legacy: plain string origins
-        return [OriginInput(country=o) for o in origin_plain]
+        origins = [OriginInput(country=o) for o in origin_plain]
+        # Apply elevation_masl to first entry if provided
+        if elevation_masl is not None and origins:
+            origins[0] = OriginInput(country=origins[0].country, elevation_masl=elevation_masl)
+        return origins
 
     # Structured: positional-parallel approach
     # Find the max length across all flag tuples
@@ -111,6 +122,8 @@ def _build_origins_from_flags(
 
     origins = []
     for i in range(max_len):
+        # elevation_masl applies to first origin entry
+        elev = elevation_masl if i == 0 else None
         origin = OriginInput(
             name=_get(origin_name, i),
             country=_get(origin_country, i),
@@ -121,6 +134,7 @@ def _build_origins_from_flags(
             lot=_get(origin_lot, i),
             harvest_year=_get(origin_year, i),
             varietal=_get(origin_varietal, i),
+            elevation_masl=elev,
         )
         origins.append(origin)
     return origins if origins else None
@@ -161,6 +175,12 @@ def _build_origins_from_flags(
               help="Coffee classification: single_origin or blend.")
 @click.option("--coffee-name", "coffee_name",  type=str,   default=None,
               help="Coffee product name or descriptive label (e.g. 'Ethiopia Yirgacheffe').")
+@click.option("--roaster",     "roaster",      type=str,   default=None,
+              help="Roaster name (company or person who roasted the coffee).")
+@click.option("--roast-level", "roast_level",  type=str,   default=None,
+              help="Roast level: light, medium, or dark.")
+@click.option("--elevation-masl", "elevation_masl", type=int, default=None,
+              help="Growing elevation in meters above sea level (> 0). Applies to the first origin entry.")
 @click.option("--origin",      "origin",       type=str,   default=None,
               multiple=True,
               help="Coffee origin (may be repeated: --origin Ethiopia --origin Colombia). Legacy flag.")
@@ -228,6 +248,7 @@ def add(
     brew_ratio,
     method, temp, grind, duration, notes,
     roast_date, coffee_type, coffee_name,
+    roaster, roast_level, elevation_masl,
     origin,
     origin_name, origin_country, origin_region, origin_subregion,
     origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
@@ -269,6 +290,17 @@ def add(
 
     if yield_g is not None and yield_g <= 0:
         click.echo("Error: --yield-g must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if roast_level is not None and roast_level not in ROAST_LEVEL_ENUM:
+        click.echo(
+            f"Error: --roast-level must be one of: {sorted(ROAST_LEVEL_ENUM)}",
+            err=True,
+        )
+        sys.exit(1)
+
+    if elevation_masl is not None and elevation_masl <= 0:
+        click.echo("Error: --elevation-masl must be greater than 0.", err=True)
         sys.exit(1)
 
     # Validate --origin-varietal entries (non-empty when supplied)
@@ -330,7 +362,10 @@ def add(
         origin_name, origin_country, origin_region, origin_subregion,
         origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
     ])
-    has_coffee = any([roast_date, coffee_type, coffee_name, origin, has_structured_origin])
+    has_coffee = any([
+        roast_date, coffee_type, coffee_name, roaster, roast_level,
+        origin, has_structured_origin, elevation_masl is not None,
+    ])
     coffee_obj = None
     if has_coffee:
         try:
@@ -338,11 +373,14 @@ def add(
                 origin_name, origin_country, origin_region, origin_subregion,
                 origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
                 origin,
+                elevation_masl=elevation_masl,
             )
             coffee_obj = CoffeeInput(
                 roast_date=roast_date,
                 type=coffee_type,
                 name=coffee_name,
+                roaster=roaster,
+                roast_level=roast_level,
                 origins=origins_list,
             )
         except ValidationError as exc:

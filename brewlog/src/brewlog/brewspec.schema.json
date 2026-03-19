@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.7",
+  "title": "BrewSpec v0.8",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.7",
-      "description": "The BrewSpec version. Must be \"0.7\"."
+      "const": "0.8",
+      "description": "The BrewSpec version. Must be \"0.8\"."
     },
     "brews": {
       "type": "array",
@@ -71,7 +71,8 @@
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Water temperature in celsius. Optional. Range 0-100 inclusive."
+          "multipleOf": 0.1,
+          "description": "Water temperature in celsius. Optional. Range 0-100 inclusive. Constrained to 0.1-degree precision (multipleOf: 0.1). New constraint in v0.8."
         },
         "coffee": {
           "$ref": "#/$defs/coffee"
@@ -114,6 +115,18 @@
           "maxLength": 150,
           "description": "A branded product name or human-readable descriptive label for the coffee (e.g. 'Ethiopia Yirgacheffe', 'Blue Bottle Hayes Valley Espresso', 'Estate'). Optional. Not required even when origins[] is populated. New in v0.6.",
           "examples": ["Ethiopia Yirgacheffe", "Blue Bottle Hayes Valley Espresso", "Estate"]
+        },
+        "roaster": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "The company or person who roasted the coffee. Applies to the coffee as a whole, not to individual origin components.",
+          "examples": ["Onyx", "Tim Wendelboe", "George Howell"]
+        },
+        "roast_level": {
+          "type": "string",
+          "enum": ["light", "medium", "dark"],
+          "description": "Roast level category. Deliberately coarse — three values cover the labels on the majority of retail bags. For finer roast detail, use the brew-level notes field. New in v0.8."
         },
         "roast_date": {
           "type": "string",
@@ -203,6 +216,12 @@
           "maxLength": 100,
           "description": "Coffee varietal for this origin entry. Freeform. Records the coffee variety or cultivar specific to this component (e.g. Heirloom, Gesha, Bourbon). New in v0.6.",
           "examples": ["Heirloom", "Gesha", "Bourbon", "Catuai", "SL28"]
+        },
+        "elevation_masl": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Growing elevation in meters above sea level. Unit is embedded in the field name, following the established convention (dose_g, water_weight_g, water_temp_c, duration_s, yield_g). New in v0.8.",
+          "examples": [1950, 1200, 2100]
         }
       }
     },
