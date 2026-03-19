@@ -110,6 +110,8 @@ tasks:
          no consumer thermometer measures beyond 0.1°C precision.
 
       All changes are additive and non-breaking.
+    review_carry_forward:
+      - "examples/invalid/invalid_type_enum.yaml still has brewspec_version: \"0.2\" — bump to current version so it tests the intended failure (bad type enum) rather than version mismatch"
 
   - id: brewspec-v0.7
     name: "BrewSpec v0.7"
