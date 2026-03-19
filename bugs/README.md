@@ -53,5 +53,6 @@ Copy `specs/templates/bug-report.md` to start a new bug file.
 
 | ID | Slug | Severity | Status | Area |
 |---|---|---|---|---|
+| BUG-001 | site-favicon-missing | low | in_progress | frontend |
 
 *Update this table when adding or closing a bug.*
