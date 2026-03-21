@@ -1,4 +1,4 @@
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
@@ -38,6 +38,7 @@ brews:
         fragrance: 4
         aroma: 5
         flavour: 5
+        aftertaste: 7
         acidity: 5
         sweetness: 4
         mouthfeel: 4

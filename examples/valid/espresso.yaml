@@ -1,4 +1,4 @@
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-02-13T06:45:00Z"
     type: "espresso"

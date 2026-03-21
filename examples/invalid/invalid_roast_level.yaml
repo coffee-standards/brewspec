@@ -1,4 +1,4 @@
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - coffee:
       roast_level: "medium_light"

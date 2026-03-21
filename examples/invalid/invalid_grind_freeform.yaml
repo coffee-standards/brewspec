@@ -1,6 +1,6 @@
 # This file demonstrates that a freeform grind value is rejected.
 # grind accepts only: turkish, espresso, fine, medium_fine, medium, medium_coarse, coarse
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-02-21"
     type: "pour_over"
