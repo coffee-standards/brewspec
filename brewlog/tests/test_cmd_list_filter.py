@@ -382,8 +382,8 @@ def test_filter_rating_min_invalid_zero(runner):
 
 
 def test_filter_rating_min_invalid_high(runner):
-    """AC-2: --rating-min 6 -> exit 1."""
-    result = runner.invoke(cli, ["list", "--rating-min", "6"])
+    """AC-2: --rating-min 10 -> exit 1 (v0.9: max is 9)."""
+    result = runner.invoke(cli, ["list", "--rating-min", "10"])
     assert result.exit_code == 1
 
 
@@ -394,8 +394,8 @@ def test_filter_rating_max_invalid_zero(runner):
 
 
 def test_filter_rating_max_invalid_high(runner):
-    """AC-3: --rating-max 6 -> exit 1."""
-    result = runner.invoke(cli, ["list", "--rating-max", "6"])
+    """AC-3: --rating-max 10 -> exit 1 (v0.9: max is 9)."""
+    result = runner.invoke(cli, ["list", "--rating-max", "10"])
     assert result.exit_code == 1
 
 

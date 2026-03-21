@@ -45,6 +45,5 @@ def stats(ctx: click.Context) -> None:
 
     click.echo("Distribution:")
     dist = stats_data["rating_distribution"]
-    for star in range(1, 6):
-        label = f"{star} star:" if star == 1 else f"{star} stars:"
-        click.echo(f"  {label:<8}{dist[star]}")
+    for rating in range(1, 10):
+        click.echo(f"  {rating}:{dist[rating]:>3}")

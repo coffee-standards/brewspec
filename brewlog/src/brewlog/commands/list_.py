@@ -252,11 +252,11 @@ def _render_table(rows) -> None:
 )
 @click.option(
     "--rating-min", "rating_min", type=int, default=None,
-    help="Filter brews with overall rating >= N (1-5).",
+    help="Filter brews with overall rating >= N (1-9).",
 )
 @click.option(
     "--rating-max", "rating_max", type=int, default=None,
-    help="Filter brews with overall rating <= N (1-5).",
+    help="Filter brews with overall rating <= N (1-9).",
 )
 @click.pass_context
 def list_cmd(
@@ -317,17 +317,17 @@ def list_cmd(
             sys.exit(1)
 
     # Validate --rating-min
-    if rating_min is not None and not (1 <= rating_min <= 5):
+    if rating_min is not None and not (1 <= rating_min <= 9):
         click.echo(
-            "Error: --rating-min must be an integer between 1 and 5.",
+            "Error: --rating-min must be an integer between 1 and 9.",
             err=True,
         )
         sys.exit(1)
 
     # Validate --rating-max
-    if rating_max is not None and not (1 <= rating_max <= 5):
+    if rating_max is not None and not (1 <= rating_max <= 9):
         click.echo(
-            "Error: --rating-max must be an integer between 1 and 5.",
+            "Error: --rating-max must be an integer between 1 and 9.",
             err=True,
         )
         sys.exit(1)

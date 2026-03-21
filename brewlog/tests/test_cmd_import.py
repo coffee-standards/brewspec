@@ -210,8 +210,8 @@ def test_import_v03_file_lists_migration_changes(runner_with_db):
     """AC-13: error message lists required structural changes."""
     fixture = str(FIXTURES_DIR / "invalid_v03_file.yaml")
     result = runner_with_db.invoke(cli, ["import", fixture])
-    # Must mention migration steps (v0.7 to v0.8: bump version)
-    assert "brewspec_version" in result.output.lower() or "0.8" in result.output
+    # Must mention migration steps (v0.8 to v0.9: bump version)
+    assert "brewspec_version" in result.output.lower() or "0.9" in result.output
 
 
 def test_import_v03_file_points_to_migration_guide(runner_with_db):
@@ -260,10 +260,10 @@ def test_import_v04_exact_error_message(runner_with_db):
     result = runner_with_db.invoke(cli, ["import", fixture])
     expected = (
         'Error: This file uses BrewSpec v0.3, which is not supported by BrewLog v0.8.\n'
-        'BrewLog v0.8 requires BrewSpec v0.8.\n'
+        'BrewLog v0.8 requires BrewSpec v0.9.\n'
         '\n'
-        'To migrate your file from v0.7 to v0.8, make the following changes:\n'
-        '  1. Bump brewspec_version from "0.7" to "0.8"\n'
+        'To migrate your file from v0.8 to v0.9, make the following changes:\n'
+        '  1. Bump brewspec_version from "0.8" to "0.9"\n'
         '\n'
         'Full migration guide: https://github.com/coffee-standards/brewspec'
     )

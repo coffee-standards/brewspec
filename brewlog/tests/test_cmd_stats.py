@@ -114,8 +114,8 @@ class TestStatsCommand:
         # Average of 4, 5, 3 = 4.0
         assert "4.0" in result.output
 
-    def test_stats_rating_distribution_all_stars(self, runner, db_path):
-        """AC-2: Distribution shows all 5 star levels."""
+    def test_stats_rating_distribution_all_levels(self, runner, db_path):
+        """AC-8 (v0.9): Distribution shows all 9 rating levels with numeric labels."""
         conn = db_module.get_connection(db_path=db_path)
         try:
             for r, day in [(1, 19), (2, 20), (3, 21), (4, 22), (5, 23)]:
@@ -128,8 +128,11 @@ class TestStatsCommand:
         finally:
             conn.close()
         result = runner.invoke(cli, ["stats"])
-        for star in ["1 star", "2 star", "3 star", "4 star", "5 star"]:
-            assert star in result.output
+        # Numeric labels 1-9 must all appear
+        for i in range(1, 10):
+            assert f"  {i}:" in result.output
+        # Old star labels must not appear
+        assert "star" not in result.output
 
     def test_stats_brew_summary_section(self, runner, db_path):
         """AC-3: Output has 'Brew Summary' section header."""

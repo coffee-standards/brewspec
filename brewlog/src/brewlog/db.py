@@ -683,7 +683,7 @@ def get_brew_stats(conn: sqlite3.Connection) -> dict:
       total: int
       most_common_type: str | None
       avg_overall_rating: float | None
-      rating_distribution: dict[int, int]  {1: count, ..., 5: count}
+      rating_distribution: dict[int, int]  {1: count, ..., 9: count}
 
     All queries are read-only; no user input involved.
     """
@@ -706,9 +706,9 @@ def get_brew_stats(conn: sqlite3.Connection) -> dict:
         "WHERE result_rating_overall IS NOT NULL "
         "GROUP BY result_rating_overall ORDER BY result_rating_overall"
     ).fetchall()
-    distribution = {i: 0 for i in range(1, 6)}
+    distribution = {i: 0 for i in range(1, 10)}
     for star, count in dist_rows:
-        if 1 <= star <= 5:
+        if 1 <= star <= 9:
             distribution[star] = count
 
     return {

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-BREWSPEC_VERSION = "0.8"
+BREWSPEC_VERSION = "0.9"
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ _RATING_DIMS = [
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.8 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v0.9 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).
@@ -159,8 +159,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.8 document dict.
-    Returns {"brewspec_version": "0.8", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec v0.9 document dict.
+    Returns {"brewspec_version": "0.9", "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.

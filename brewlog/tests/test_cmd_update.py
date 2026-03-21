@@ -303,9 +303,9 @@ def test_update_all_rating_dimensions_stored(runner, db_path, monkeypatch):
 
 
 def test_update_rating_invalid_exits_1(runner):
-    """AC-33: --rating-overall 6 -> exit 1."""
+    """AC-33: --rating-overall 10 -> exit 1 (v0.9: max is 9)."""
     _add_brew(runner)
-    result = runner.invoke(cli, ["update", "--rating-overall", "6"])
+    result = runner.invoke(cli, ["update", "--rating-overall", "10"])
     assert result.exit_code == 1
 
 
