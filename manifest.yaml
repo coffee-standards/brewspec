@@ -60,12 +60,12 @@ products:
     status: "in_progress"
     description: "Open source standard for describing coffee brews (YAML/JSON). The trust anchor — free and open forever."
     spec: specs/products/brewspec.md
-    current_version: "0.8"
+    current_version: "0.9"
   - name: "BrewLog CLI"
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
     spec: specs/products/brewlog.md
-    current_version: "0.7"
+    current_version: "0.8"
   - name: "BrewSpec Site"
     status: "active"
     description: "Public landing page at brewspec.coffee — describes the spec, links to the repo and schema."
@@ -75,6 +75,43 @@ tasks:
   # BrewSpec Schema
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewspec-v0.9
+    name: "BrewSpec v0.9"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: standard
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-22"
+    review_verdict: PASS
+    review_date: "2026-03-21"
+    review: reviews/2026-03-21-reviewer-brewspec-v0.9.yaml
+    tag: v0.9
+    artifacts:
+      spec: specs/products/brewspec-v0.9.md
+      design: specs/designs/brewspec-v0.9.md
+      adr: specs/decisions/ADR-001-ratings-scale-cva-hedonic.md
+    depends_on:
+      - brewspec-v0.8
+    description: >
+      Align ratings with the SCA Coffee Value Assessment (CVA) standard
+      (SCA-104, adopted 2024). Two breaking changes:
+
+      1. Update minimum/maximum on all ratings fields from 1-5 to 1-9.
+         The CVA uses a 9-point hedonic scale (1 = dislike extremely,
+         9 = like extremely).
+
+      2. Rename ratings.body → ratings.mouthfeel to match CVA terminology.
+
+      Also:
+      3. Update rating descriptions to reflect the 1-9 scale and CVA semantics.
+      4. Update all valid/invalid examples that reference ratings.
+      5. Update the spec document.
+
+      Existing 1-5 values remain valid under the expanded 1-9 range. The
+      body → mouthfeel rename is a breaking field change.
 
   - id: brewspec-site-v0.8
     name: "BrewSpec Site — v0.8 Update"
@@ -320,6 +357,51 @@ tasks:
   # BrewLog CLI
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewlog-cli-v0.8
+    name: "BrewLog CLI v0.8"
+    type: feature
+    product: "BrewLog CLI"
+    priority: P1
+    tier: standard
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-22"
+    review_verdict: PASS
+    review_date: "2026-03-21"
+    review: reviews/2026-03-21-reviewer-brewlog-cli-v0.8.yaml
+    tag: brewlog-v0.8
+    depends_on:
+      - brewlog-cli-v0.7
+      - brewspec-v0.9
+    artifacts:
+      spec: specs/products/brewlog-cli-v0.8.md
+      design: specs/designs/brewlog-cli-v0.8.md
+    description: >
+      BrewSpec v0.9 adoption. Rating range change from 1-5 to 1-9 across
+      Pydantic model, CLI prompts/flags, list filters, and stats display.
+      No DB migration needed — mouthfeel column already exists, and INTEGER
+      columns accept the wider range without schema change. Bundle updated
+      v0.9 schema. Bump BREWSPEC_VERSION to 0.9. TDD.
+
+  - id: brewspec-site-v0.9
+    name: "BrewSpec Site — v0.9 Update"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-22"
+    depends_on:
+      - brewspec-v0.9
+      - brewspec-site-v0.8
+    description: >
+      Update brewspec.coffee landing page for v0.9. Bump version references
+      from 0.8 to 0.9 in Hero eyebrow and schema link. Update Examples section
+      YAML to show v0.9 rating scale (1-9) and mouthfeel field (renamed from
+      body). Update WhatItCovers section if ratings are mentioned. Add v0.9
+      schema to site/public/schema/.
 
   - id: brewlog-cli-v0.7
     name: "BrewLog CLI v0.7"
