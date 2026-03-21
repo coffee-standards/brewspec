@@ -1,5 +1,5 @@
 # Invalid: grinder_setting must be a number in v0.6; string is rejected.
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-01"
     type: "pour_over"
