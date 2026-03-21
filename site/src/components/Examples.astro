@@ -5,7 +5,7 @@
 // fragrance, aroma, and sweetness.
 import CodeBlock from './CodeBlock.astro';
 
-const pourOverYaml = `brewspec_version: "0.8"
+const pourOverYaml = `brewspec_version: "0.9"
 brews:
   - date: "2026-02-25"
     type: "pour_over"
@@ -14,8 +14,8 @@ brews:
 
 // Full espresso example — all 8 SCA rating dimensions present:
 // overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel
-// v0.8: roaster, roast_level, and elevation_masl added.
-const espressoYaml = `brewspec_version: "0.8"
+// v0.9: ratings scale updated to 1-9 (CVA hedonic scale).
+const espressoYaml = `brewspec_version: "0.9"
 brews:
   - date: "2026-02-25T08:30:00Z"
     type: "espresso"
@@ -49,14 +49,14 @@ brews:
       brix: 4.6
       tasting_notes: "Dark chocolate, orange peel, long clean finish"
       ratings:
-        overall: 4
-        fragrance: 4
-        aroma: 4
-        flavour: 5
-        acidity: 4
-        aftertaste: 4
-        sweetness: 3
-        mouthfeel: 3`;
+        overall: 7
+        fragrance: 7
+        aroma: 7
+        flavour: 8
+        acidity: 7
+        aftertaste: 7
+        sweetness: 6
+        mouthfeel: 6`;
 ---
 <section id="examples">
   <div class="wide-width">
