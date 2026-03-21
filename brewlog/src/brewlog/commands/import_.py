@@ -1,7 +1,7 @@
 """
 `brewlog import` command.
 
-Imports brews from a BrewSpec v0.8 YAML or JSON file.
+Imports brews from a BrewSpec v0.9 YAML or JSON file.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
@@ -18,14 +18,14 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v0.8 BrewSpec files.
+# Verbatim error message for non-v0.9 BrewSpec files.
 # The {version} placeholder is replaced with the version string found in the file.
-_V08_REQUIRED_MSG = """\
+_V09_REQUIRED_MSG = """\
 Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.8.
-BrewLog v0.8 requires BrewSpec v0.8.
+BrewLog v0.8 requires BrewSpec v0.9.
 
-To migrate your file from v0.7 to v0.8, make the following changes:
-  1. Bump brewspec_version from "0.7" to "0.8"
+To migrate your file from v0.8 to v0.9, make the following changes:
+  1. Bump brewspec_version from "0.8" to "0.9"
 
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
@@ -51,7 +51,7 @@ def _brew_exists(brew_dict: dict, conn) -> bool:
 @click.argument("path", type=str)
 @click.pass_context
 def import_cmd(ctx: click.Context, path: str) -> None:
-    """Import brews from a BrewSpec v0.8 YAML or JSON file."""
+    """Import brews from a BrewSpec v0.9 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
     in_path = serialise.validate_import_path(path)
@@ -89,11 +89,11 @@ def import_cmd(ctx: click.Context, path: str) -> None:
         click.echo("Error: file content is not a valid BrewSpec document.", err=True)
         sys.exit(1)
 
-    # -- Check for non-v0.8 BrewSpec version before schema validation --
+    # -- Check for non-v0.9 BrewSpec version before schema validation --
     file_version = str(doc.get("brewspec_version", ""))
-    if file_version != "0.8":
+    if file_version != "0.9":
         version_label = file_version if file_version else "(unknown)"
-        click.echo(_V08_REQUIRED_MSG.format(version=version_label), err=True)
+        click.echo(_V09_REQUIRED_MSG.format(version=version_label), err=True)
         sys.exit(1)
 
     # -- Schema validation (before any DB writes or dedup checks) AC-19 --

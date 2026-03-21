@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json",
-  "title": "BrewSpec v0.8",
+  "title": "BrewSpec v0.9",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "0.8",
-      "description": "The BrewSpec version. Must be \"0.8\"."
+      "const": "0.9",
+      "description": "The BrewSpec version. Must be \"0.9\"."
     },
     "brews": {
       "type": "array",
@@ -309,55 +309,55 @@
     "ratings": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Optional multi-dimensional sensory ratings. Dimensions align with SCA cupping protocol. All fields optional integers 1-5.",
+      "description": "Optional multi-dimensional sensory ratings. Dimensions align with the SCA Coffee Value Assessment (CVA) hedonic scale. All fields optional integers 1-9.",
       "properties": {
         "overall": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Holistic impression. 1 = poor, 5 = excellent."
+          "maximum": 9,
+          "description": "Holistic impression. 1 = poor, 9 = excellent. SCA CVA 9-point hedonic scale."
         },
         "fragrance": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Dry grounds aroma before water is added."
+          "maximum": 9,
+          "description": "Dry grounds aroma before water is added. 1-9."
         },
         "aroma": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Wet aroma after water is added."
+          "maximum": 9,
+          "description": "Wet aroma after water is added. 1-9."
         },
         "flavour": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Taste and aroma experienced during drinking."
+          "maximum": 9,
+          "description": "Taste and aroma experienced during drinking. 1-9."
         },
         "aftertaste": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Length and quality of positive flavour attributes after swallowing."
+          "maximum": 9,
+          "description": "Length and quality of positive flavour attributes after swallowing. 1-9."
         },
         "acidity": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Quality (not quantity) of acidity; brightness."
+          "maximum": 9,
+          "description": "Quality (not quantity) of acidity; brightness. 1-9."
         },
         "sweetness": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Perceived sweetness."
+          "maximum": 9,
+          "description": "Perceived sweetness. 1-9."
         },
         "mouthfeel": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
-          "description": "Tactile sensation; body and texture."
+          "maximum": 9,
+          "description": "Tactile sensation; body and texture. 1-9."
         }
       }
     }

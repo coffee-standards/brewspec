@@ -5,8 +5,8 @@ Covers:
 - Pydantic model validation: roaster, roast_level, elevation_masl, water_temp_c precision
 - DB migration: coffee_roaster and coffee_roast_level columns
 - insert_brew() and insert_brew_dict() with new fields
-- Serialise: export includes roaster, roast_level; BREWSPEC_VERSION is "0.8"
-- Import: v0.8 documents accepted, v0.7 documents rejected with new message
+- Serialise: export includes roaster, roast_level; BREWSPEC_VERSION is "0.9" (updated in CLI v0.8)
+- Import: v0.9 documents accepted, v0.7 documents rejected with updated message
 - add command: --roaster, --roast-level, --elevation-masl flags
 - update command: --roaster, --roast-level flags
 - show command: roaster and roast_level displayed in Coffee section
@@ -371,16 +371,16 @@ def test_insert_brew_dict_elevation_masl_in_origins_json(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Serialise: BREWSPEC_VERSION is "0.8"
+# Serialise: BREWSPEC_VERSION is "0.9"
 # ---------------------------------------------------------------------------
 
-def test_brewspec_version_constant_is_08():
-    """BREWSPEC_VERSION constant in serialise.py is '0.8'."""
-    assert BREWSPEC_VERSION == "0.8"
+def test_brewspec_version_constant_is_09():
+    """BREWSPEC_VERSION constant in serialise.py is '0.9' (updated in v0.8 CLI)."""
+    assert BREWSPEC_VERSION == "0.9"
 
 
-def test_rows_to_brewspec_document_version_is_08(tmp_path):
-    """rows_to_brewspec_document() produces brewspec_version '0.8'."""
+def test_rows_to_brewspec_document_version_is_09(tmp_path):
+    """rows_to_brewspec_document() produces brewspec_version '0.9'."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
         INSERT INTO brews (date, type, dose_g, water_weight_g)
@@ -391,7 +391,7 @@ def test_rows_to_brewspec_document_version_is_08(tmp_path):
     conn.close()
 
     doc = rows_to_brewspec_document(rows)
-    assert doc["brewspec_version"] == "0.8"
+    assert doc["brewspec_version"] == "0.9"
 
 
 # ---------------------------------------------------------------------------
@@ -482,32 +482,32 @@ def test_row_to_brew_dict_elevation_masl_round_trips(tmp_path):
 # Bundled schema version
 # ---------------------------------------------------------------------------
 
-def test_bundled_schema_is_v08():
-    """brewlog/src/brewlog/brewspec.schema.json must declare version 0.8."""
+def test_bundled_schema_is_v09():
+    """brewlog/src/brewlog/brewspec.schema.json must declare version 0.9 (updated in CLI v0.8)."""
     import importlib.resources
     import json as json_mod
     with importlib.resources.files("brewlog").joinpath("brewspec.schema.json").open(
         "r", encoding="utf-8"
     ) as f:
         schema = json_mod.load(f)
-    assert schema["properties"]["brewspec_version"]["const"] == "0.8"
+    assert schema["properties"]["brewspec_version"]["const"] == "0.9"
 
 
 # ---------------------------------------------------------------------------
-# Import: v0.8 document accepted
+# Import: v0.9 document accepted
 # ---------------------------------------------------------------------------
 
-def test_import_v08_doc_accepted(tmp_path):
-    """Importing a v0.8 document succeeds."""
+def test_import_v09_doc_accepted(tmp_path):
+    """Importing a v0.9 document succeeds (CLI v0.8 adopts BrewSpec v0.9)."""
     yaml_content = """
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
     water_weight_g: 320.0
 """
-    doc_path = tmp_path / "v08.yaml"
+    doc_path = tmp_path / "v09.yaml"
     doc_path.write_text(yaml_content)
     db_path = tmp_path / "test.db"
 
@@ -517,10 +517,10 @@ brews:
     assert "1 brews added" in result.output
 
 
-def test_import_v08_doc_with_roaster_stores_roaster(tmp_path):
-    """Importing a v0.8 document with coffee.roaster stores it in DB."""
+def test_import_v09_doc_with_roaster_stores_roaster(tmp_path):
+    """Importing a v0.9 document with coffee.roaster stores it in DB."""
     yaml_content = """
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
@@ -530,7 +530,7 @@ brews:
       roaster: "Onyx"
       roast_level: "light"
 """
-    doc_path = tmp_path / "v08_roaster.yaml"
+    doc_path = tmp_path / "v09_roaster.yaml"
     doc_path.write_text(yaml_content)
     db_path = tmp_path / "test.db"
 
@@ -547,10 +547,10 @@ brews:
     assert rows[0]["coffee_roast_level"] == "light"
 
 
-def test_import_v08_doc_with_elevation_masl_stores_in_origins(tmp_path):
-    """Importing a v0.8 document with elevation_masl stores it in origins JSON."""
+def test_import_v09_doc_with_elevation_masl_stores_in_origins(tmp_path):
+    """Importing a v0.9 document with elevation_masl stores it in origins JSON."""
     yaml_content = """
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
@@ -561,7 +561,7 @@ brews:
         - country: "Ethiopia"
           elevation_masl: 2100
 """
-    doc_path = tmp_path / "v08_elevation.yaml"
+    doc_path = tmp_path / "v09_elevation.yaml"
     doc_path.write_text(yaml_content)
     db_path = tmp_path / "test.db"
 
@@ -579,11 +579,11 @@ brews:
 
 
 # ---------------------------------------------------------------------------
-# Import: v0.7 document rejected with v0.8 message
+# Import: v0.7 document rejected with v0.9 message
 # ---------------------------------------------------------------------------
 
-def test_import_v07_file_rejected_with_v08_message(tmp_path):
-    """Importing a v0.7 document is rejected with a message referencing v0.8."""
+def test_import_v07_file_rejected_with_v09_message(tmp_path):
+    """Importing a v0.7 document is rejected with a message referencing v0.9."""
     yaml_content = """
 brewspec_version: "0.7"
 brews:
@@ -600,11 +600,11 @@ brews:
     result = runner.invoke(cli, ["--db", str(db_path), "import", str(doc_path)])
     assert result.exit_code == 1
     assert "0.7" in result.output
-    assert "0.8" in result.output
+    assert "0.9" in result.output
 
 
 def test_import_exact_v07_rejection_message(tmp_path):
-    """Exact rejection message for v0.7 file references v0.8 correctly."""
+    """Exact rejection message for v0.7 file references v0.9 correctly."""
     yaml_content = """
 brewspec_version: "0.7"
 brews:
@@ -622,19 +622,19 @@ brews:
     assert result.exit_code == 1
     expected = (
         "Error: This file uses BrewSpec v0.7, which is not supported by BrewLog v0.8.\n"
-        "BrewLog v0.8 requires BrewSpec v0.8."
+        "BrewLog v0.8 requires BrewSpec v0.9."
     )
     assert expected in result.output
 
 
 # ---------------------------------------------------------------------------
-# Import round-trip: v0.8 fields survive import → export
+# Import round-trip: v0.9 fields survive import → export
 # ---------------------------------------------------------------------------
 
-def test_import_export_roundtrip_v08_roaster_and_level(tmp_path):
-    """roaster and roast_level survive import → DB → export unchanged."""
+def test_import_export_roundtrip_v09_roaster_and_level(tmp_path):
+    """roaster and roast_level survive import → DB → export unchanged (v0.9 doc)."""
     yaml_content = """
-brewspec_version: "0.8"
+brewspec_version: "0.9"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
@@ -644,7 +644,7 @@ brews:
       roaster: "Onyx"
       roast_level: "light"
 """
-    doc_path = tmp_path / "v08.yaml"
+    doc_path = tmp_path / "v09.yaml"
     doc_path.write_text(yaml_content)
     db_path = tmp_path / "test.db"
 
@@ -657,7 +657,7 @@ brews:
     doc = rows_to_brewspec_document(rows)
     conn.close()
 
-    assert doc["brewspec_version"] == "0.8"
+    assert doc["brewspec_version"] == "0.9"
     brew = doc["brews"][0]
     assert brew["coffee"]["roaster"] == "Onyx"
     assert brew["coffee"]["roast_level"] == "light"

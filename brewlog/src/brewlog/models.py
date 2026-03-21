@@ -7,7 +7,7 @@ These models serve two purposes:
   2. Secondary validation layer — after JSON Schema validation on import, each
      brew can optionally be run through BrewInput for additional checks.
 
-Field names mirror BrewSpec v0.8 snake_case names exactly.
+Field names mirror BrewSpec v0.9 snake_case names exactly.
 """
 
 from __future__ import annotations
@@ -212,7 +212,7 @@ class EquipmentInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 class RatingsInput(BaseModel):
-    """Optional multi-dimensional sensory ratings. All fields optional integers 1-5."""
+    """Optional multi-dimensional sensory ratings. All fields optional integers 1-9 (SCA CVA hedonic scale)."""
 
     overall: Optional[int] = None
     fragrance: Optional[int] = None
@@ -229,8 +229,8 @@ class RatingsInput(BaseModel):
     )
     @classmethod
     def validate_rating_dimension(cls, v: Optional[int]) -> Optional[int]:
-        if v is not None and not (1 <= v <= 5):
-            raise ValueError("rating dimension must be between 1 and 5 inclusive")
+        if v is not None and not (1 <= v <= 9):
+            raise ValueError("rating dimension must be between 1 and 9 inclusive")
         return v
 
 
@@ -285,7 +285,7 @@ class ResultInput(BaseModel):
 # ---------------------------------------------------------------------------
 
 class BrewInput(BaseModel):
-    """Primary model for a brew log entry. Validates all BrewSpec v0.8 constraints."""
+    """Primary model for a brew log entry. Validates all BrewSpec v0.9 constraints."""
 
     # In v0.7 these four fields are optional at the schema level.
     # The CLI add/update commands still collect them interactively.

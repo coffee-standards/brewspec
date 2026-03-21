@@ -120,14 +120,14 @@ def test_add_invalid_temp_out_of_range(runner_with_db):
 
 
 def test_add_invalid_overall_out_of_range(runner_with_db):
-    """AC-9/AC-26: --rating-overall 6 -> error, exit 1."""
+    """AC-9/AC-26: --rating-overall 10 -> error, exit 1 (v0.9: max is 9)."""
     result = runner_with_db.invoke(cli, [
         "add",
         "--date", "2026-02-19T08:30:00Z",
         "--type", "pour_over",
         "--dose", "18.0",
         "--water", "280.0",
-        "--rating-overall", "6",
+        "--rating-overall", "10",
     ])
     assert result.exit_code == 1
 
@@ -683,11 +683,11 @@ def test_add_rating_overall_invalid_zero(runner_with_db):
     assert result.exit_code == 1
 
 
-def test_add_rating_overall_invalid_six(runner_with_db):
-    """AC-26: --rating-overall 6 -> exit 1."""
+def test_add_rating_overall_invalid_ten(runner_with_db):
+    """AC-26: --rating-overall 10 -> exit 1 (v0.9: max is 9)."""
     result = runner_with_db.invoke(cli, [
         "add", "--date", "2026-02-22", "--type", "pour_over",
-        "--dose", "18.0", "--water", "280.0", "--rating-overall", "6",
+        "--dose", "18.0", "--water", "280.0", "--rating-overall", "10",
     ])
     assert result.exit_code == 1
 

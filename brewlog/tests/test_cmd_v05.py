@@ -74,19 +74,19 @@ def _insert_brew(db_path, **kwargs):
 
 
 class TestVersionBump:
-    """v0.6.0 version string appears in the welcome screen and --version output."""
+    """v0.8.0 version string appears in the welcome screen and --version output."""
 
-    def test_welcome_screen_shows_v060(self, runner):
-        """Welcome screen shows 'BrewLog v0.6.0'."""
+    def test_welcome_screen_shows_v080(self, runner):
+        """Welcome screen shows 'BrewLog v0.8.0'."""
         result = runner.invoke(cli, [])
         assert result.exit_code == 0
-        assert "0.6.0" in result.output
+        assert "0.8.0" in result.output
 
-    def test_version_flag_shows_v060(self, runner):
-        """--version outputs 0.6.0."""
+    def test_version_flag_shows_v080(self, runner):
+        """--version outputs 0.8.0."""
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "0.6.0" in result.output
+        assert "0.8.0" in result.output
 
 
 # ===========================================================================
@@ -300,7 +300,7 @@ class TestStats:
         assert "No ratings logged" in result.output
 
     def test_stats_rating_distribution(self, runner, db_path):
-        """AC-2: Rating distribution shows counts for stars 1-5."""
+        """AC-8 (v0.9): Rating distribution shows counts for ratings 1-9 with numeric labels."""
         conn = db_module.get_connection(db_path=db_path)
         try:
             for r in [1, 3, 3, 5]:
@@ -316,10 +316,11 @@ class TestStats:
             conn.close()
         result = runner.invoke(cli, ["stats"])
         assert result.exit_code == 0
-        assert "1 star" in result.output
-        assert "2 star" in result.output  # 0 count but still shown
-        assert "3 star" in result.output
-        assert "5 star" in result.output
+        # All 9 numeric labels must appear
+        for i in range(1, 10):
+            assert f"  {i}:" in result.output
+        # Old star labels must not appear
+        assert "star" not in result.output
 
     def test_stats_output_sections(self, runner, db_path):
         """AC-3: Output has required sections: Brew Summary, Ratings."""
@@ -555,7 +556,7 @@ class TestImportDeduplication:
     """Import deduplication: skip brews that already exist."""
 
     def _make_valid_v06_yaml(self, brews_list):
-        doc = {"brewspec_version": "0.8", "brews": brews_list}
+        doc = {"brewspec_version": "0.9", "brews": brews_list}  # v0.9 required by bundled schema
         return yaml.dump(doc, default_flow_style=False)
 
     def _base_brew(self, date="2026-02-19", brew_type="pour_over"):
@@ -649,7 +650,7 @@ class TestImportDeduplication:
         custom_db = tmp_path / "import_test.db"
         import_file = tmp_path / "import.yaml"
         brews = [{"date": "2026-02-19", "type": "pour_over", "dose_g": 18.0, "water_weight_g": 280.0}]
-        import_file.write_text(yaml.dump({"brewspec_version": "0.8", "brews": brews}))
+        import_file.write_text(yaml.dump({"brewspec_version": "0.9", "brews": brews}))
         result = runner.invoke(cli, ["--db", str(custom_db), "import", str(import_file)])
         assert result.exit_code == 0
         assert "1 brews added" in result.output
@@ -713,7 +714,7 @@ class TestExportById:
         runner.invoke(cli, ["export", out_file, "--id", "1"])
         content = (tmp_path / "single.yaml").read_text()
         doc = yaml.safe_load(content)
-        assert doc["brewspec_version"] == "0.8"
+        assert doc["brewspec_version"] == "0.9"
 
     def test_export_no_id_exports_all(self, runner, db_path, tmp_path):
         """AC-24: No --id exports all brews."""
@@ -770,7 +771,7 @@ class TestSchemaAdoption:
         out_file = str(tmp_path / "out.yaml")
         runner.invoke(cli, ["export", out_file])
         doc = yaml.safe_load((tmp_path / out_file).read_text())
-        assert doc["brewspec_version"] == "0.8"
+        assert doc["brewspec_version"] == "0.9"
 
     def test_import_rejects_v05_file(self, runner, db_path, tmp_path):
         """AC-35: v0.5 file rejected with error, exit 1."""
@@ -941,7 +942,7 @@ class TestBrewRatio:
         """AC-42: brew_ratio read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.8",
+            "brewspec_version": "0.9",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1124,7 +1125,7 @@ class TestCoffeeOrigins:
         """AC-50: import reads coffee.origins into coffee_origins column."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.8",
+            "brewspec_version": "0.9",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1220,7 +1221,7 @@ class TestCoffeeOrigins:
         """MED-1: importing a YAML with varietal in origins[] shows varietal in `show` output."""
         import_file = tmp_path / "varietal_import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.8",
+            "brewspec_version": "0.9",
             "brews": [{
                 "date": "2026-03-10",
                 "type": "pour_over",
@@ -1339,7 +1340,7 @@ class TestCoffeeName:
         """AC-50e: coffee.name read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.8",
+            "brewspec_version": "0.9",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
@@ -1533,7 +1534,7 @@ class TestEquipmentFields:
         """AC-56: equipment fields read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.8",
+            "brewspec_version": "0.9",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",

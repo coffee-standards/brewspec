@@ -59,21 +59,21 @@ from brewlog.prompts import prompt_brew_type
               ))
 @click.option("--rating",         "rating_retired", type=int, default=None, hidden=True)
 @click.option("--rating-overall", "rating_overall",    type=int, default=None,
-              help="Overall impression, 1-5.")
+              help="Overall impression, 1-9.")
 @click.option("--rating-fragrance", "rating_fragrance", type=int, default=None,
-              help="Fragrance rating, 1-5.")
+              help="Fragrance rating, 1-9.")
 @click.option("--rating-aroma",    "rating_aroma",     type=int, default=None,
-              help="Aroma rating, 1-5.")
+              help="Aroma rating, 1-9.")
 @click.option("--rating-flavour",  "rating_flavour",   type=int, default=None,
-              help="Flavour rating, 1-5.")
+              help="Flavour rating, 1-9.")
 @click.option("--rating-aftertaste", "rating_aftertaste", type=int, default=None,
-              help="Aftertaste rating, 1-5.")
+              help="Aftertaste rating, 1-9.")
 @click.option("--rating-acidity",  "rating_acidity",   type=int, default=None,
-              help="Acidity rating, 1-5.")
+              help="Acidity rating, 1-9.")
 @click.option("--rating-sweetness", "rating_sweetness", type=int, default=None,
-              help="Sweetness rating, 1-5.")
+              help="Sweetness rating, 1-9.")
 @click.option("--rating-mouthfeel", "rating_mouthfeel", type=int, default=None,
-              help="Mouthfeel rating, 1-5.")
+              help="Mouthfeel rating, 1-9.")
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
@@ -144,7 +144,7 @@ def update(
     if rating_retired is not None:
         click.echo(
             "Error: --rating has been replaced by --rating-overall in BrewLog v0.3.\n"
-            "Use --rating-overall N to set your overall impression (1-5).\n"
+            "Use --rating-overall N to set your overall impression (1-9).\n"
             "See --help for all available rating dimension flags.",
             err=True,
         )
@@ -175,9 +175,9 @@ def update(
         "rating-mouthfeel":  rating_mouthfeel,
     }
     for flag_name, flag_val in _RATING_DIMS.items():
-        if flag_val is not None and not (1 <= flag_val <= 5):
+        if flag_val is not None and not (1 <= flag_val <= 9):
             click.echo(
-                f"Error: --{flag_name} must be an integer between 1 and 5.",
+                f"Error: --{flag_name} must be an integer between 1 and 9.",
                 err=True,
             )
             sys.exit(1)

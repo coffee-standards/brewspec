@@ -824,7 +824,7 @@ def test_ratings_input_boundary_minimum():
 
 
 def test_ratings_input_boundary_maximum():
-    """Each dimension: 5 is accepted (maximum boundary)."""
+    """Each dimension: 5 is accepted (within 1-9 range)."""
     from brewlog.models import RatingsInput
 
     ratings = RatingsInput(overall=5)
@@ -840,11 +840,11 @@ def test_ratings_input_below_minimum_rejected():
 
 
 def test_ratings_input_above_maximum_rejected():
-    """rating dimension: 6 is rejected (maximum: 5)."""
+    """rating dimension: 10 is rejected (maximum: 9)."""
     from brewlog.models import RatingsInput
 
     with pytest.raises(ValidationError):
-        RatingsInput(overall=6)
+        RatingsInput(overall=10)
 
 
 def test_ratings_input_empty():
