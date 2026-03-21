@@ -1,14 +1,20 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark rounded square background -->
-  <rect width="1024" height="1024" rx="192" fill="#1A1814"/>
+  <!-- Light squircle background -->
+  <rect width="1024" height="1024" rx="192" fill="#F7F5F2"/>
 
-  <!-- Accent ring -->
-  <circle cx="512" cy="512" r="300"
-          fill="none"
-          stroke="#C47B2B"
-          stroke-width="80"/>
+  <!-- Clipping paths for diagonal bisection (top-left to bottom-right) -->
+  <defs>
+    <clipPath id="top-left">
+      <polygon points="0,0 1024,0 0,1024"/>
+    </clipPath>
+    <clipPath id="bottom-right">
+      <polygon points="1024,0 1024,1024 0,1024"/>
+    </clipPath>
+  </defs>
 
-  <!-- Centre dot -->
-  <circle cx="512" cy="512" r="120"
-          fill="#C47B2B"/>
+  <!-- Dark half (top-left) -->
+  <circle cx="512" cy="512" r="340" fill="#1A1814" clip-path="url(#top-left)"/>
+
+  <!-- Accent half (bottom-right) -->
+  <circle cx="512" cy="512" r="340" fill="#C47B2B" clip-path="url(#bottom-right)"/>
 </svg>
