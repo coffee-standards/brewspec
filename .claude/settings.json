@@ -21,39 +21,35 @@
       "Read",
       "Write",
       "Edit",
-      "Bash(awk *)",
-      "Bash(sed *)",
-      "Bash(head *)",
-      "Bash(tail *)",
-      "Bash(wc *)",
-      "Bash(grep *)",
-      "Bash(cat *)",
-      "Bash(mv *)",
-      "Bash(cp *)",
-      "Bash(ls *)",
-      "Bash(rm *)",
-      "Bash(mkdir *)",
-      "Bash(curl *)",
-      "Bash(jq *)",
-      "Bash(find *)",
-      "Bash(diff *)",
-      "Bash(sort *)",
-      "Bash(uniq *)",
-      "Bash(git *)",
-      "Bash(gh *)",
-      "Bash(python *)",
-      "Bash(python3 *)",
-      "Bash(python3.* *)",
-      "Bash(pytest *)",
-      "Bash(ruff *)",
-      "Bash(pip *)",
-      "Bash(pip3 *)",
-      "Bash(source *)",
-      "Bash(npm *)",
-      "Bash(npx *)",
-      "Bash(node *)",
-      "Bash(actionlint *)",
-      "Bash(cd *)"
+      "Bash(*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/prompt-guard.js"
+          },
+          {
+            "type": "command",
+            "command": "node hooks/workflow-guard.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/context-monitor.js"
+          }
+        ]
+      }
     ]
   }
 }

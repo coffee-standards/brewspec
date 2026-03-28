@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. It defines the spec-driven development pipeline, agent coordination, and operational rules.
 
 ## Project Overview
 
@@ -110,52 +110,77 @@ pytest tests/
 
 Both must pass. Fix lint errors before running tests — a lint failure is a blocker.
 
-## Conventions
+## Parallel Build Streams (Worktrees)
 
-- Python 3.11+
-- Test-driven development: tests first, then implementation
-- Open source: everything is public, no secrets in the repo
-- Atomic commits: each commit leaves the project in a working state
-- Lint clean: all code must pass `ruff check .` before handoff to reviewer
-- **Commit message format:** `type(scope): description`
-  - Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
-  - Scopes: `brewspec`, `brewlog`, `site`
-  - Manifest-only commits use: `manifest: <description>`
-  - Examples: `feat(brewspec): add result.yield_g field`, `fix(brewlog): correct import error message`
+Use git worktrees to run multiple pipeline tasks simultaneously. Each stream gets an isolated working directory on its own branch.
 
-## Spec-Driven Development Lifecycle
+### Rules
 
-Every task flows through the agent team in order:
+- Each stream targets a **different manifest task** — never work on the same task in two streams
+- The **manifest** is the only shared file; read it at stream start, update only your own task
+- Worktree directories live in `.worktrees/` (gitignored)
+- Branch names match the task slug from the manifest
+- **Manifest updates must be committed separately** from code/spec/design changes — keeps merge conflicts isolated from implementation history
+
+### Git safety
+
+- **All work must be on a branch.** Never leave implementation changes uncommitted on `main`.
+- **Never assume uncommitted changes or stashes are stale.** Always show the user what's in them before dropping. Other sessions may be active.
+- **If `git pull` is blocked**, stash to proceed but do NOT drop without user approval.
+- **Sync regularly** — after merging a PR or before starting a new task, pull main and rebase active worktrees.
+
+## Document Hierarchy
+
+| Document | Purpose | Owner |
+|----------|---------|-------|
+| `specs/strategy.md` | Why we're building, what products, for whom | strategist |
+| `specs/principles.md` | Overarching decision-making principles | strategist + architect |
+| `specs/infrastructure.md` | Domains, hosting, email — operational reference | orchestrator |
+| `specs/products/*.md` | What to build — user stories, ACs, scope | product-manager |
+| `specs/arch/principles.md` | How we build — technical principles governing all design decisions | architect |
+| `specs/arch/escalation-levels.md` | When to pause — L0–L3 autonomy scale for agent and orchestrator actions | architect |
+| `specs/arch/pipeline.md` | Full pipeline reference — tiers, task types, bug tracking, reviewer/deploy rules | architect |
+| `specs/decisions/ADR-*.md` | Why we built it this way — record of significant architectural decisions | architect |
+| `specs/designs/*.md` | How to build this task — schemas, models, test strategy | architect |
+| `specs/brand/brewspec/` | Brand guidelines and copy | marketing-comms |
+| `roadmap.md` | Ideation backlog — loose product ideas, feature thoughts, sequencing intuitions | user |
+| `context/anti-patterns.md` | What failed and why — mistakes to avoid repeating | all agents |
+| `manifest.yaml` | Task backlog — status, assignments, artifacts | all agents |
+| `bugs/BUG-NNN-*.md` | Bug reports — reproduction, root cause, fix, regression test, spec/ADR impact | dev + reviewer |
+
+## Spec-Driven Development Pipeline
+
+Full reference: `specs/arch/pipeline.md`. Summary below.
 
 ```
-strategist → product-manager → architect → backend-dev → reviewer → deployment-manager
-   (why)         (what)          (how)     (build + test)  (verify)      (ship it)
+Backend:   strategist → PM → architect → backend-dev → reviewer → deploy
+Frontend:  strategist → PM → marketing-comms → architect → frontend-dev → reviewer → deploy
+Full-stack: both dev agents run in parallel worktrees after architect
 ```
+
+Each stage in plain language:
 
 1. **Strategy** — `strategist` defines principles, objectives, and which problems to solve next. Pauses for user input on priorities and positioning.
 2. **Spec** — `product-manager` writes a product spec in `specs/products/` using the template. Defines user stories, acceptance criteria, scope, and security requirements. Pauses for user input on stories, ACs, and scope.
-3. **Design** — `architect` reads the product spec and produces data models, CLI interface design, schema definitions, test strategy, and security considerations.
-4. **Build + Test** — `backend-dev` follows TDD: write tests for each acceptance criterion first, then implement to make tests pass. Run `ruff check .` alongside tests. All code must be lint-clean and test-passing before signaling ready for review.
-5. **Verify** — `reviewer` validates the implementation against the spec, checks security, confirms TDD was followed, and runs the test suite. Any non-blocking issues found during review are recorded as `review_carry_forward` items on the **next** version's backlog task in `manifest.yaml` — not on the completed task.
-6. **Deploy** — `deployment-manager` runs only after a reviewer PASS. Commits with a structured message, creates a version tag, and pushes. Updates the manifest to `done`. Never deploys on a FAIL verdict.
+3. **Brand/copy** (frontend tasks only) — `marketing-comms` produces copy and messaging before the architect designs the UI. Pauses at every direction checkpoint and final copy sign-off.
+4. **Design** — `architect` reads the product spec and produces data models, CLI interface design, schema definitions, test strategy, and security considerations.
+5. **Build + Test** — `backend-dev` (CLI/schema) or `frontend-dev` (site) follows TDD: write tests for each acceptance criterion first, then implement to make tests pass. Run `ruff check .` alongside tests. All code must be lint-clean and test-passing before signalling ready for review.
+6. **Verify** — `reviewer` validates the implementation against the spec, checks security, confirms TDD was followed, and runs the test suite. Any non-blocking issues found during review are recorded as `review_carry_forward` items on the **next** version's backlog task in `manifest.yaml` — not on the completed task.
+7. **Deploy** — `deployment-manager` runs only after a reviewer PASS. Commits with a structured message, creates a version tag, and pushes. Updates the manifest to `done`. Never deploys on a FAIL verdict.
 
 ### Pipeline Tiers
 
 Every task runs one of three pipelines. The `tier` field in `manifest.yaml` controls routing; it defaults to `standard` if absent.
 
-**Express** — carry-forward fixes and fully-specified patches
-- **Eligible:** items where every step is already described in `review_carry_forward`, or single-behaviour bug fixes with no design ambiguity
-- **Gate:** *Could a dev implement this from the manifest description alone, with zero ambiguity?* If yes, Express. If no, Standard.
-- **Pipeline:** `backend-dev → reviewer → deploy` — no spec, no design, no self-reviews
+| Tier | Pipeline | When |
+|---|---|---|
+| `standard` | Full pipeline | New features, schema changes, design judgment needed |
+| `express` | `dev → reviewer → deploy` | Carry-forwards, unambiguous bug fixes |
+| `discovery` | `dev` only | Spikes, proof-of-concept (output may not ship) |
 
-**Standard** — new features, schema changes, anything requiring design judgment
-- **Eligible:** everything not clearly Express
-- **Pipeline:** full `strategist → product-manager → architect → backend-dev → reviewer → deploy`
+**Express** gate: *Could a dev implement this from the manifest description alone, with zero ambiguity?* If yes, Express. If no, Standard.
 
-**Discovery** — exploratory spikes, proof-of-concept work
-- **Eligible:** work to validate a direction before committing to building it
-- **Pipeline:** `backend-dev` only — output may not ship
-- **Exit:** promote to Standard (write a spec from what was learned) or discard
+**Discovery** exit: promote to Standard (write a spec from what was learned) or discard.
 
 ### Task Types
 
@@ -174,6 +199,48 @@ The `type` field classifies tasks in `manifest.yaml`. Feature and chore tasks li
 - A carry-forward item on a completed task was not absorbed into the next scheduled version
 
 Use `source_task` to link a maintenance item back to the task where it was originally surfaced.
+
+### Agent Isolation — Worktrees Required
+
+When the orchestrator launches any agent that modifies files (backend-dev, frontend-dev, reviewer, deployment-manager), it **must** use `isolation: "worktree"` on the Agent tool call. This gives the agent its own copy of the repo so it cannot conflict with the orchestrator's working directory or with other agents running in parallel.
+
+Branches alone are not sufficient — two sessions on the same working directory will still clobber each other's uncommitted files, stashes, and untracked artifacts. Worktrees provide true filesystem isolation.
+
+Read-only agents (strategist, product-manager, architect, marketing-comms, system-steward, harness-reviewer) do not require worktree isolation since they do not write to the repo.
+
+### Using Agents
+
+All agents use the L0–L3 escalation scale (`specs/arch/escalation-levels.md`).
+
+| Agent | Role | L2 checkpoints? |
+|---|---|---|
+| **strategist** | Product direction, principles, priorities | Yes — priorities, principles, personas, positioning |
+| **product-manager** | Product specs, ACs, backlog | Yes — stories, ACs, scope, domain assumptions |
+| **marketing-comms** | Brand, voice, copy, messaging for landing page and releases | Yes — every direction + final copy sign-off |
+| **architect** | Data models, CLI interfaces, schema definitions, test strategy | No |
+| **backend-dev** | Python TDD, lint-clean before handoff | No |
+| **frontend-dev** | Astro/TS TDD, design system enforcement for the landing page | No |
+| **reviewer** | Two-stage review: spec compliance then code quality | No |
+| **deployment-manager** | PR creation after reviewer PASS only | No |
+| **system-steward** | Health checks, refactor recommendations — run via `/system-health` | No |
+| **harness-reviewer** | Harness coherence audits (MECE, Lean, Correct) — run via `/harness-review` | No |
+
+### Skills
+
+Skills are behavioural knowledge that agents load and follow. They live in `.claude/skills/` and are referenced by agent definitions — they apply automatically, not via explicit invocation.
+
+| Skill | File | Used by | Purpose |
+|-------|------|---------|---------|
+| TDD | `.claude/skills/test-driven-development.md` | backend-dev, frontend-dev | Red-green-refactor methodology, rationalisation rejection, restart triggers |
+| Systematic Debugging | `.claude/skills/systematic-debugging.md` | backend-dev, frontend-dev | 4-phase root cause analysis, 3-strikes escalation rule |
+| Verification Before Completion | `.claude/skills/verification-before-completion.md` | All agents | Fresh verification evidence required before any completion claim |
+| Code Review | `.claude/skills/code-review.md` | reviewer, self-review | Two-stage review methodology, severity levels, verdict criteria |
+| Writing Quality | `.claude/skills/writing-quality.md` | marketing-comms, product-manager, strategist, architect | AI slop elimination — banned phrases, structural anti-patterns, sentence-level rules |
+| Design System | `.claude/skills/design-system.md` | frontend-dev, reviewer | Brand tokens, visual craft, component specs, animation, elevation, responsive, dark mode |
+| UX Design | `.claude/skills/ux-design.md` | frontend-dev, reviewer, architect | User psychology, flow design, information architecture, cognitive load, accessibility |
+| Notion Sync | `.claude/skills/notion-sync.md` | frontend-dev, reviewer, marketing-comms, orchestrator | Bidirectional Notion ↔ code sync for app copy and rich docs |
+
+Dev agents read these at the start of every task. The reviewer enforces compliance — skipping TDD or claiming "done" without verification evidence is a FAIL.
 
 ### Bug Tracking
 
@@ -198,157 +265,124 @@ Security is embedded in every stage, even for local tools:
 - **Dev**: Validates all inputs via Pydantic, parameterizes queries, no secrets in code
 - **Reviewer**: Checks for injection, data exposure, and validates security requirements
 
-### Using Agents
-
-Agents are invoked via natural language in Claude Code conversations:
-
-- **strategist** — Define product direction, principles, and feature priorities
-- **product-manager** — Write product specs, acceptance criteria, and manage the backlog
-- **architect** — Design data models, CLI interfaces, and schema structures before implementation
-- **backend-dev** — Build Python code with TDD. Runs `ruff check .` alongside tests; code must be lint-clean before handoff
-- **reviewer** — Final gate: spec compliance, security review, TDD verification, and test execution
-- **deployment-manager** — Runs after reviewer PASS only. Commits, tags, pushes, and marks the task done
-- **system-steward** — On-demand health monitor. Run via `/system-health`. Checks architecture principles, ADR staleness, design-to-code gaps, dependency health, and test health. Writes a health report to `reviews/` and writes `type: refactor` tasks to `maintenance:` in `manifest.yaml`. Does not write code or specs — signal only.
-
-### Slash Commands (Skills)
-
-These are invoked via `/command` in conversations:
+### Slash Commands
 
 | Command | Purpose | When to use |
 |---|---|---|
 | `/start-task` | Begin a manifest task — reads manifest, selects pipeline, starts execution | Starting any new task from the backlog |
-| `/pipeline-status` | Show current status of all active tasks in the manifest | Checking what's in flight |
-| `/self-review` | Run a self-review on a spec or design doc before handoff to the next agent | Standard tier: after PM spec (before architect), after design (before dev) |
+| `/pipeline-status` | Show current status of all active tasks; archives stale completed tasks | Checking what's in flight |
+| `/self-review` | Structured review of a spec or design doc before handoff to the next agent | Standard tier: after PM spec, after design |
 | `/release-notes` | Generate formatted release notes for a completed task | After a task reaches `done` — for GitHub releases |
-| `/bug` | File a new bug report from a template | When a defect is found during use or review |
+| `/bug` | File a new bug report from the template | When a defect is found during use or review |
 | `/system-health` | Run the system-steward health check | On-demand or periodic (weekly/fortnightly) |
+| `/harness-review` | Audit the harness itself for coherence (MECE, Lean, Correct) | When pipeline docs or agent definitions have drifted |
+| `/forensics` | Deep-dive root cause analysis on a past failure or regression | After a second reviewer FAIL or a production incident |
+| `/pause-work` | Safely checkpoint in-progress work before ending a session at critical context | When context monitor fires at critical level |
 
-### Deployment Rules
+## Permissions and Safety Model
+
+**Permissions posture:** `Bash(*)` allowed, with a deny list for destructive operations (force push, hard reset, PR merge, direct merge to main). The safety boundary is **branch and worktree isolation**, not permission prompts. See ADR-009.
+
+**Deny list** (in `.claude/settings.json`): force push, force-with-lease, hard reset, merge to main, PR merge. These are never auto-allowed.
+
+**Agent secret access:** Agents must not access, store, or transmit secrets (API keys, tokens, credentials). If a task requires secret access, escalate to L3. Secrets are injected at deploy time, not during development.
+
+### Hooks
+
+Three hooks run automatically (registered in `.claude/settings.json`):
+
+| Hook | Type | Trigger | Purpose |
+|------|------|---------|---------|
+| `hooks/context-monitor.js` | PostToolUse | Every tool call | Warns at 35% (warning) and 25% (critical) remaining context. Debounced to every 5 tool uses. |
+| `hooks/prompt-guard.js` | PreToolUse | Write, Edit | Scans content for prompt injection patterns (instruction override, role play, system markers, invisible Unicode). Advisory only. |
+| `hooks/workflow-guard.js` | PreToolUse | Write, Edit | Warns when editing source code on main outside a pipeline task. Advisory only. |
+
+All hooks are advisory — they inject context messages but never block execution. If the context monitor fires at critical level, run `/pause-work` before the session ends.
+
+## Orchestrator (Claude Code Main)
+
+Claude Code (the main session) is the orchestrator. It manages the pipeline, mediates the PM conversation, tracks state via the manifest, and decides when to pause for user input. These rules govern how it runs.
+
+### Escalation levels
+
+All agents and the orchestrator use a shared 4-level scale defined in `specs/arch/escalation-levels.md`. Read that file for the full table of actions per level.
+
+| Level | Rule | Orchestrator behaviour |
+|---|---|---|
+| **L0 — Autonomous** | Read-only, reversible, or pipeline-authorised | Proceed without notification |
+| **L1 — Inform** | Safe, localised changes | Proceed, mention in handoff summary |
+| **L2 — Propose** | API/schema/scope/brand changes, 5+ files, new deps | Present options, wait for "go ahead" |
+| **L3 — Stop** | Deploys, security, irreversible ops, reviewer FAIL ×2 | Halt, explain, wait for explicit instruction |
+
+### When to pause for user input
+
+The orchestrator pauses **only** at L2+ moments:
+
+1. **PM scoping (L2)** — the product-manager has produced a scope proposal. Present it, relay user feedback, repeat until agreed. Then proceed autonomously.
+2. **Brand/copy sign-off (L2)** — marketing-comms requires explicit approval at each checkpoint before handing off to architect.
+3. **Repeated reviewer FAIL (L3)** — reviewer fails a second time after a dev fix attempt. Stop and present the full list of blocking issues.
+4. **Agent escalation (L2/L3)** — any agent explicitly flags a decision it cannot make autonomously, stating the level.
+
+Everything at L0–L1 runs through without interruption. Do not ask for approval between pipeline stages unless an agent raises an L2+ escalation.
+
+### Pipeline execution
+
+Read `manifest.yaml` to determine where a task is and where to start. Never redo a completed stage — resume from the current status. Check both `tasks:` and `maintenance:` sections when scanning for work.
+
+**Quick reference:** manifest status → next action:
+- `backlog` → wait | `ready_for_spec` → PM | `ready_for_design` → marketing-comms (frontend) or self-review + architect (backend) | `ready_for_dev` → self-review + dev | `ready_for_review` → reviewer | `ready_for_deploy` → deployment-manager | `done` → nothing
+- Express tier skips spec/design/self-review. Discovery tier is dev-only.
+
+**Standard tier — full status table:**
+
+| Manifest status | Orchestrator action |
+|---|---|
+| `backlog` | Not ready — wait for strategist to prioritise |
+| `ready_for_spec` | Invoke product-manager (with PM conversation loop) |
+| `ready_for_design` | **Frontend tasks:** invoke marketing-comms (L2 sign-off loop) → self-review → architect. **Backend/schema tasks:** self-review on product spec → invoke architect |
+| `ready_for_dev` | Run `/self-review` on the design doc → invoke backend-dev or frontend-dev |
+| `ready_for_review` | Invoke reviewer |
+| `ready_for_deploy` | Invoke deployment-manager |
+| `done` | Nothing to do |
+
+**Express tier** (`tier: express`): `ready_for_dev` → backend-dev directly (no self-review) → reviewer → deployment-manager.
+
+**Discovery tier** (`tier: discovery`): `ready_for_dev` → backend-dev → close out or promote to Standard.
+
+**Maintenance items:** `type: bug` defaults to express; `type: refactor` follows steward → dev → reviewer. Can run independently or bundle into the next feature version — use judgement based on priority and whether a related feature task is in flight.
+
+**Reviewer FAIL logic:**
+1. First FAIL → send full list of blocking issues back to backend-dev. Re-run reviewer.
+2. Second FAIL → L3 stop. Present blocking issues to user and wait for direction.
+
+**Deployment:** branch + PR only. PRs require user review before merge — deployment-manager creates the PR but does not merge it.
+
+## Conventions
+
+- Python 3.11+
+- Test-driven development: tests first, then implementation
+- Open source: everything is public, no secrets in the repo
+- Atomic commits: each commit leaves the project in a working state
+- Lint clean: all code must pass `ruff check .` before handoff to reviewer
+
+**Commit message format:** `type(scope): description`
+- Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+- Scopes: `brewspec`, `brewlog`, `site`
+- Manifest-only commits use: `manifest: <description>` (no scope, no type prefix)
+- Examples: `feat(brewspec): add result.yield_g field`, `fix(brewlog): correct import error message`
+
+**Pull request format:**
+- Title: `type(scope): description` — same as commit format, under 70 characters
+- Body: summary bullets + test plan checklist
+- PRs require user review before merge — deployment-manager creates the PR but does not merge it
+
+## Deployment Rules
 
 | Product | Strategy | Tag format |
 |---|---|---|
 | BrewSpec schema/spec | Feature branch → merge to `main` → delete branch | `vX.Y` |
 | BrewLog CLI | Feature branch → merge to `main` → delete branch | `brewlog-vX.Y` |
 | BrewSpec site | Push to `main` → GitHub Actions deploys to GitHub Pages | — |
-
-## Orchestrator (Claude Code Main)
-
-Claude Code (the main session) is the orchestrator. It manages the pipeline, mediates the PM conversation, tracks state via the manifest, and decides when to pause for user input.
-
-### When to pause for user input
-
-Pause **only** when:
-1. **PM scoping** — the product-manager has produced a scope proposal. Present it to the user, relay their response back to the PM, repeat until scope is agreed. Then proceed autonomously.
-2. **Repeated reviewer FAIL** — reviewer fails a second time after a dev fix attempt. Stop and present the full list of blocking issues.
-3. **Agent escalation** — any agent explicitly flags a decision it cannot make autonomously.
-
-Everything else runs through without interruption. Do not ask for approval between stages.
-
-### Pipeline execution
-
-Read `manifest.yaml` to determine where a task is and where to start. Never redo a completed stage — resume from the current status. Check the `tier` field (default: `standard`) to select the right pipeline.
-
-**Standard tier:**
-
-| Manifest status | Orchestrator action |
-|---|---|
-| `backlog` | Not ready — wait for strategist to prioritise |
-| `ready_for_spec` | Invoke product-manager (with PM conversation loop) |
-| `ready_for_design` | Run `/self-review` on the product spec → invoke architect |
-| `ready_for_dev` | Run `/self-review` on the design doc → invoke backend-dev |
-| `ready_for_review` | Invoke reviewer |
-| `ready_for_deploy` | Invoke deployment-manager |
-| `done` | Nothing to do |
-
-**Express tier** (`tier: express` in manifest):
-
-| Manifest status | Orchestrator action |
-|---|---|
-| `ready_for_dev` | Invoke backend-dev directly — no self-review, no spec/design required |
-| `ready_for_review` | Invoke reviewer |
-| `ready_for_deploy` | Invoke deployment-manager |
-
-**Discovery tier** (`tier: discovery` in manifest):
-
-| Manifest status | Orchestrator action |
-|---|---|
-| `ready_for_dev` | Invoke backend-dev — output may not ship |
-| `done` or discarded | Close out the task; promote to Standard if continuing |
-
-**Maintenance items** (`maintenance:` section in manifest):
-
-Check both `tasks:` and `maintenance:` when scanning for work. Maintenance items follow the same status flow but skip spec and design stages. `type: bug` defaults to `tier: express`; `type: refactor` follows the steward → dev → reviewer pipeline. Maintenance items can be run independently or held and bundled into the next feature version — orchestrator uses judgement based on priority and whether a related feature task is already in flight.
-
-Update the manifest status at each handoff. The manifest is the source of truth — if a pipeline breaks and restarts, read it and continue from where it stopped.
-
-### Reviewer FAIL logic
-
-1. **First FAIL** — send the full list of blocking issues back to backend-dev. Re-run the reviewer.
-2. **Second FAIL** — stop. Present the blocking issues to the user and wait for direction.
-
-## Document Hierarchy
-
-```
-specs/
-  strategy.md              # Business & product strategy
-  principles.md            # Product and engineering principles
-  infrastructure.md        # Domains, hosting, email — operational reference
-  arch/
-    principles.md          # Architecture principles — technical decisions, system design
-  decisions/               # Architecture Decision Records (ADRs)
-    ADR-NNN-title.md
-  products/                # Product specs — one per version
-    brewspec.md
-    brewspec-v0.3.md
-    brewlog.md
-  designs/                 # Technical designs — architect output per task
-    brewspec-v0.1.md
-    brewlog-cli-v0.1.md
-  brand/                   # Brand artifacts
-    brewspec/
-      brand-guidelines.md
-      copy/
-        landing-page.md
-  templates/               # Source-of-truth templates
-
-manifest.yaml              # Task backlog and coordination
-roadmap.md                 # Ideation backlog — human-authored, input to PM
-reviews/                   # Agent review artifacts
-bugs/                      # Bug tracker
-```
-
-### How documents flow
-
-| Document | Purpose | Owner |
-|----------|---------|-------|
-| `specs/strategy.md` | Why we're building, what products, for whom | strategist |
-| `specs/principles.md` | Overarching decision-making principles | strategist + architect |
-| `specs/infrastructure.md` | Domains, hosting, email — operational reference | orchestrator |
-| `specs/products/*.md` | What to build — user stories, ACs, scope | product-manager |
-| `specs/arch/principles.md` | How we build — technical principles | architect |
-| `specs/decisions/ADR-*.md` | Why we built it this way | architect |
-| `specs/designs/*.md` | How to build this task — schemas, models, test strategy | architect |
-| `roadmap.md` | Ideation backlog — loose product ideas, feature thoughts, sequencing intuitions | user |
-| `manifest.yaml` | Task backlog — status, assignments, artifacts | all agents |
-| `bugs/BUG-NNN-*.md` | Bug reports — reproduction, root cause, fix, regression test | dev + reviewer |
-
-## Parallel Build Streams (Worktrees)
-
-To run multiple pipeline tasks simultaneously without file conflicts, use **git worktrees**. Each stream gets an isolated working directory on its own branch, sharing the same git history.
-
-### Starting a parallel stream
-
-```bash
-git worktree add .worktrees/<task-name> -b <task-name>
-```
-
-### Rules for parallel streams
-
-- Each stream must target a **different manifest task**
-- The **manifest** (`manifest.yaml`) is the only shared file that parallel streams touch
-- Worktree directories live in `.worktrees/` (gitignored)
-- Branch names should match the task slug from the manifest
-- **Manifest updates must be committed separately** from code changes
 
 ## Cross-Repo Dependencies
 

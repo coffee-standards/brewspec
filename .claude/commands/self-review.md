@@ -2,7 +2,7 @@
 
 Evaluate the quality of recent agent output against the project's review scorecard.
 
-## When this skill is invoked
+## When this command is invoked
 
 The orchestrator runs `/self-review` at two mandatory pipeline checkpoints:
 
@@ -11,7 +11,11 @@ The orchestrator runs `/self-review` at two mandatory pipeline checkpoints:
 
 Run `/self-review --feature <task-id>` after a release ships to trace the full SDLC and score alignment at every handoff.
 
+The orchestrator can also run `/self-review` ad-hoc on any artifact — a draft spec, a design doc, a one-off edit — to apply structured review thinking outside the pipeline.
+
 ## Instructions
+
+**Before starting, read `.claude/skills/code-review.md`.** This command applies the review skill's two-stage methodology (spec compliance → quality) using the weighted scorecard for scoring.
 
 You are performing a structured self-review. Your job is to honestly evaluate output quality — not to be generous.
 
