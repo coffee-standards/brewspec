@@ -5,6 +5,7 @@
 **Created:** 2026-02-25
 **Status:** Approved
 **Approved by:** Scott Luengen — 2026-02-25
+**Last revised:** 2026-03-29 — added dark mode palette; reconciled all hex values against live implementation
 
 ---
 
@@ -139,20 +140,46 @@ Key terms and how we use them — consistency across all copy:
 
 ### Colour Direction
 
-**Feel:** Clean and modern with warmth. Not clinical white, not dark mode by default, not styled like a coffee-shop menu. The spec is a precise technical artifact; the site should feel like someone took the time to present it well.
+**Feel:** Clean and modern with warmth. Not clinical white, not styled like a coffee-shop menu. The spec is a precise technical artifact; the site should feel like someone took the time to present it well.
+
+**Modes:** Light mode is the default. Dark mode follows system preference (`prefers-color-scheme: dark`) — it is first-class, not an afterthought. Both palettes use the same warm-toned foundation; dark mode is not a simple colour inversion.
 
 These are the live palette values from the implemented site — not aspirational direction. Use them exactly.
 
-**Palette:**
+**Light mode palette:**
 
-| Role | Hex | Notes |
-|------|-----|-------|
-| Background | `#F7F5F2` | Off-white with warmth — not pure white. Clean and readable. |
-| Text (primary) | `#1A1814` | Near-black with warmth — not pure black. Readable without harshness. |
-| Text (muted) | `#6B6460` | Secondary text, metadata, captions. |
-| Accent / CTA | `#C47B2B` | Warm ochre — used for buttons and active states. References extraction colour without being literal. One accent only; do not introduce a second. |
-| Border | `#E8E4E0` | Subtle dividers and component boundaries. |
-| Code block background | `#1E1E1E` | Standard dark background with syntax highlighting. Developer convention — do not fight it. |
+| Role | Token | Hex | Notes |
+|------|-------|-----|-------|
+| Background | `--color-bg` | `#F5F3EF` | Warm off-white canvas — not pure white. |
+| Surface | `--color-surface` | `#ECEAE5` | Raised surface — cards, labels. |
+| Surface (elevated) | `--color-surface-raised` | `#FFFFFF` | Elevated surface — pure white. |
+| Text (primary) | `--color-text` | `#110F0D` | Near-black with warmth — not pure black. |
+| Text (muted) | `--color-text-muted` | `#6A6560` | Secondary text, metadata, captions. |
+| Text (faint) | `--color-text-faint` | `#9A9590` | Tertiary — very quiet labels. |
+| Accent | `--color-accent` | `#C07A18` | Warm amber — references extraction colour without being literal. Used for interactive accents. One accent only; do not introduce a second. |
+| Accent (hover) | `--color-accent-hover` | `#A46612` | Darkened amber for hover states. |
+| Border | `--color-border` | `#DCD9D3` | Subtle dividers and component boundaries. |
+| Border (subtle) | `--color-border-subtle` | `#ECEAE5` | Very quiet borders. |
+| Code block background | `--color-code-bg` | `#1A1816` | Dark code block background. Developer convention — do not fight it. |
+| Code chrome | `--color-code-surface` | `#252220` | Code header bar — slightly lighter than code bg. |
+| Code text | `--color-code-text` | `#D4CFC7` | Default code text colour. |
+
+**Dark mode palette** (applied via `prefers-color-scheme: dark`):
+
+| Role | Token | Hex | Notes |
+|------|-------|-----|-------|
+| Background | `--color-bg` | `#0E0D0B` | Very dark warm near-black. |
+| Surface | `--color-surface` | `#1B1916` | Raised surface — cards, labels. |
+| Surface (elevated) | `--color-surface-raised` | `#242119` | Elevated surface. |
+| Text (primary) | `--color-text` | `#E6E0D6` | Warm off-white — readable without harshness. |
+| Text (muted) | `--color-text-muted` | `#7A756C` | Secondary text, metadata, captions. |
+| Text (faint) | `--color-text-faint` | `#4A4842` | Tertiary — very quiet labels. |
+| Accent | `--color-accent` | `#D4962A` | Slightly brighter amber on dark backgrounds for contrast parity. |
+| Accent (hover) | `--color-accent-hover` | `#E8A838` | Lightened amber for hover states. |
+| Border | `--color-border` | `#2C2924` | Subtle dividers. |
+| Border (subtle) | `--color-border-subtle` | `#1E1C19` | Very quiet borders. |
+| Code chrome | `--color-code-surface` | `#2A2724` | Code header bar. |
+| Code text | `--color-code-text` | `#CCC8C0` | Default code text colour. |
 
 ### Typography Direction
 
