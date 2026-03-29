@@ -1,6 +1,6 @@
 ---
-// AudienceCard.astro — Reusable audience card
-// body prop accepts HTML string for inline links, rendered via set:html
+// AudienceCard.astro — Audience card with accent top border and hover elevation
+// body prop accepts HTML string, rendered via set:html
 
 interface Props {
   headline: string;
@@ -19,25 +19,38 @@ const { headline, body } = Astro.props;
 <style>
   .audience-card {
     border: 1px solid var(--color-border);
-    border-radius: 6px;
+    border-top: 2.5px solid var(--color-accent);
+    border-radius: var(--radius-md);
     padding: var(--space-lg);
     background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow 200ms var(--ease-out),
+      transform 150ms var(--ease-out),
+      border-color 200ms var(--ease-out);
+  }
+
+  .audience-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 
   .audience-card h3 {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-bold);
+    letter-spacing: -0.01em;
     margin-bottom: var(--space-sm);
     color: var(--color-text);
   }
 
   .card-body {
     font-size: var(--text-base);
-    color: var(--color-text);
+    color: var(--color-text-muted);
     line-height: var(--line-height-body);
   }
 
   .card-body :global(p) {
+    color: var(--color-text-muted);
     margin-bottom: var(--space-sm);
   }
 
@@ -49,9 +62,11 @@ const { headline, body } = Astro.props;
     color: var(--color-text);
     text-decoration: underline;
     text-decoration-color: var(--color-border);
+    transition: text-decoration-color 0.15s ease;
   }
 
   .card-body :global(a:hover) {
-    text-decoration-color: var(--color-text);
+    text-decoration-color: var(--color-accent);
+    color: var(--color-accent);
   }
 </style>
