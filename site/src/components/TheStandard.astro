@@ -1,8 +1,14 @@
 ---
-// TheStandard.astro — Section 5: stability / license copy
+// TheStandard.astro — Section 5: stability, license, and open-source messaging
 ---
 <section id="the-standard">
   <div class="content-width">
+    <div class="badges">
+      <span class="badge">v0.9</span>
+      <span class="badge">Apache 2.0</span>
+      <span class="badge">JSON Schema Draft 2020-12</span>
+    </div>
+
     <h2>Open, versioned, and maintained.</h2>
 
     <p>
@@ -22,16 +28,36 @@
         href="https://github.com/coffee-standards/brewspec"
         target="_blank"
         rel="noopener noreferrer"
-      >github.com/coffee-standards/brewspec</a>
+      >github.com/coffee-standards/brewspec →</a>
     </p>
   </div>
 </section>
 
 <style>
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-lg);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-muted);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.225rem 0.55rem;
+    letter-spacing: 0.02em;
+  }
+
   p {
     font-size: var(--text-lg);
     color: var(--color-text);
-    max-width: 600px;
+    max-width: 580px;
   }
 
   p + p {
@@ -43,12 +69,24 @@
   }
 
   .github-link a {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-normal);
     color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
   }
 
   .github-link a:hover {
+    color: var(--color-accent);
+  }
+
+  code {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 0.88em;
     color: var(--color-text);
   }
 </style>

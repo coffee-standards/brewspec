@@ -1,7 +1,6 @@
 ---
-// CodeBlock.astro — Reusable syntax-highlighted code block
+// CodeBlock.astro — Syntax-highlighted code block with terminal chrome
 // Uses Astro's built-in <Code> component (Shiki) — zero additional dependencies.
-// Highlighting happens at build time; no JavaScript is shipped for this.
 import { Code } from 'astro:components';
 
 interface Props {
@@ -13,7 +12,14 @@ interface Props {
 const { label, code, language } = Astro.props;
 ---
 <figure class="code-block">
-  <figcaption class="code-label">{label}</figcaption>
+  <div class="chrome-bar">
+    <span class="chrome-dots" aria-hidden="true">
+      <span class="chrome-dot"></span>
+      <span class="chrome-dot"></span>
+      <span class="chrome-dot"></span>
+    </span>
+    <figcaption class="code-label">{label}</figcaption>
+  </div>
   <div class="code-wrapper">
     <Code code={code} lang={language} theme="dark-plus" />
   </div>
@@ -24,31 +30,62 @@ const { label, code, language } = Astro.props;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
-    min-width: 0; /* prevent grid item from expanding beyond column width on mobile */
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    min-width: 0;  /* prevent grid item expansion on mobile */
+    transition: box-shadow 200ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+
+  .code-block:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+
+  /* Terminal chrome bar */
+  .chrome-bar {
+    background-color: var(--color-code-surface);
+    padding: 0.625rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+  }
+
+  .chrome-dots {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .chrome-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
   }
 
   .code-label {
-    font-size: 0.75rem;
-    font-weight: var(--font-weight-medium);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
-  }
-
-  .code-wrapper {
-    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-normal);
+    text-transform: none;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.40);
+    margin-left: 0.25rem;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .code-wrapper :global(pre) {
     margin: 0;
-    padding: var(--space-md);
+    padding: var(--space-md) !important;
     overflow-x: auto;
     font-family: var(--font-mono);
     font-size: 0.875rem;
-    line-height: 1.6;
-    background-color: var(--color-code-bg) !important;
+    line-height: 1.65;
   }
 
   .code-wrapper :global(code) {

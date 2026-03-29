@@ -1,5 +1,5 @@
 ---
-// WhatItCovers.astro — Section 2: five field groups
+// WhatItCovers.astro — Section 2: five field groups as card grid
 ---
 <section id="what-it-covers">
   <div class="content-width">
@@ -10,7 +10,7 @@
 
     <div class="field-groups">
       <div class="field-group">
-        <h3>Brew</h3>
+        <span class="field-group-tag">Brew</span>
         <ul>
           <li>Brew date (date-only or full datetime)</li>
           <li>Brew type (espresso, pour over, immersion, hybrid)</li>
@@ -24,7 +24,7 @@
       </div>
 
       <div class="field-group">
-        <h3>Coffee</h3>
+        <span class="field-group-tag">Coffee</span>
         <ul>
           <li>Origin</li>
           <li>Elevation (meters above sea level)</li>
@@ -38,22 +38,23 @@
       </div>
 
       <div class="field-group">
-        <h3>Water</h3>
+        <span class="field-group-tag">Water</span>
         <ul>
           <li>Dissolved solids (ppm)</li>
         </ul>
       </div>
 
       <div class="field-group">
-        <h3>Equipment</h3>
+        <span class="field-group-tag">Equipment</span>
         <ul>
           <li>Grinder model</li>
           <li>Brewer model</li>
+          <li>Grinder setting (dial position)</li>
         </ul>
       </div>
 
-      <div class="field-group">
-        <h3>Result</h3>
+      <div class="field-group field-group--wide">
+        <span class="field-group-tag">Result</span>
         <ul>
           <li>TDS and extraction yield</li>
           <li>Brix</li>
@@ -78,43 +79,98 @@
   }
 
   .field-groups {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
     margin-bottom: var(--space-lg);
   }
 
-  .field-group {
-    border-left: 3px solid var(--color-accent);
-    padding-left: var(--space-md);
+  /* Result card spans full width */
+  .field-group--wide {
+    grid-column: 1 / -1;
   }
 
-  .field-group h3 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-bold);
+  .field-group {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-md) var(--space-md) var(--space-md);
+    transition: box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out);
+  }
+
+  .field-group:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-text-faint);
+  }
+
+  .field-group-tag {
+    display: inline-block;
+    font-family: var(--font-head);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-xs);
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    background-color: var(--color-accent-subtle);
+    padding: 0.2em 0.55em;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-sm);
   }
 
   .field-group ul {
     list-style: none;
     padding: 0;
-  }
-
-  .field-group li {
-    font-size: var(--text-base);
-    color: var(--color-text);
-    padding: 0.2rem 0;
     margin: 0;
   }
 
+  .field-group li {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    padding: 0.225rem 0;
+    margin: 0;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 1rem;
+  }
+
+  .field-group li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--color-border);
+  }
+
+  /* Wide card: 2-column list on wide screens */
+  .field-group--wide ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-lg);
+  }
+
   .closing-line {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     color: var(--color-text-muted);
     font-style: italic;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-subtle);
     padding-top: var(--space-md);
+    margin-top: var(--space-xs);
+  }
+
+  @media (max-width: 639px) {
+    .field-groups {
+      grid-template-columns: 1fr;
+    }
+
+    .field-group--wide {
+      grid-column: auto;
+    }
+
+    .field-group--wide ul {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

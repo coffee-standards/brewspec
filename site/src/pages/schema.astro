@@ -20,523 +20,534 @@ import Footer from '../components/Footer.astro';
       </div>
     </section>
 
-    <section id="top-level">
-      <div class="content-width">
-        <h2>Top-Level</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Required</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>brewspec_version</code></td>
-                <td>string</td>
-                <td>Yes</td>
-                <td>const: <code>"0.9"</code></td>
-                <td>Must be the literal string "0.9".</td>
-              </tr>
-              <tr>
-                <td><code>brews</code></td>
-                <td>array</td>
-                <td>Yes</td>
-                <td>minItems: 1</td>
-                <td>Array of brew objects. At least one brew required.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="brew">
-      <div class="content-width">
-        <h2>Brew</h2>
-        <p class="section-note">All fields in the brew object are optional.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>date</code></td>
-                <td>string</td>
-                <td><code>YYYY-MM-DD</code> or <code>YYYY-MM-DDTHH:MM:SSZ</code></td>
-                <td>Brew date or datetime (UTC).</td>
-              </tr>
-              <tr>
-                <td><code>type</code></td>
-                <td>string</td>
-                <td>Enum: <code>immersion</code>, <code>pour_over</code>, <code>espresso</code>, <code>hybrid</code></td>
-                <td>Brew method category.</td>
-              </tr>
-              <tr>
-                <td><code>dose_g</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Coffee dose in grams.</td>
-              </tr>
-              <tr>
-                <td><code>water_weight_g</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Water weight in grams.</td>
-              </tr>
-              <tr>
-                <td><code>brew_ratio</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Water-to-coffee ratio as a float (e.g. 15.5 = 15.5:1).</td>
-              </tr>
-              <tr>
-                <td><code>method</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Freeform brewer description (e.g. "Hario V60").</td>
-              </tr>
-              <tr>
-                <td><code>water_temp_c</code></td>
-                <td>number</td>
-                <td>0–100, multipleOf: 0.1</td>
-                <td>Water temperature in celsius.</td>
-              </tr>
-              <tr>
-                <td><code>coffee</code></td>
-                <td>object</td>
-                <td></td>
-                <td>Coffee ingredient descriptor.</td>
-              </tr>
-              <tr>
-                <td><code>water</code></td>
-                <td>object</td>
-                <td></td>
-                <td>Water ingredient descriptor.</td>
-              </tr>
-              <tr>
-                <td><code>equipment</code></td>
-                <td>object</td>
-                <td></td>
-                <td>Equipment descriptor.</td>
-              </tr>
-              <tr>
-                <td><code>grind</code></td>
-                <td>string</td>
-                <td>Enum: <code>turkish</code>, <code>espresso</code>, <code>fine</code>, <code>medium_fine</code>, <code>medium</code>, <code>medium_coarse</code>, <code>coarse</code></td>
-                <td>Grind size (finest to coarsest).</td>
-              </tr>
-              <tr>
-                <td><code>duration_s</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Brew duration in seconds.</td>
-              </tr>
-              <tr>
-                <td><code>notes</code></td>
-                <td>string</td>
-                <td>maxLength: 2000</td>
-                <td>Brew-process notes.</td>
-              </tr>
-              <tr>
-                <td><code>result</code></td>
-                <td>object</td>
-                <td></td>
-                <td>Brew outcome measurements and sensory evaluation.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="coffee">
-      <div class="content-width">
-        <h2>Coffee</h2>
-        <p class="section-note">Entire object optional. All fields within optional.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>name</code></td>
-                <td>string</td>
-                <td>maxLength: 150</td>
-                <td>Branded product name or descriptive label.</td>
-              </tr>
-              <tr>
-                <td><code>roaster</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Who roasted the coffee.</td>
-              </tr>
-              <tr>
-                <td><code>roast_level</code></td>
-                <td>string</td>
-                <td>Enum: <code>light</code>, <code>medium</code>, <code>dark</code></td>
-                <td>Roast level category.</td>
-              </tr>
-              <tr>
-                <td><code>roast_date</code></td>
-                <td>string</td>
-                <td><code>YYYY-MM-DD</code></td>
-                <td>Roast date.</td>
-              </tr>
-              <tr>
-                <td><code>type</code></td>
-                <td>string</td>
-                <td>Enum: <code>single_origin</code>, <code>blend</code></td>
-                <td>Single origin or blend.</td>
-              </tr>
-              <tr>
-                <td><code>origins</code></td>
-                <td>array</td>
-                <td>minItems: 1</td>
-                <td>Structured origin records.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="origin">
-      <div class="content-width">
-        <h2>Origin</h2>
-        <p class="section-note">All fields optional. Each entry in the <code>origins</code> array.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>name</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Descriptive name for this origin.</td>
-              </tr>
-              <tr>
-                <td><code>country</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Country of production.</td>
-              </tr>
-              <tr>
-                <td><code>region</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>State, province, or growing region.</td>
-              </tr>
-              <tr>
-                <td><code>subregion</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>District or sub-area within the region.</td>
-              </tr>
-              <tr>
-                <td><code>producer</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Farm, cooperative, or washing station.</td>
-              </tr>
-              <tr>
-                <td><code>process</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Green coffee processing method (e.g. washed, natural, honey).</td>
-              </tr>
-              <tr>
-                <td><code>lot</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Lot or batch identifier.</td>
-              </tr>
-              <tr>
-                <td><code>harvest_year</code></td>
-                <td>integer</td>
-                <td>1900–2100</td>
-                <td>Year the crop was harvested.</td>
-              </tr>
-              <tr>
-                <td><code>varietal</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Coffee varietal (e.g. Heirloom, Gesha, Bourbon).</td>
-              </tr>
-              <tr>
-                <td><code>elevation_masl</code></td>
-                <td>integer</td>
-                <td>&gt; 0</td>
-                <td>Growing elevation in meters above sea level.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="water">
-      <div class="content-width">
-        <h2>Water</h2>
-        <p class="section-note">Entire object optional.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>ppm</code></td>
-                <td>number</td>
-                <td>&ge; 0</td>
-                <td>Total dissolved solids in parts per million.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="equipment">
-      <div class="content-width">
-        <h2>Equipment</h2>
-        <p class="section-note">Entire object optional. All fields within optional.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>grinder</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Grinder model.</td>
-              </tr>
-              <tr>
-                <td><code>brewer</code></td>
-                <td>string</td>
-                <td>maxLength: 100</td>
-                <td>Brewer or brewing vessel.</td>
-              </tr>
-              <tr>
-                <td><code>grinder_setting</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Dial position or click setting. Integer or decimal tenths.</td>
-              </tr>
-              <tr>
-                <td><code>notes</code></td>
-                <td>string</td>
-                <td>maxLength: 2000</td>
-                <td>Equipment state observations (burr age, filter type, etc.).</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="result">
-      <div class="content-width">
-        <h2>Result</h2>
-        <p class="section-note">Entire object optional. All fields within optional.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>tds</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>TDS percentage of finished brew.</td>
-              </tr>
-              <tr>
-                <td><code>ey</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Extraction yield as a percentage.</td>
-              </tr>
-              <tr>
-                <td><code>brix</code></td>
-                <td>number</td>
-                <td>&ge; 0</td>
-                <td>Dissolved sugar content in degrees Brix.</td>
-              </tr>
-              <tr>
-                <td><code>yield_g</code></td>
-                <td>number</td>
-                <td>&gt; 0</td>
-                <td>Output weight in grams (espresso: liquid in cup).</td>
-              </tr>
-              <tr>
-                <td><code>tasting_notes</code></td>
-                <td>string</td>
-                <td>maxLength: 2000</td>
-                <td>Sensory description of the brew.</td>
-              </tr>
-              <tr>
-                <td><code>ratings</code></td>
-                <td>object</td>
-                <td></td>
-                <td>Multi-dimensional sensory ratings.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="ratings">
-      <div class="content-width">
-        <h2>Ratings</h2>
-        <p class="section-note">
-          All fields optional integers 1–9, aligned to the
-          <a href="https://sca.coffee/sca-news/sca-new-cva-cupping-standards" target="_blank" rel="noopener noreferrer">SCA Coffee Value Assessment</a>
-          hedonic scale (SCA-104, 2024).
-        </p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Type</th>
-                <th>Range</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>overall</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Holistic impression.</td>
-              </tr>
-              <tr>
-                <td><code>fragrance</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Dry grounds aroma before water is added.</td>
-              </tr>
-              <tr>
-                <td><code>aroma</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Wet aroma after water is added.</td>
-              </tr>
-              <tr>
-                <td><code>flavour</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Taste and aroma experienced during drinking.</td>
-              </tr>
-              <tr>
-                <td><code>aftertaste</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Length and quality of positive flavour after swallowing.</td>
-              </tr>
-              <tr>
-                <td><code>acidity</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Quality of acidity; brightness.</td>
-              </tr>
-              <tr>
-                <td><code>sweetness</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Perceived sweetness.</td>
-              </tr>
-              <tr>
-                <td><code>mouthfeel</code></td>
-                <td>integer</td>
-                <td>1–9</td>
-                <td>Tactile sensation; body and texture.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="hedonic-scale">
-          <h3>CVA Hedonic Scale</h3>
-          <div class="scale-grid">
-            <div class="scale-item"><span class="scale-value">1</span> Dislike extremely</div>
-            <div class="scale-item"><span class="scale-value">2</span> Dislike very much</div>
-            <div class="scale-item"><span class="scale-value">3</span> Dislike moderately</div>
-            <div class="scale-item"><span class="scale-value">4</span> Dislike slightly</div>
-            <div class="scale-item scale-neutral"><span class="scale-value">5</span> Neither like nor dislike</div>
-            <div class="scale-item"><span class="scale-value">6</span> Like slightly</div>
-            <div class="scale-item"><span class="scale-value">7</span> Like moderately</div>
-            <div class="scale-item"><span class="scale-value">8</span> Like very much</div>
-            <div class="scale-item"><span class="scale-value">9</span> Like extremely</div>
+    <div class="schema-body">
+      <!-- Sticky sidebar navigation -->
+      <aside class="schema-sidebar" aria-label="Section navigation">
+        <nav>
+          <p class="sidebar-label">Sections</p>
+          <ul class="sidebar-links" role="list">
+            <li><a href="#top-level" class="sidebar-link">Top-Level</a></li>
+            <li><a href="#brew" class="sidebar-link">Brew</a></li>
+            <li><a href="#coffee" class="sidebar-link">Coffee</a></li>
+            <li><a href="#origin" class="sidebar-link">Origin</a></li>
+            <li><a href="#water" class="sidebar-link">Water</a></li>
+            <li><a href="#equipment" class="sidebar-link">Equipment</a></li>
+            <li><a href="#result" class="sidebar-link">Result</a></li>
+            <li><a href="#ratings" class="sidebar-link">Ratings</a></li>
+          </ul>
+          <div class="sidebar-footer">
+            <a
+              href="https://brewspec.coffee/schema/v0.9.json"
+              class="sidebar-schema-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >v0.9.json ↗</a>
           </div>
-        </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="schema-content">
+        <section id="top-level">
+          <h2>Top-Level</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>brewspec_version</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>const: <code>"0.9"</code></td>
+                  <td>Must be the literal string "0.9".</td>
+                </tr>
+                <tr>
+                  <td><code>brews</code></td>
+                  <td>array</td>
+                  <td>Yes</td>
+                  <td>minItems: 1</td>
+                  <td>Array of brew objects. At least one brew required.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="brew">
+          <h2>Brew</h2>
+          <p class="section-note">All fields in the brew object are optional.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>date</code></td>
+                  <td>string</td>
+                  <td><code>YYYY-MM-DD</code> or <code>YYYY-MM-DDTHH:MM:SSZ</code></td>
+                  <td>Brew date or datetime (UTC).</td>
+                </tr>
+                <tr>
+                  <td><code>type</code></td>
+                  <td>string</td>
+                  <td>Enum: <code>immersion</code>, <code>pour_over</code>, <code>espresso</code>, <code>hybrid</code></td>
+                  <td>Brew method category.</td>
+                </tr>
+                <tr>
+                  <td><code>dose_g</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Coffee dose in grams.</td>
+                </tr>
+                <tr>
+                  <td><code>water_weight_g</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Water weight in grams.</td>
+                </tr>
+                <tr>
+                  <td><code>brew_ratio</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Water-to-coffee ratio as a float (e.g. 15.5 = 15.5:1).</td>
+                </tr>
+                <tr>
+                  <td><code>method</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Freeform brewer description (e.g. "Hario V60").</td>
+                </tr>
+                <tr>
+                  <td><code>water_temp_c</code></td>
+                  <td>number</td>
+                  <td>0–100, multipleOf: 0.1</td>
+                  <td>Water temperature in celsius.</td>
+                </tr>
+                <tr>
+                  <td><code>coffee</code></td>
+                  <td>object</td>
+                  <td></td>
+                  <td>Coffee ingredient descriptor.</td>
+                </tr>
+                <tr>
+                  <td><code>water</code></td>
+                  <td>object</td>
+                  <td></td>
+                  <td>Water ingredient descriptor.</td>
+                </tr>
+                <tr>
+                  <td><code>equipment</code></td>
+                  <td>object</td>
+                  <td></td>
+                  <td>Equipment descriptor.</td>
+                </tr>
+                <tr>
+                  <td><code>grind</code></td>
+                  <td>string</td>
+                  <td>Enum: <code>turkish</code>, <code>espresso</code>, <code>fine</code>, <code>medium_fine</code>, <code>medium</code>, <code>medium_coarse</code>, <code>coarse</code></td>
+                  <td>Grind size (finest to coarsest).</td>
+                </tr>
+                <tr>
+                  <td><code>duration_s</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Brew duration in seconds.</td>
+                </tr>
+                <tr>
+                  <td><code>notes</code></td>
+                  <td>string</td>
+                  <td>maxLength: 2000</td>
+                  <td>Brew-process notes.</td>
+                </tr>
+                <tr>
+                  <td><code>result</code></td>
+                  <td>object</td>
+                  <td></td>
+                  <td>Brew outcome measurements and sensory evaluation.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="coffee">
+          <h2>Coffee</h2>
+          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>name</code></td>
+                  <td>string</td>
+                  <td>maxLength: 150</td>
+                  <td>Branded product name or descriptive label.</td>
+                </tr>
+                <tr>
+                  <td><code>roaster</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Who roasted the coffee.</td>
+                </tr>
+                <tr>
+                  <td><code>roast_level</code></td>
+                  <td>string</td>
+                  <td>Enum: <code>light</code>, <code>medium</code>, <code>dark</code></td>
+                  <td>Roast level category.</td>
+                </tr>
+                <tr>
+                  <td><code>roast_date</code></td>
+                  <td>string</td>
+                  <td><code>YYYY-MM-DD</code></td>
+                  <td>Roast date.</td>
+                </tr>
+                <tr>
+                  <td><code>type</code></td>
+                  <td>string</td>
+                  <td>Enum: <code>single_origin</code>, <code>blend</code></td>
+                  <td>Single origin or blend.</td>
+                </tr>
+                <tr>
+                  <td><code>origins</code></td>
+                  <td>array</td>
+                  <td>minItems: 1</td>
+                  <td>Structured origin records.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="origin">
+          <h2>Origin</h2>
+          <p class="section-note">All fields optional. Each entry in the <code>origins</code> array.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>name</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Descriptive name for this origin.</td>
+                </tr>
+                <tr>
+                  <td><code>country</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Country of production.</td>
+                </tr>
+                <tr>
+                  <td><code>region</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>State, province, or growing region.</td>
+                </tr>
+                <tr>
+                  <td><code>subregion</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>District or sub-area within the region.</td>
+                </tr>
+                <tr>
+                  <td><code>producer</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Farm, cooperative, or washing station.</td>
+                </tr>
+                <tr>
+                  <td><code>process</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Green coffee processing method (e.g. washed, natural, honey).</td>
+                </tr>
+                <tr>
+                  <td><code>lot</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Lot or batch identifier.</td>
+                </tr>
+                <tr>
+                  <td><code>harvest_year</code></td>
+                  <td>integer</td>
+                  <td>1900–2100</td>
+                  <td>Year the crop was harvested.</td>
+                </tr>
+                <tr>
+                  <td><code>varietal</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Coffee varietal (e.g. Heirloom, Gesha, Bourbon).</td>
+                </tr>
+                <tr>
+                  <td><code>elevation_masl</code></td>
+                  <td>integer</td>
+                  <td>&gt; 0</td>
+                  <td>Growing elevation in meters above sea level.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="water">
+          <h2>Water</h2>
+          <p class="section-note">Entire object optional.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>ppm</code></td>
+                  <td>number</td>
+                  <td>&ge; 0</td>
+                  <td>Total dissolved solids in parts per million.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="equipment">
+          <h2>Equipment</h2>
+          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>grinder</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Grinder model.</td>
+                </tr>
+                <tr>
+                  <td><code>brewer</code></td>
+                  <td>string</td>
+                  <td>maxLength: 100</td>
+                  <td>Brewer or brewing vessel.</td>
+                </tr>
+                <tr>
+                  <td><code>grinder_setting</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Dial position or click setting. Integer or decimal tenths.</td>
+                </tr>
+                <tr>
+                  <td><code>notes</code></td>
+                  <td>string</td>
+                  <td>maxLength: 2000</td>
+                  <td>Equipment state observations (burr age, filter type, etc.).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="result">
+          <h2>Result</h2>
+          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Constraints</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>tds</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>TDS percentage of finished brew.</td>
+                </tr>
+                <tr>
+                  <td><code>ey</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Extraction yield as a percentage.</td>
+                </tr>
+                <tr>
+                  <td><code>brix</code></td>
+                  <td>number</td>
+                  <td>&ge; 0</td>
+                  <td>Dissolved sugar content in degrees Brix.</td>
+                </tr>
+                <tr>
+                  <td><code>yield_g</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Output weight in grams (espresso: liquid in cup).</td>
+                </tr>
+                <tr>
+                  <td><code>tasting_notes</code></td>
+                  <td>string</td>
+                  <td>maxLength: 2000</td>
+                  <td>Sensory description of the brew.</td>
+                </tr>
+                <tr>
+                  <td><code>ratings</code></td>
+                  <td>object</td>
+                  <td></td>
+                  <td>Multi-dimensional sensory ratings.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="ratings">
+          <h2>Ratings</h2>
+          <p class="section-note">
+            All fields optional integers 1–9, aligned to the
+            <a href="https://sca.coffee/sca-news/sca-new-cva-cupping-standards" target="_blank" rel="noopener noreferrer">SCA Coffee Value Assessment</a>
+            hedonic scale (SCA-104, 2024).
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Range</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>overall</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Holistic impression.</td>
+                </tr>
+                <tr>
+                  <td><code>fragrance</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Dry grounds aroma before water is added.</td>
+                </tr>
+                <tr>
+                  <td><code>aroma</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Wet aroma after water is added.</td>
+                </tr>
+                <tr>
+                  <td><code>flavour</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Taste and aroma experienced during drinking.</td>
+                </tr>
+                <tr>
+                  <td><code>aftertaste</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Length and quality of positive flavour after swallowing.</td>
+                </tr>
+                <tr>
+                  <td><code>acidity</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Quality of acidity; brightness.</td>
+                </tr>
+                <tr>
+                  <td><code>sweetness</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Perceived sweetness.</td>
+                </tr>
+                <tr>
+                  <td><code>mouthfeel</code></td>
+                  <td>integer</td>
+                  <td>1–9</td>
+                  <td>Tactile sensation; body and texture.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="hedonic-scale">
+            <h3>CVA Hedonic Scale</h3>
+            <div class="scale-grid">
+              <div class="scale-item"><span class="scale-value">1</span> Dislike extremely</div>
+              <div class="scale-item"><span class="scale-value">2</span> Dislike very much</div>
+              <div class="scale-item"><span class="scale-value">3</span> Dislike moderately</div>
+              <div class="scale-item"><span class="scale-value">4</span> Dislike slightly</div>
+              <div class="scale-item scale-neutral"><span class="scale-value">5</span> Neither like nor dislike</div>
+              <div class="scale-item"><span class="scale-value">6</span> Like slightly</div>
+              <div class="scale-item"><span class="scale-value">7</span> Like moderately</div>
+              <div class="scale-item"><span class="scale-value">8</span> Like very much</div>
+              <div class="scale-item"><span class="scale-value">9</span> Like extremely</div>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </main>
   <Footer />
 </Base>
 
 <style>
+  /* ── Hero ── */
   #schema-hero {
     padding-top: var(--space-2xl);
     padding-bottom: var(--space-xl);
-    border-bottom: none;
-  }
-
-  #schema-hero + section {
-    border-top: none;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .schema-eyebrow {
     font-family: var(--font-head);
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-accent);
-    margin-bottom: 0;
+    margin-bottom: var(--space-sm);
   }
 
   #schema-hero h1 {
@@ -549,22 +560,113 @@ import Footer from '../components/Footer.astro';
     font-size: var(--text-lg);
     color: var(--color-text-muted);
     max-width: 540px;
+    margin: 0;
   }
 
-  /* Section headings */
-  section h2 {
+  /* ── Body layout: sidebar + content ── */
+  .schema-body {
+    max-width: var(--wide-width);
+    margin: 0 auto;
+    padding: 0 var(--space-sm);
+    display: grid;
+    grid-template-columns: 176px 1fr;
+    gap: var(--space-2xl);
+    align-items: start;
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-2xl);
+  }
+
+  /* ── Sidebar ── */
+  .schema-sidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--space-md));
+    height: fit-content;
+  }
+
+  .sidebar-label {
+    font-family: var(--font-head);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-faint);
+    margin-bottom: var(--space-sm);
+  }
+
+  .sidebar-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidebar-link {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease, background-color 0.15s ease;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar-link:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    text-decoration: none;
+    border-left-color: var(--color-accent);
+  }
+
+  .sidebar-footer {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .sidebar-schema-link {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .sidebar-schema-link:hover {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  /* ── Content sections ── */
+  .schema-content section {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: var(--space-2xl);
+    border-top: none;
+  }
+
+  .schema-content section + section {
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: var(--space-xl);
+  }
+
+  .schema-content h2 {
     font-size: var(--text-2xl);
+    letter-spacing: -0.015em;
     margin-bottom: var(--space-xs);
   }
 
   .section-note {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-text-muted);
     margin-bottom: var(--space-md);
   }
 
   .section-note code {
     background: var(--color-surface);
+    border: 1px solid var(--color-border);
     padding: 0.1em 0.35em;
     border-radius: 3px;
     font-size: 0.85em;
@@ -572,48 +674,62 @@ import Footer from '../components/Footer.astro';
 
   .section-note a {
     color: var(--color-accent);
-    text-decoration-color: var(--color-accent);
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
 
   .section-note a:hover {
-    color: var(--color-accent-hover);
+    text-decoration-color: var(--color-accent);
   }
 
-  /* Tables */
+  /* ── Tables ── */
   .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 1.5;
   }
 
   thead {
-    border-bottom: 2px solid var(--color-accent);
+    background-color: var(--color-surface);
   }
 
   th {
     font-family: var(--font-head);
     font-weight: var(--font-weight-medium);
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
+    font-size: var(--text-xs);
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--color-text-muted);
     text-align: left;
-    padding: var(--space-xs) var(--space-xs) var(--space-xs) 0;
+    padding: var(--space-sm) var(--space-sm);
     white-space: nowrap;
+    border-bottom: 1px solid var(--color-border);
   }
 
   td {
-    padding: var(--space-xs) var(--space-xs) var(--space-xs) 0;
-    border-bottom: 1px solid var(--color-border);
+    padding: 0.625rem var(--space-sm);
+    border-bottom: 1px solid var(--color-border-subtle);
     vertical-align: top;
     color: var(--color-text);
+    transition: background-color 0.1s ease;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Row hover */
+  tbody tr:hover td {
+    background-color: var(--color-surface);
   }
 
   td:first-child {
@@ -622,25 +738,26 @@ import Footer from '../components/Footer.astro';
 
   td code {
     background: var(--color-surface);
+    border: 1px solid var(--color-border);
     padding: 0.1em 0.35em;
     border-radius: 3px;
     font-size: 0.85em;
     color: var(--color-text);
   }
 
-  /* Hedonic scale */
+  /* ── Hedonic scale ── */
   .hedonic-scale {
     margin-top: var(--space-lg);
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-subtle);
     padding-top: var(--space-md);
   }
 
   .hedonic-scale h3 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-bold);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
+    letter-spacing: 0.1em;
+    color: var(--color-text-faint);
     margin-bottom: var(--space-sm);
   }
 
@@ -651,9 +768,9 @@ import Footer from '../components/Footer.astro';
   }
 
   .scale-item {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--color-text-muted);
-    padding: 0.35rem 0;
+    padding: 0.3rem 0;
   }
 
   .scale-neutral {
@@ -669,18 +786,47 @@ import Footer from '../components/Footer.astro';
     color: var(--color-accent);
   }
 
-  /* Responsive */
+  /* ── Responsive ── */
+  @media (max-width: 860px) {
+    .schema-body {
+      grid-template-columns: 1fr;
+    }
+
+    .schema-sidebar {
+      position: static;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .sidebar-links {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+
+    .sidebar-link {
+      border-left: none;
+      border-bottom: 2px solid transparent;
+    }
+
+    .sidebar-link:hover {
+      border-left-color: transparent;
+      border-bottom-color: var(--color-accent);
+    }
+  }
+
   @media (max-width: 639px) {
     #schema-hero h1 {
       font-size: var(--text-3xl);
     }
 
     table {
-      font-size: 0.8125rem;
+      font-size: var(--text-xs);
     }
 
     th, td {
-      padding: 0.35rem 0.35rem 0.35rem 0;
+      padding: 0.4rem 0.5rem;
     }
 
     .scale-grid {
