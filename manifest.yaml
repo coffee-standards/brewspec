@@ -60,7 +60,7 @@ products:
     status: "in_progress"
     description: "Open source standard for describing coffee brews (YAML/JSON). The trust anchor — free and open forever."
     spec: specs/products/brewspec.md
-    current_version: "0.9"
+    current_version: "1.0"
   - name: "BrewLog CLI"
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
@@ -82,8 +82,20 @@ tasks:
     product: "BrewSpec"
     priority: P1
     tier: standard
-    status: ready_for_spec
+    status: done
     assigned_to: null
+    completed_date: "2026-03-30"
+    review_verdict: PASS
+    review_date: "2026-03-29"
+    review: reviews/2026-03-29-reviewer-brewspec-v1.0.yaml
+    tag: v1.0
+    artifacts:
+      spec: specs/products/brewspec-v1.0.md
+      design: specs/designs/brewspec-v1.0.md
+    review_carry_forward:
+      - "LOW: tests/test_brewspec_schema.py lines 91 and 96 — stale test function names test_schema_title_is_v0_9 and test_version_must_be_0_9 (assertions are correct; names are stale)"
+      - "LOW: brew.water_g schema description reads 'Recipe target water weight in grams.' — should read 'Recipe target water in grams.' per AC-2 (no validation impact)"
+      - "LOW: examples/invalid/v0.2_format.yaml comment still references 'the v0.3 schema'"
     depends_on:
       - brewspec-v0.9
     description: >
@@ -215,246 +227,6 @@ tasks:
       Existing 1-5 values remain valid under the expanded 1-9 range. The
       body → mouthfeel rename is a breaking field change.
 
-  - id: brewspec-site-v0.8
-    name: "BrewSpec Site — v0.8 Update"
-    type: feature
-    product: "BrewSpec"
-    priority: P1
-    tier: express
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-19"
-    review_verdict: PASS
-    review_date: "2026-03-19"
-    review: reviews/2026-03-19-reviewer-brewspec-site-v0.8.yaml
-    depends_on:
-      - brewspec-v0.8
-    description: >
-      Update brewspec.coffee landing page for v0.8. Bump version references
-      from 0.7 to 0.8 in Hero eyebrow and schema link. Update Examples section
-      YAML to show v0.8 features (roaster, roast_level, elevation_masl).
-      Update WhatItCovers section to list new coffee fields (roaster, roast level)
-      and origin field (elevation). Add v0.8 schema to site/public/schema/.
-    review_carry_forward:
-      - "MED-1: deploy-site.yml CI workflow still references v0.4.json in jq patch step (lines 40-41) — update or remove"
-
-  - id: brewspec-v0.8
-    name: "BrewSpec v0.8"
-    type: feature
-    product: "BrewSpec"
-    priority: P1
-    tier: standard
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-19"
-    review_verdict: PASS
-    review_date: "2026-03-19"
-    review: reviews/2026-03-19-reviewer-brewspec-v0.8.yaml
-    tag: v0.8
-    artifacts:
-      spec: specs/products/brewspec-v0.8.md
-      design: specs/designs/brewspec-v0.8.md
-    depends_on:
-      - brewspec-v0.7
-    description: >
-      Four targeted additions to the BrewSpec schema.
-
-      1. Add coffee.roaster field. Freeform string identifying who roasted the coffee
-         (e.g. "Onyx", "Tim Wendelboe"). Critical for tracking and comparing across roasters.
-
-      2. Add coffee.roast_level field. Enum: light, medium, dark. Widely used descriptor
-         that affects grind and brew parameters.
-
-      3. Add origin.elevation_masl field. Positive integer for growing altitude in meters
-         above sea level. Common on specialty bags, correlates with density and flavour.
-
-      4. Add multipleOf: 0.1 precision constraint to water_temp_c. Pragmatic data validation —
-         no consumer thermometer measures beyond 0.1°C precision.
-
-      All changes are additive and non-breaking.
-    review_carry_forward:
-      - "examples/invalid/invalid_type_enum.yaml still has brewspec_version: \"0.2\" — bump to current version so it tests the intended failure (bad type enum) rather than version mismatch"
-
-  - id: brewspec-v0.7
-    name: "BrewSpec v0.7"
-    type: feature
-    product: "BrewSpec"
-    priority: P1
-    tier: standard
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-17"
-    review_verdict: PASS
-    review_date: "2026-03-17"
-    review: reviews/2026-03-17-reviewer-brewspec-v0.7-r2.yaml
-    tag: v0.7
-    artifacts:
-      spec: specs/products/brewspec-v0.7.md
-      design: specs/designs/brewspec-v0.7.md
-    description: >
-      Two targeted changes to the BrewSpec schema.
-
-      1. Add result.yield_g field. Espresso brewing distinguishes between water_weight_g
-         (water in) and yield_g (liquid out). These diverge due to puck absorption
-         (typically 2–4g). Add result.yield_g as an optional positive number
-         (exclusiveMinimum: 0). This is additive and non-breaking.
-
-      2. Remove required constraint from brew object. The four previously required brew
-         object fields (date, type, dose_g, water_weight_g) become optional. This is a
-         breaking change for validators but not for existing documents — all v0.6-valid
-         documents remain valid under v0.7 with only a version bump.
-    depends_on:
-      - brewspec-v0.6
-
-  - id: brewspec-v0.6
-    name: "BrewSpec v0.6"
-    type: feature
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-05"
-    review_verdict: PASS
-    review_date: "2026-03-05"
-    review: reviews/2026-03-05-reviewer-brewspec-v0.6.yaml
-    description: >
-      Stability release — four breaking schema changes (grinder_setting type→number,
-      water_volume_ml removed, coffee.process removed, coffee.varietal removed) plus
-      coffee.name added, varietal added to origins[], and carry-forward fixes MED-1/2/4/5 from v0.5 review.
-    depends_on:
-      - brewspec-v0.5
-    artifacts:
-      product_spec: specs/products/brewspec-v0.6.md
-      design: specs/designs/brewspec-v0.6.md
-      self_review: reviews/2026-03-03-product-manager-brewspec-v0.6.yaml
-      architect_self_review: reviews/2026-03-04-architect-brewspec-v0.6.yaml
-      dev_self_review: reviews/2026-03-05-backend-dev-brewspec-v0.6.yaml
-      tag: v0.6
-
-  - id: brewspec-v0.5
-    name: "BrewSpec v0.5"
-    type: feature
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-03"
-    review_verdict: PASS
-    review_date: "2026-03-01"
-    description: >
-      Adds brew_ratio field, structured coffee.origins object replacing the v0.4
-      coffee.origin string array (breaking change), equipment.grinder_setting and
-      equipment.notes fields, and carry-forward fixes.
-    depends_on:
-      - brewspec-v0.4
-    artifacts:
-      product_spec: specs/products/brewspec-v0.5.md
-      design: specs/designs/brewspec-v0.5.md
-      review: reviews/2026-03-01-reviewer-brewspec-v0.5.yaml
-
-  - id: brewspec-landing-page
-    name: "BrewSpec Landing Page (brewspec.coffee)"
-    product: "BrewSpec"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-26"
-    branch: "brewspec-landing-page"
-    description: >
-      A minimal landing page at brewspec.coffee that describes BrewSpec, links to the
-      GitHub repository and schema, and gives tool builders a canonical URL to
-      reference.
-    depends_on: []
-    artifacts:
-      brand_guidelines: specs/brand/brewspec/brand-guidelines.md
-      copy: specs/brand/brewspec/copy/landing-page.md
-      design: specs/designs/brewspec-landing-page.md
-      self_review: reviews/2026-02-25-backend-dev-brewspec-landing-page.yaml
-      reviewer_review: reviews/2026-02-26-reviewer-brewspec-landing-page.yaml
-
-  - id: brewspec-site-polish
-    name: "BrewSpec Site — Favicon + Social Preview"
-    type: feature
-    product: "BrewSpec"
-    priority: P2
-    tier: express
-    status: done
-    completed_date: "2026-03-05"
-    assigned_to: null
-    source_task: brewspec-landing-page
-    description: >
-      Two cosmetic enhancements to brewspec.coffee: favicon (coffee cup SVG) and
-      Open Graph social preview image (og.png 1200×630px).
-
-  - id: brewspec-v0.4
-    name: "BrewSpec v0.4"
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-22"
-    artifacts:
-      product_spec: specs/products/brewspec-v0.4.md
-      design: specs/designs/brewspec-v0.4.md
-      review: reviews/2026-02-22-reviewer-brewspec-v0.4.yaml
-    description: >
-      Schema iteration with breaking structural changes. Key changes: date field
-      accepts both YYYY-MM-DD and YYYY-MM-DDTHH:MM:SSZ; grind field standardized
-      to 8-value enum; new result object groups tds, ey, brix, ratings (SCA-aligned
-      8-dimension 1-10 scale), and tasting_notes.
-    depends_on:
-      - brewspec-v0.3
-
-  - id: brewspec-v0.3
-    name: "BrewSpec v0.3"
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-20"
-    description: >
-      Additive, non-breaking iteration on v0.2. New optional equipment object
-      (grinder, brewer as freeform strings). New optional ey field. maxLength
-      constraints added to all freeform string fields.
-    depends_on: []
-    artifacts:
-      product_spec: specs/products/brewspec-v0.3.md
-      design: specs/designs/brewspec-v0.3.md
-      review: reviews/2026-02-20-reviewer-brewspec-v0.3.yaml
-
-  - id: brewspec-v0.2
-    name: "BrewSpec v0.2"
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-19"
-    description: >
-      Schema corrections and additive enhancements. Breaking change from v0.1:
-      brew quantities move to the brew level; coffee and water objects become optional
-      ingredient descriptors. Additions: coffee metadata, water ppm, brew tds.
-    depends_on:
-      - brewspec-v0.1
-    artifacts:
-      product_spec: specs/products/brewspec-v0.2.md
-      design: specs/designs/brewspec-v0.2.md
-      review: reviews/2026-02-18-reviewer-brewspec-v0.2.yaml
-
-  - id: brewspec-v0.1
-    name: "BrewSpec v0.1"
-    product: "BrewSpec"
-    priority: P0
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-17"
-    description: >
-      Minimal brew data format with JSON Schema, test suite, and examples.
-    depends_on: []
-    artifacts:
-      product_spec: specs/products/brewspec.md
-      design: specs/designs/brewspec-v0.1.md
-      review: reviews/2026-02-17-reviewer-brewspec-v0.1.yaml
-
   # ──────────────────────────────────────────────────────────────────────────
   # BrewLog CLI
   # Open tasks first, then done (newest → oldest).
@@ -505,246 +277,77 @@ tasks:
       body). Update WhatItCovers section if ratings are mentioned. Add v0.9
       schema to site/public/schema/.
 
-  - id: brewlog-cli-v0.7
-    name: "BrewLog CLI v0.7"
-    type: feature
-    product: "BrewLog CLI"
-    priority: P1
-    tier: express
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-19"
-    review_verdict: PASS
-    review_date: "2026-03-19"
-    review: reviews/2026-03-19-reviewer-brewlog-cli-v0.7.yaml
-    tag: brewlog-v0.7
-    depends_on:
-      - brewlog-cli-v0.6
-      - brewspec-v0.8
-    description: >
-      BrewSpec v0.8 adoption. Bump schema version to 0.8 and bundle updated
-      schema. Add support for three new fields: coffee.roaster (string, max 100),
-      coffee.roast_level (enum: light/medium/dark), and origin.elevation_masl
-      (positive integer). Add water_temp_c multipleOf 0.1 precision validation
-      in the Pydantic model. New DB columns: coffee_roaster (TEXT),
-      coffee_roast_level (TEXT). Update models, db, serialise, prompts, add,
-      update, show, export, and import commands. Update bundled schema. TDD.
-    review_carry_forward:
-      - "_rebuild_brews_table in db.py does not include coffee_roaster/coffee_roast_level — correct by design but add a comment explaining v0.8+ columns are excluded because _apply_migrations adds them after rebuild"
-      - "test_v08.py checks result.output for stderr messages — add comment or set mix_stderr=True explicitly"
-
-  - id: brewlog-cli-v0.6
-    name: "BrewLog CLI v0.6"
-    type: feature
-    product: "BrewLog CLI"
-    priority: P1
-    tier: express
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-17"
-    review_verdict: PASS
-    review_date: "2026-03-17"
-    review: reviews/2026-03-17-reviewer-brewlog-cli-v0.6.yaml
-    depends_on:
-      - brewlog-cli-v0.5
-      - brewspec-v0.7
-    description: >
-      BrewSpec v0.7 adoption plus carry-forward fixes from the v0.5 reviewer report.
-      Adds result.yield_g support, bumps schema version to 0.7, and makes previously
-      required fields optional in import validation.
-    artifacts:
-      commit: "8e7cb52 (feat(brewlog-cli-v0.6): BrewSpec v0.7 adoption and carry-forward fixes)"
-    review_carry_forward: []
-
-  - id: brewlog-cli-v0.5
-    name: "BrewLog CLI v0.5"
-    type: feature
-    product: "BrewLog CLI"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-08"
-    review_verdict: PASS
-    review_date: "2026-03-08"
-    description: >
-      New commands: stats (brew history summary) and search (case-insensitive
-      substring search). New data management: import deduplication, single-brew
-      export, custom database path. BrewSpec v0.6 adoption: brew_ratio, structured
-      coffee.origins, coffee.name, equipment.grinder_setting, equipment.notes.
-    depends_on:
-      - brewlog-cli-v0.4
-      - brewspec-v0.6
-    artifacts:
-      product_spec: specs/products/brewlog-cli-v0.5.md
-      design: specs/designs/brewlog-cli-v0.5.md
-      review: reviews/2026-03-08-reviewer-brewlog-cli-v0.5.yaml
-      tag: brewlog-v0.5
-
-  - id: brewlog-cli-v0.4
-    name: "BrewLog CLI v0.4"
-    product: "BrewLog CLI"
-    priority: P1
-    tier: express
-    status: done
-    completed_date: "2026-02-26"
-    assigned_to: null
-    description: >
-      Express-tier patch. Carry-forward items from v0.3 review: list hide empty
-      columns, update help text, CSV export support.
-    depends_on:
-      - brewlog-cli-v0.3
-    artifacts:
-      review: reviews/2026-02-26-reviewer-brewlog-cli-v0.4.yaml
-      tag: brewlog-v0.4
-
-  - id: brewlog-cli-v0.3
-    name: "BrewLog CLI v0.3"
-    product: "BrewLog CLI"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-23"
-    review_verdict: PASS
-    review_date: "2026-02-23"
-    description: >
-      BrewSpec v0.4 adoption: result object, grind enum, SCA rating dimensions,
-      date format UX (YYYY-MM-DD accepted). New: brix, tasting notes, 8 SCA rating
-      flags, list filtering, show results section.
-    depends_on:
-      - brewlog-cli-v0.2
-      - brewspec-v0.4
-    artifacts:
-      product_spec: specs/products/brewlog-cli-v0.3.md
-      design: specs/designs/brewlog-cli-v0.3.md
-      review: reviews/2026-02-23-reviewer-brewlog-cli-v0.3.yaml
-      tag: brewlog-v0.3
-
-  - id: brewlog-cli-v0.2
-    name: "BrewLog CLI v0.2"
-    product: "BrewLog CLI"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-21"
-    artifacts:
-      product_spec: specs/products/brewlog-cli-v0.2.md
-      design: specs/designs/brewlog-cli-v0.2.md
-      review: reviews/2026-02-21-reviewer-brewlog-cli-v0.2.yaml
-    description: >
-      New commands: delete (with confirmation), add interactive brew type menu.
-      New: list filtering (--type, --rating, --since). Carry-forward fixes from
-      v0.1 review.
-    depends_on:
-      - brewlog-cli-v0.1.1
-
-  - id: brewlog-cli-v0.1.1
-    name: "BrewLog CLI v0.1.1"
-    product: "BrewLog CLI"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-20"
-    description: >
-      Patch on v0.1. Two usability additions: flag hint tip on brewlog add,
-      and new brewlog update command.
-    depends_on:
-      - brewlog-cli-v0.1
-
-  - id: brewlog-cli-v0.1
-    name: "BrewLog CLI v0.1"
-    product: "BrewLog CLI"
-    priority: P1
-    status: done
-    assigned_to: null
-    completed_date: "2026-02-20"
-    description: >
-      Minimal local CLI for logging and viewing brews. Commands: add, list, show,
-      export, import. Local SQLite storage. BrewSpec v0.2-compliant export and
-      import.
-    depends_on:
-      - brewspec-v0.2
-    artifacts:
-      product_spec: specs/products/brewlog.md
-      design: specs/designs/brewlog-cli-v0.1.md
-      review: reviews/2026-02-19-reviewer-brewlog-cli-v0.1.yaml
-
 maintenance:
   # Bugs, carry-forward fixes, and health-report refactors.
   # Items here are small and targeted — no product spec or design doc required.
   #
   # type: bug      → defect or usability fix; defaults to tier: express
   # type: refactor → structural improvement sourced from a health report
+  # type: chore    → carry-forward cleanup items; human-driven
   #
   # Status flow: backlog → ready_for_dev → ready_for_review → ready_for_deploy → done
 
   # ──────────────────────────────────────────────────────────────────────────
-  # BrewSpec Schema
+  # Carry-forward chores (surfaced during archiving)
   # ──────────────────────────────────────────────────────────────────────────
 
-  - id: brewspec-fix-duplicate-test-function
-    type: bug
-    tier: express
+  - id: carry-forward-test-coverage
+    type: chore
     product: "BrewSpec"
-    priority: P2
-    status: done
+    priority: P3
+    status: backlog
     assigned_to: null
-    completed_date: "2026-03-08"
-    source_task: brewlog-cli-v0.5
-    artifacts:
-      review: reviews/2026-03-08-reviewer-brewspec-fix-duplicate-test-function.yaml
     description: >
-      Three bundled fixes: ruff F811 duplicate test function name, varietal
-      round-trip test coverage, and serialise.py docstring update.
+      Carry-forward test/schema hygiene items from archived reviews.
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # BrewSpec Landing Page
-  # ──────────────────────────────────────────────────────────────────────────
+      1. (from brewspec-v0.8) examples/invalid/invalid_type_enum.yaml still has
+         brewspec_version: "0.2" — bump to current version so it tests the intended
+         failure (bad type enum) rather than version mismatch.
 
-  - id: brewspec-site-mobile-overflow
-    type: bug
-    tier: express
-    product: "BrewSpec"
-    priority: P2
-    status: done
-    completed_date: "2026-03-05"
-    assigned_to: null
-    source_task: brewspec-landing-page
-    description: >
-      On mobile, YAML code blocks in the Examples section overflow horizontally.
-      Fix: add min-width: 0 to .code-block in CodeBlock.astro.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # BrewLog CLI
-  # ──────────────────────────────────────────────────────────────────────────
-
-  - id: brewlog-fix-update-help-text
-    type: bug
-    tier: express
+  - id: carry-forward-code-cleanup
+    type: chore
     product: "BrewLog CLI"
     priority: P3
-    status: done
+    status: backlog
     assigned_to: null
-    completed_date: "2026-03-04"
-    review_verdict: PASS
-    review_date: "2026-03-04"
-    artifacts:
-      review: reviews/2026-03-04-reviewer-brewlog-fix-update-help-text.yaml
     description: >
-      update command: '--id' flag description reads 'defaults to the…' (truncated).
-      Complete to 'defaults to the last brew'.
+      Carry-forward code comment and CI cleanup items from archived reviews.
 
-  - id: brewlog-fix-list-hide-empty-cols
-    type: bug
-    tier: express
-    product: "BrewLog CLI"
-    priority: P2
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-04"
-    review_verdict: PASS
-    review_date: "2026-03-04"
-    artifacts:
-      review: reviews/2026-03-04-reviewer-brewlog-fix-list-hide-empty-cols.yaml
-    description: >
-      list command: table shows columns that have no data in the current result set.
-      A column should only appear when at least one row has a non-null value for it.
+      1. (from brewspec-site-v0.8) deploy-site.yml CI workflow still references
+         v0.4.json in jq patch step (lines 40-41) — update or remove.
+
+      2. (from brewlog-cli-v0.7) _rebuild_brews_table in db.py does not include
+         coffee_roaster/coffee_roast_level — correct by design but add a comment
+         explaining v0.8+ columns are excluded because _apply_migrations adds them
+         after rebuild.
+
+      3. (from brewlog-cli-v0.7) test_v08.py checks result.output for stderr
+         messages — add comment or set mix_stderr=True explicitly.
+
+# ──────────────────────────────────────────────────────────────────────────
+# Archive — completed tasks older than 7 days
+# ──────────────────────────────────────────────────────────────────────────
+archive:
+  - {id: brewspec-v0.8, name: "BrewSpec v0.8", status: done, completed_date: '2026-03-19', tag: v0.8}
+  - {id: brewspec-site-v0.8, name: "BrewSpec Site — v0.8 Update", status: done, completed_date: '2026-03-19'}
+  - {id: brewlog-cli-v0.7, name: "BrewLog CLI v0.7", status: done, completed_date: '2026-03-19', tag: brewlog-v0.7}
+  - {id: brewspec-v0.7, name: "BrewSpec v0.7", status: done, completed_date: '2026-03-17', tag: v0.7}
+  - {id: brewlog-cli-v0.6, name: "BrewLog CLI v0.6", status: done, completed_date: '2026-03-17'}
+  - {id: brewspec-fix-duplicate-test-function, name: "Fix duplicate test function + varietal coverage", status: done, completed_date: '2026-03-08'}
+  - {id: brewlog-cli-v0.5, name: "BrewLog CLI v0.5", status: done, completed_date: '2026-03-08', tag: brewlog-v0.5}
+  - {id: brewspec-v0.6, name: "BrewSpec v0.6", status: done, completed_date: '2026-03-05', tag: v0.6}
+  - {id: brewspec-site-polish, name: "BrewSpec Site — Favicon + Social Preview", status: done, completed_date: '2026-03-05'}
+  - {id: brewspec-site-mobile-overflow, name: "Fix mobile code block overflow", status: done, completed_date: '2026-03-05'}
+  - {id: brewlog-fix-update-help-text, name: "Fix update --id help text", status: done, completed_date: '2026-03-04'}
+  - {id: brewlog-fix-list-hide-empty-cols, name: "Fix list: hide empty columns", status: done, completed_date: '2026-03-04'}
+  - {id: brewspec-v0.5, name: "BrewSpec v0.5", status: done, completed_date: '2026-03-03'}
+  - {id: brewspec-landing-page, name: "BrewSpec Landing Page (brewspec.coffee)", status: done, completed_date: '2026-02-26'}
+  - {id: brewlog-cli-v0.4, name: "BrewLog CLI v0.4", status: done, completed_date: '2026-02-26', tag: brewlog-v0.4}
+  - {id: brewlog-cli-v0.3, name: "BrewLog CLI v0.3", status: done, completed_date: '2026-02-23', tag: brewlog-v0.3}
+  - {id: brewspec-v0.4, name: "BrewSpec v0.4", status: done, completed_date: '2026-02-22'}
+  - {id: brewlog-cli-v0.2, name: "BrewLog CLI v0.2", status: done, completed_date: '2026-02-21'}
+  - {id: brewspec-v0.3, name: "BrewSpec v0.3", status: done, completed_date: '2026-02-20'}
+  - {id: brewlog-cli-v0.1.1, name: "BrewLog CLI v0.1.1", status: done, completed_date: '2026-02-20'}
+  - {id: brewlog-cli-v0.1, name: "BrewLog CLI v0.1", status: done, completed_date: '2026-02-20'}
+  - {id: brewspec-v0.2, name: "BrewSpec v0.2", status: done, completed_date: '2026-02-19'}
+  - {id: brewspec-v0.1, name: "BrewSpec v0.1", status: done, completed_date: '2026-02-17'}
