@@ -1,0 +1,10 @@
+# Invalid: water_weight_g was removed in v1.0 and replaced by water_g.
+# The brew object enforces additionalProperties: false, so water_weight_g
+# is now an unrecognised field and fails validation.
+# Migration: rename water_weight_g to water_g.
+brewspec_version: "1.0"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "pour_over"
+    dose_g: 20.0
+    water_weight_g: 320.0

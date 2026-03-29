@@ -1,10 +1,10 @@
 # Invalid: coffee.process at the top-level coffee object is removed in v0.6.
 # Process must be recorded inside coffee.origins[].process.
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-01"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 288.0
+    water_g: 288.0
     coffee:
       process: "Washed"

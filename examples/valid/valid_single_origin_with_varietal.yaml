@@ -1,12 +1,12 @@
 # Valid example: single origin with varietal at origin level.
 # Demonstrates coffee.name (new in v0.6) alongside coffee.origins[].varietal.
 # For single-origin coffees, coffee.name and origins[].name typically match.
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-01"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 288.0
+    water_g: 288.0
     brew_ratio: 16.0
     method: "Hario V60 02"
     grind: "medium_fine"

@@ -1,9 +1,9 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-28"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 300.0
+    water_g: 300.0
     equipment:
       grinder: "Comandante C40 MK4"
       brewer: "Hario V60 02"

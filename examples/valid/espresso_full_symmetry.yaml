@@ -1,0 +1,31 @@
+# Valid: demonstrates full water/yield symmetry in v1.0.
+# brew.water_g = recipe target water input (what you intend to put in)
+# brew.yield_g = recipe target output weight (what you intend to collect)
+# result.water_g = actual water used (may differ from target)
+# result.yield_g = actual output weight collected in the cup
+# equipment.pressure_bar and equipment.flow_rate_ml_s are new in v1.0.
+brewspec_version: "1.0"
+brews:
+  - date: "2026-03-20T07:30:00Z"
+    type: "espresso"
+    dose_g: 18.0
+    water_g: 36.0
+    yield_g: 36.0
+    grind: "espresso"
+    duration_s: 28
+    equipment:
+      grinder: "Comandante C40 MK4"
+      brewer: "La Marzocco Linea Mini"
+      grinder_setting: 11
+      pressure_bar: 9.0
+      flow_rate_ml_s: 2.5
+    result:
+      water_g: 35.5
+      yield_g: 35.8
+      tds: 9.1
+      ey: 19.6
+      tasting_notes: "Rich caramel, dark chocolate, syrupy mouthfeel"
+      ratings:
+        overall: 8
+        flavour: 7
+        mouthfeel: 8

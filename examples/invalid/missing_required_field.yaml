@@ -1,6 +1,9 @@
-# Invalid: brew missing required 'date' field
-brewspec_version: "0.2"
+# Invalid: water_temp_c value of 96.15 violates the multipleOf: 0.1 constraint.
+# water_temp_c accepts only values that are multiples of 0.1 (e.g. 96.0, 96.1, 96.2).
+# 96.15 has sub-0.1 precision and is rejected.
+brewspec_version: "1.0"
 brews:
   - type: "pour_over"
     dose_g: 20
-    water_weight_g: 320
+    water_g: 320
+    water_temp_c: 96.15

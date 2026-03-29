@@ -1,12 +1,12 @@
 # Invalid: result.ratings.overall value of 10 exceeds the maximum of 9.
 # All rating dimension fields (overall, fragrance, aroma, flavour, aftertaste,
 # acidity, sweetness, mouthfeel) accept integers 1-9 inclusive only.
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-28"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 280.0
+    water_g: 280.0
     result:
       ratings:
         overall: 10

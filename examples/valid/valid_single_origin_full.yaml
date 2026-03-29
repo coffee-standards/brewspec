@@ -1,9 +1,9 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-28"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 280.0
+    water_g: 280.0
     brew_ratio: 15.56
     method: "Hario V60"
     grind: "medium_fine"

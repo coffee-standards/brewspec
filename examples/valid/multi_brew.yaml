@@ -1,10 +1,10 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-21"
     type: "pour_over"
     method: "Hario V60"
     dose_g: 20
-    water_weight_g: 320
+    water_g: 320
     water_temp_c: 96
     coffee:
       roast_date: "2026-01-20"
@@ -18,7 +18,7 @@ brews:
     type: "immersion"
     method: "French press"
     dose_g: 30
-    water_weight_g: 500
+    water_g: 500
     coffee:
       type: "blend"
       origins:
@@ -30,4 +30,4 @@ brews:
   - date: "2026-02-13T06:45:00Z"
     type: "espresso"
     dose_g: 18
-    water_weight_g: 36
+    water_g: 36
