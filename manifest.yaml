@@ -76,6 +76,108 @@ tasks:
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
 
+  - id: brewspec-v1.0
+    name: "BrewSpec v1.0"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: standard
+    status: ready_for_spec
+    assigned_to: null
+    depends_on:
+      - brewspec-v0.9
+    description: >
+      BrewSpec v1.0. Several breaking changes, making this a major version bump.
+
+      1. Recipe vs result symmetry for water and yield.
+         Rename brew.water_weight_g → brew.water_g (the _weight suffix is redundant
+         given the _g unit). Add brew.yield_g as a recipe-level target (intended
+         output weight — primarily useful for espresso dialling). Add result.water_g
+         for actual water used (captures deviation from recipe target). result.yield_g
+         already exists and is unchanged. Context (brew level = recipe intent,
+         result level = actual measurement) is what distinguishes target from actual
+         — field names are intentionally symmetric and clean.
+
+      2. Standardise name field maxLength.
+         coffee.name is currently maxLength: 150; origin.name is maxLength: 100.
+         Both should be 100. Reduces coffee.name from 150 → 100 (breaking constraint
+         tightening — documents with names 101-150 chars become invalid).
+
+      3. Differentiate freetext notes fields.
+         Rename brew.notes → brew.process_notes (breaking rename; same semantics —
+         operational observations about preparation). Add coffee.cupping_notes
+         (sensory notes on the coffee as a whole, e.g. from a bag description or
+         pre-brew cupping). Add origin.cupping_notes (per-component sensory notes).
+         Coexistence rule: for a single-origin coffee, origin.cupping_notes serves
+         as the cupping note for the coffee (same pattern as origin.name). For blends,
+         each component carries its own origin.cupping_notes and coffee.cupping_notes
+         describes the blend as a whole. result.tasting_notes is unchanged.
+
+      4. Equipment: add pressure and flow rate fields.
+         Add equipment.pressure_bar (number, exclusiveMinimum: 0) — line pressure or
+         lever pressure in bars; primarily relevant to espresso. Add
+         equipment.flow_rate_ml_s (number, exclusiveMinimum: 0) — volumetric flow
+         rate in ml/s; useful for espresso profiling and controlled pour-over.
+
+      All note renames (brew.notes → brew.process_notes) and the water_weight_g →
+      water_g rename are breaking. The maxLength tightening on coffee.name is also
+      technically breaking. This is the right time to bundle them as v1.0.
+
+  - id: brewlog-cli-v1.0
+    name: "BrewLog CLI v1.0"
+    type: feature
+    product: "BrewLog CLI"
+    priority: P1
+    tier: standard
+    status: backlog
+    assigned_to: null
+    depends_on:
+      - brewspec-v1.0
+      - brewlog-cli-v0.8
+    description: >
+      BrewSpec v1.0 adoption. Substantial schema changes require updates across
+      models, DB, CLI, and tests.
+
+      Breaking field renames:
+      - brew.water_weight_g → brew.water_g: rename DB column, Pydantic field,
+        all CLI prompts/flags, import/export serialisation.
+      - brew.notes → brew.process_notes: rename DB column, Pydantic field,
+        all CLI prompts/flags, import/export serialisation.
+
+      New fields:
+      - brew.yield_g (recipe target yield): new DB column, Pydantic field,
+        CLI --target-yield flag on add/update.
+      - result.water_g (actual water used): new DB column, Pydantic field,
+        CLI --actual-water flag on add/update.
+      - coffee.cupping_notes: new DB column, Pydantic field, CLI flag.
+      - origin.cupping_notes: new DB column, Pydantic field, CLI flag.
+      - equipment.pressure_bar: new DB column, Pydantic field, CLI flag.
+      - equipment.flow_rate_ml_s: new DB column, Pydantic field, CLI flag.
+
+      maxLength change: coffee.name maxLength 150 → 100. Update Pydantic model.
+
+      DB migration required for all new and renamed columns. Bump BREWSPEC_VERSION
+      to 1.0. Bundle updated v1.0 schema. TDD.
+
+  - id: brewspec-site-v1.0
+    name: "BrewSpec Site — v1.0 Update"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: express
+    status: backlog
+    assigned_to: null
+    depends_on:
+      - brewspec-v1.0
+      - brewlog-cli-v1.0
+    description: >
+      Update brewspec.coffee landing page for v1.0. Bump version references from
+      0.9 to 1.0 in Hero eyebrow and schema link. Update Examples section YAML to
+      demonstrate v1.0 features (brew.water_g, brew.process_notes, new equipment
+      fields). Update WhatItCovers section to reflect new fields. Add v1.0 schema
+      to site/public/schema/. Update product version to 1.0 in manifest products
+      section.
+
   - id: brewspec-v0.9
     name: "BrewSpec v0.9"
     type: feature
