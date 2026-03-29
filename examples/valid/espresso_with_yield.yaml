@@ -1,9 +1,9 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-16"
     type: "espresso"
     dose_g: 18.0
-    water_weight_g: 36.0
+    water_g: 36.0
     grind: "espresso"
     duration_s: 28
     equipment:

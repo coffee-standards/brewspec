@@ -1,16 +1,16 @@
 # Valid example: date-only format and full result object.
 # Demonstrates YYYY-MM-DD date, grind enum, result with all fields.
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-21"
     type: "pour_over"
     dose_g: 20
-    water_weight_g: 320
+    water_g: 320
     grind: "medium_fine"
     water_temp_c: 96
     duration_s: 210
     method: "Hario V60 02"
-    notes: "Washed filter paper, water from Brita filter"
+    process_notes: "Washed filter paper, water from Brita filter"
     coffee:
       roast_date: "2026-01-20"
       type: "single_origin"

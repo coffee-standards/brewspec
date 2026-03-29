@@ -1,7 +1,7 @@
 # Invalid: 'type' value not in enum (drip is not a valid type)
-brewspec_version: "0.2"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-15T08:30:00Z"
     type: "drip"
     dose_g: 20
-    water_weight_g: 320
+    water_g: 320

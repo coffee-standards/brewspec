@@ -4,12 +4,12 @@
 # additionalProperties: false, any key not in the v0.5 coffee property list
 # causes validation failure. To migrate, rename 'origin' to 'origins' and
 # wrap each string in an object: { country: "Ethiopia" }.
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-28"
     type: "pour_over"
     dose_g: 18.0
-    water_weight_g: 280.0
+    water_g: 280.0
     coffee:
       origin:
         - "Ethiopia"

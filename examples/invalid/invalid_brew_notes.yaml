@@ -1,0 +1,11 @@
+# Invalid: brew.notes was removed in v1.0 and renamed to brew.process_notes.
+# The brew object enforces additionalProperties: false, so notes is now an
+# unrecognised field and fails validation.
+# Migration: rename notes to process_notes.
+brewspec_version: "1.0"
+brews:
+  - date: "2026-02-15T08:30:00Z"
+    type: "pour_over"
+    dose_g: 20.0
+    water_g: 320.0
+    notes: "Washed filter paper, water from Brita filter"

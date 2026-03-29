@@ -1,0 +1,42 @@
+# Valid: demonstrates cupping notes fields new in v1.0.
+# coffee.cupping_notes = sensory notes on the coffee as a whole (from bag description or pre-brew cupping)
+# origin.cupping_notes = per-component sensory notes (for single origin, describes the coffee overall)
+# brew.process_notes = operational observations about preparation (renamed from notes in v1.0)
+brewspec_version: "1.0"
+brews:
+  - date: "2026-03-22T08:00:00Z"
+    type: "pour_over"
+    method: "Hario V60"
+    dose_g: 18.0
+    water_g: 288.0
+    brew_ratio: 16.0
+    water_temp_c: 96.0
+    grind: "medium_fine"
+    duration_s: 200
+    process_notes: "Washed filter paper, 30s bloom with 50g water"
+    coffee:
+      name: "Ethiopia Guji Natural"
+      roaster: "Tim Wendelboe"
+      roast_level: "light"
+      roast_date: "2026-03-12"
+      type: "single_origin"
+      cupping_notes: "Wild blueberry, dark chocolate, complex fermented fruit"
+      origins:
+        - name: "Guji Natural"
+          country: "Ethiopia"
+          region: "Guji"
+          producer: "Benti Nenqa"
+          process: "Natural"
+          varietal: "Heirloom"
+          elevation_masl: 2100
+          cupping_notes: "Blueberry jam, winey, lingering sweetness"
+    result:
+      tds: 1.40
+      ey: 20.8
+      tasting_notes: "Intense blueberry, dark chocolate finish, vibrant acidity"
+      ratings:
+        overall: 9
+        fragrance: 8
+        aroma: 9
+        flavour: 8
+        acidity: 7

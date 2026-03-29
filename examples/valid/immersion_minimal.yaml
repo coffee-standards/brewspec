@@ -1,6 +1,6 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-14T07:00:00Z"
     type: "immersion"
     dose_g: 30
-    water_weight_g: 500
+    water_g: 500

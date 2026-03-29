@@ -1,14 +1,14 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-13T06:45:00Z"
     type: "espresso"
     method: "Breville Barista Express"
     dose_g: 18
-    water_weight_g: 36
+    water_g: 36
     water_temp_c: 93
     grind: "espresso"
     duration_s: 28
-    notes: "Thick crema, balanced sweetness"
+    process_notes: "Thick crema, balanced sweetness"
     result:
       tds: 8.5
       ey: 19.8
