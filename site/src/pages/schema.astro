@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 ---
 <Base
   title="BrewSpec Field Reference — Every field in the schema"
-  description="Complete field reference for BrewSpec v0.9. Every field, type, constraint, and description in one place."
+  description="Complete field reference for BrewSpec v0.9: every field, type, constraint, and description."
 >
   <Nav />
   <main>
@@ -14,7 +14,7 @@ import Footer from '../components/Footer.astro';
         <p class="schema-eyebrow">v0.9 Field Reference</p>
         <h1>What's in the schema.</h1>
         <p class="schema-intro">
-          Every field BrewSpec defines — type, constraints, and what it's for.
+          Every field BrewSpec defines: type, constraints, and what it's for.
           All fields are optional. Record what you measure.
         </p>
       </div>
@@ -186,7 +186,7 @@ import Footer from '../components/Footer.astro';
 
         <section id="coffee">
           <h2>Coffee</h2>
-          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <p class="section-note">Entire object optional. All nested fields optional.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -241,7 +241,7 @@ import Footer from '../components/Footer.astro';
 
         <section id="origin">
           <h2>Origin</h2>
-          <p class="section-note">All fields optional. Each entry in the <code>origins</code> array.</p>
+          <p class="section-note">All fields optional. Each object in the <code>origins</code> array follows this shape.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -345,7 +345,7 @@ import Footer from '../components/Footer.astro';
 
         <section id="equipment">
           <h2>Equipment</h2>
-          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <p class="section-note">Entire object optional. All nested fields optional.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -388,7 +388,7 @@ import Footer from '../components/Footer.astro';
 
         <section id="result">
           <h2>Result</h2>
-          <p class="section-note">Entire object optional. All fields within optional.</p>
+          <p class="section-note">Entire object optional. All nested fields optional.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -444,7 +444,7 @@ import Footer from '../components/Footer.astro';
         <section id="ratings">
           <h2>Ratings</h2>
           <p class="section-note">
-            All fields optional integers 1–9, aligned to the
+            All fields are optional integers 1–9, aligned to the
             <a href="https://sca.coffee/sca-news/sca-new-cva-cupping-standards" target="_blank" rel="noopener noreferrer">SCA Coffee Value Assessment</a>
             hedonic scale (SCA-104, 2024).
           </p>
