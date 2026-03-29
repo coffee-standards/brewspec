@@ -1,6 +1,12 @@
 # Worktrees — parallel task branches checked out locally
 .worktrees/
 
+# Harness — Claude Code configuration and pipeline artifacts
+.claude/
+CLAUDE.md
+hooks/
+reviews/
+
 # Python
 __pycache__/
 *.py[cod]
