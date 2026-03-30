@@ -679,3 +679,15 @@ def test_json_format_supported(validator):
     if json_files:
         json_data = _load_example(json_files[0])
         validator.validate(json_data)
+
+
+# ---------------------------------------------------------------------------
+# Schema $id canonical URL
+# ---------------------------------------------------------------------------
+
+CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.0.json"
+
+
+def test_schema_id_is_canonical_url(schema):
+    """Bundled schema $id must reference the canonical brewspec.coffee URL."""
+    assert schema["$id"] == CANONICAL_SCHEMA_ID
