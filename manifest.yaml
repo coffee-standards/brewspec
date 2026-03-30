@@ -65,7 +65,7 @@ products:
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
     spec: specs/products/brewlog.md
-    current_version: "0.8"
+    current_version: "1.0"
   - name: "BrewSpec Site"
     status: "active"
     description: "Public landing page at brewspec.coffee — describes the spec, links to the repo and schema."
@@ -141,9 +141,19 @@ tasks:
     product: "BrewLog CLI"
     priority: P1
     tier: standard
-    status: ready_for_review
+    status: done
     assigned_to: null
-    branch: worktree-agent-af3acdcc
+    completed_date: "2026-03-30"
+    review_verdict: PASS
+    review_date: "2026-03-30"
+    review: reviews/2026-03-30-reviewer-brewlog-cli-v1.0.yaml
+    tag: brewlog-v1.0
+    review_carry_forward:
+      - "LOW: brewlog/src/brewlog/schema.py lines 24 and 37 — stale docstrings say 'v0.4 schema' instead of 'v1.0 schema'. Cosmetic only."
+      - "LOW: no explicit unit test asserting 'water_g' not in UPDATABLE_COLUMNS (AC-32 regression guard missing). Implementation is correct."
+    artifacts:
+      spec: specs/products/brewlog-cli-v1.0.md
+      design: specs/designs/brewlog-cli-v1.0.md
     depends_on:
       - brewspec-v1.0
       - brewlog-cli-v0.8
