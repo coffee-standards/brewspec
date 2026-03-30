@@ -297,6 +297,9 @@ maintenance:
     priority: P3
     status: backlog
     assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-03-30"
+    review: reviews/2026-03-30-reviewer-carry-forward-test-coverage.yaml
     description: >
       Carry-forward test/schema hygiene items from archived reviews.
 
@@ -308,7 +311,8 @@ maintenance:
     type: chore
     product: "BrewLog CLI"
     priority: P3
-    status: backlog
+    tier: express
+    status: ready_for_review
     assigned_to: null
     description: >
       Carry-forward code comment and CI cleanup items from archived reviews.
