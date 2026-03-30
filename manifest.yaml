@@ -238,6 +238,7 @@ maintenance:
     health_report: reviews/2026-03-31-system-steward-health-report.yaml
     pipeline: "steward → architect → dev → reviewer"
     url_decision: "https://brewspec.coffee/schema/v1.0.json (versioned, stable identity)"
+    pr: https://github.com/coffee-standards/brewspec/pull/12
     artifacts:
       design: specs/designs/refactor-schema-id-canonical-url.md
     review_carry_forward:
