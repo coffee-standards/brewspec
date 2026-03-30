@@ -2393,3 +2393,30 @@ def test_invalid_brew_notes_example_fails(validator):
     data = _load_yaml_example(path)
     with pytest.raises(ValidationError):
         validator.validate(data)
+
+
+# ---------------------------------------------------------------------------
+# Schema $id canonical URL
+# ---------------------------------------------------------------------------
+
+CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.0.json"
+
+
+def test_schema_id_is_canonical_url(schema):
+    """$id must reference the canonical brewspec.coffee URL, not the GitHub CDN URL."""
+    assert schema["$id"] == CANONICAL_SCHEMA_ID
+
+
+def test_schema_copies_are_identical():
+    """The root schema, site copy, and brewlog bundled copy must be identical."""
+    root = REPO_ROOT / "brewspec.schema.json"
+    site_copy = REPO_ROOT / "site" / "public" / "schema" / "v1.0.json"
+    brewlog_copy = REPO_ROOT / "brewlog" / "src" / "brewlog" / "brewspec.schema.json"
+
+    root_text = root.read_text(encoding="utf-8")
+    assert site_copy.read_text(encoding="utf-8") == root_text, (
+        "site/public/schema/v1.0.json differs from brewspec.schema.json"
+    )
+    assert brewlog_copy.read_text(encoding="utf-8") == root_text, (
+        "brewlog/src/brewlog/brewspec.schema.json differs from brewspec.schema.json"
+    )
