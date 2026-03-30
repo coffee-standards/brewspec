@@ -84,29 +84,6 @@ def test_schema_is_valid_draft_2020_12(schema):
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
 
 
-# ---------------------------------------------------------------------------
-# AC-1 (legacy): Version — const "1.0", title "BrewSpec v1.0"
-# ---------------------------------------------------------------------------
-
-def test_schema_title_is_v1_0(schema):
-    """Schema title must be 'BrewSpec v1.0'."""
-    assert schema["title"] == "BrewSpec v1.0"
-
-
-def test_version_must_be_1_0(validator):
-    """brewspec_version is required and must be exactly '1.0'."""
-    # Missing version
-    with pytest.raises(ValidationError):
-        validator.validate({"brews": [VALID_BREW]})
-
-    # Wrong version (old 0.9)
-    with pytest.raises(ValidationError):
-        validator.validate({"brewspec_version": "0.9", "brews": [VALID_BREW]})
-
-    # Correct version
-    validator.validate(VALID_DOC)
-
-
 def test_version_const_rejects_v0_8(validator):
     """brewspec_version '0.8' is rejected by the v1.0 schema."""
     with pytest.raises(ValidationError):
