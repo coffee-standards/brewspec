@@ -141,8 +141,9 @@ tasks:
     product: "BrewLog CLI"
     priority: P1
     tier: standard
-    status: backlog
+    status: ready_for_review
     assigned_to: null
+    branch: worktree-agent-af3acdcc
     depends_on:
       - brewspec-v1.0
       - brewlog-cli-v0.8
