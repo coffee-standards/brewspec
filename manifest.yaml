@@ -194,7 +194,7 @@ tasks:
     review_verdict: PASS
     review_date: "2026-03-30"
     review: reviews/2026-03-30-reviewer-brewspec-site-v1.0-recheck.yaml
-    pr: https://github.com/coffee-standards/brewspec/pull/10
+    pr: https://github.com/coffee-standards/brewspec/pull/11
     depends_on:
       - brewspec-v1.0
       - brewlog-cli-v1.0
@@ -264,7 +264,7 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-30"
     review: reviews/2026-03-30-reviewer-carry-forward-brewlog-v1.0-and-brewspec-site-v1.0.yaml
-    pr: https://github.com/coffee-standards/brewspec/pull/10
+    pr: https://github.com/coffee-standards/brewspec/pull/11
     source_task: brewlog-cli-v1.0
     description: >
       Carry-forward items from brewlog-cli-v1.0 review (non-blocking, Low severity).
