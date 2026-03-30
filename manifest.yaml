@@ -312,8 +312,11 @@ maintenance:
     product: "BrewLog CLI"
     priority: P3
     tier: express
-    status: ready_for_review
+    status: ready_for_deploy
     assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-03-30"
+    review: reviews/2026-03-30-reviewer-carry-forward-code-cleanup.yaml
     description: >
       Carry-forward code comment and CI cleanup items from archived reviews.
 
