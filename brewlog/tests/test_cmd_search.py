@@ -42,8 +42,8 @@ class TestSearchCommand:
         try:
             brew = BrewInput(
                 date="2026-02-19", type="pour_over",
-                dose_g=18.0, water_weight_g=280.0,
-                notes="Ethiopia Yirgacheffe washed"
+                dose_g=18.0, water_g=280.0,
+                process_notes="Ethiopia Yirgacheffe washed"
             )
             db_module.insert_brew(brew, conn)
         finally:
@@ -56,7 +56,7 @@ class TestSearchCommand:
         """AC-6/AC-7: result_tasting_notes field is searched."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             db_module.update_brew(brew_id, {"result_tasting_notes": "jasmine and bergamot"}, conn)
         finally:
@@ -69,7 +69,7 @@ class TestSearchCommand:
         """AC-6/AC-7: coffee_name field is searched."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             db_module.update_brew(brew_id, {"coffee_name": "Gesha Village Honey Process"}, conn)
         finally:
@@ -83,7 +83,7 @@ class TestSearchCommand:
         import json
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             db_module.update_brew(
                 brew_id,
@@ -101,7 +101,7 @@ class TestSearchCommand:
         import json
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             # coffee_origin is not in UPDATABLE_COLUMNS; insert directly
             conn.execute(
@@ -120,7 +120,7 @@ class TestSearchCommand:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="colombia huila washed")
+                             water_g=280.0, process_notes="colombia huila washed")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -133,7 +133,7 @@ class TestSearchCommand:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="Colombia Huila")
+                             water_g=280.0, process_notes="Colombia Huila")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -145,7 +145,7 @@ class TestSearchCommand:
         """AC-10: No match returns friendly message and exit 0."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -176,8 +176,8 @@ class TestSearchCommand:
             for i in range(10):
                 brew = BrewInput(
                     date=f"2026-02-{10+i:02d}", type="pour_over",
-                    dose_g=18.0, water_weight_g=280.0,
-                    notes="match text here"
+                    dose_g=18.0, water_g=280.0,
+                    process_notes="match text here"
                 )
                 db_module.insert_brew(brew, conn)
         finally:
@@ -196,8 +196,8 @@ class TestSearchCommand:
             for i in range(7):
                 brew = BrewInput(
                     date=f"2026-02-{10+i:02d}", type="pour_over",
-                    dose_g=18.0, water_weight_g=280.0,
-                    notes="all match"
+                    dose_g=18.0, water_g=280.0,
+                    process_notes="all match"
                 )
                 db_module.insert_brew(brew, conn)
         finally:
@@ -212,7 +212,7 @@ class TestSearchCommand:
         """AC-13: SQL injection characters in query don't cause errors."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -226,7 +226,7 @@ class TestSearchCommand:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="findme")
+                             water_g=280.0, process_notes="findme")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -244,7 +244,7 @@ class TestSearchCommand:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="unique test phrase")
+                             water_g=280.0, process_notes="unique test phrase")
             db_mod.insert_brew(brew, conn)
             rows = db_mod.search_brews(conn, "unique test phrase")
             assert len(rows) == 1
@@ -259,8 +259,8 @@ class TestSearchCommand:
             for i in range(5):
                 brew = BrewInput(
                     date=f"2026-02-{19+i:02d}", type="pour_over",
-                    dose_g=18.0, water_weight_g=280.0,
-                    notes="limited search"
+                    dose_g=18.0, water_g=280.0,
+                    process_notes="limited search"
                 )
                 db_mod.insert_brew(brew, conn)
             rows = db_mod.search_brews(conn, "limited search", limit=3)
@@ -275,7 +275,7 @@ class TestSearchCommand:
         conn = db_module.get_connection(db_path=custom_db)
         try:
             brew = BrewInput(date="2026-02-19", type="espresso", dose_g=18.0,
-                             water_weight_g=36.0, notes="ristretto pull")
+                             water_g=36.0, process_notes="ristretto pull")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -289,7 +289,7 @@ class TestSearchCommand:
         try:
             brew = BrewInput(
                 date="2026-02-19", type="pour_over",
-                dose_g=18.0, water_weight_g=280.0,
+                dose_g=18.0, water_g=280.0,
                 method="Hario V60",
                 grind="coarse",
             )

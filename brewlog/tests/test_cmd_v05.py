@@ -60,7 +60,7 @@ def _insert_brew(db_path, **kwargs):
             date=kwargs.get("date", "2026-02-19"),
             type=kwargs.get("type", "pour_over"),
             dose_g=kwargs.get("dose_g", 18.0),
-            water_weight_g=kwargs.get("water_weight_g", 280.0),
+            water_g=kwargs.get("water_g", 280.0),
         )
         brew_id = db_module.insert_brew(brew, conn)
         return brew_id
@@ -163,7 +163,7 @@ class TestDbFlag:
         # Add a brew to the custom DB
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -177,7 +177,7 @@ class TestDbFlag:
         custom_db = tmp_path / "test.db"
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -191,11 +191,11 @@ class TestDbFlag:
         custom_db = tmp_path / "test.db"
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
         finally:
             conn.close()
-        result = runner.invoke(cli, ["--db", str(custom_db), "update", str(brew_id), "--notes", "test note"])
+        result = runner.invoke(cli, ["--db", str(custom_db), "update", str(brew_id), "--process-notes", "test note"])
         assert result.exit_code == 0
 
     def test_db_flag_with_delete(self, tmp_path):
@@ -204,7 +204,7 @@ class TestDbFlag:
         custom_db = tmp_path / "test.db"
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -282,7 +282,7 @@ class TestStats:
                     date=f"2026-02-{19+r:02d}",
                     type="pour_over",
                     dose_g=18.0,
-                    water_weight_g=280.0,
+                    water_g=280.0,
                 )
                 brew_id = db_module.insert_brew(brew, conn)
                 db_module.update_brew(brew_id, {"result_rating_overall": r}, conn)
@@ -308,7 +308,7 @@ class TestStats:
                     date=f"2026-02-{19+r:02d}",
                     type="pour_over",
                     dose_g=18.0,
-                    water_weight_g=280.0,
+                    water_g=280.0,
                 )
                 brew_id = db_module.insert_brew(brew, conn)
                 db_module.update_brew(brew_id, {"result_rating_overall": r}, conn)
@@ -343,7 +343,7 @@ class TestStats:
         custom_db = tmp_path / "stats_test.db"
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -355,7 +355,7 @@ class TestStats:
         """AC-2: Rating distribution shows 0 for stars with no brews."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             db_module.update_brew(brew_id, {"result_rating_overall": 5}, conn)
         finally:
@@ -379,7 +379,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="Ethiopia washed")
+                             water_g=280.0, process_notes="Ethiopia washed")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -392,7 +392,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0)
+                             water_g=280.0)
             brew_id = db_module.insert_brew(brew, conn)
             db_module.update_brew(brew_id, {"result_tasting_notes": "bright citrus"}, conn)
         finally:
@@ -431,7 +431,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="ethiopia washed")
+                             water_g=280.0, process_notes="ethiopia washed")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -464,8 +464,8 @@ class TestSearch:
             try:
                 brew = BrewInput(
                     date=f"2026-02-{19+i:02d}", type="pour_over",
-                    dose_g=18.0, water_weight_g=280.0,
-                    notes="ethiopia match"
+                    dose_g=18.0, water_g=280.0,
+                    process_notes="ethiopia match"
                 )
                 db_module.insert_brew(brew, conn)
             finally:
@@ -484,8 +484,8 @@ class TestSearch:
             try:
                 brew = BrewInput(
                     date=f"2026-02-{19+i:02d}", type="pour_over",
-                    dose_g=18.0, water_weight_g=280.0,
-                    notes="ethiopia match"
+                    dose_g=18.0, water_g=280.0,
+                    process_notes="ethiopia match"
                 )
                 db_module.insert_brew(brew, conn)
             finally:
@@ -510,7 +510,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=custom_db)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="custom db test")
+                             water_g=280.0, process_notes="custom db test")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -523,7 +523,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, grind="medium")
+                             water_g=280.0, grind="medium")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -536,7 +536,7 @@ class TestSearch:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0,
-                             water_weight_g=280.0, notes="ethiopia test")
+                             water_g=280.0, process_notes="ethiopia test")
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -556,7 +556,7 @@ class TestImportDeduplication:
     """Import deduplication: skip brews that already exist."""
 
     def _make_valid_v06_yaml(self, brews_list):
-        doc = {"brewspec_version": "0.9", "brews": brews_list}  # v0.9 required by bundled schema
+        doc = {"brewspec_version": "1.0", "brews": brews_list}  # v1.0 required by bundled schema
         return yaml.dump(doc, default_flow_style=False)
 
     def _base_brew(self, date="2026-02-19", brew_type="pour_over"):
@@ -564,12 +564,12 @@ class TestImportDeduplication:
             "date": date,
             "type": brew_type,
             "dose_g": 18.0,
-            "water_weight_g": 280.0,
+            "water_g": 280.0,
         }
 
     def test_dedup_skip_existing(self, runner, db_path, tmp_path):
         """AC-15/AC-16: Brew matching date+type+dose+water is skipped."""
-        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
         import_file = tmp_path / "import.yaml"
         import_file.write_text(
             self._make_valid_v06_yaml([self._base_brew()])
@@ -593,7 +593,7 @@ class TestImportDeduplication:
 
     def test_dedup_mixed(self, runner, db_path, tmp_path):
         """AC-16: Mixed file: 1 duplicate, 1 new."""
-        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
         import_file = tmp_path / "import.yaml"
         import_file.write_text(
             self._make_valid_v06_yaml([
@@ -608,8 +608,8 @@ class TestImportDeduplication:
 
     def test_dedup_all_duplicates(self, runner, db_path, tmp_path):
         """AC-17: All brews duplicates -> 0 added, N skipped, exit 0."""
-        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
-        _insert_brew(db_path, date="2026-02-20", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+        _insert_brew(db_path, date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
+        _insert_brew(db_path, date="2026-02-20", type="pour_over", dose_g=18.0, water_g=280.0)
         import_file = tmp_path / "import.yaml"
         import_file.write_text(
             self._make_valid_v06_yaml([
@@ -649,8 +649,8 @@ class TestImportDeduplication:
         runner = CliRunner()
         custom_db = tmp_path / "import_test.db"
         import_file = tmp_path / "import.yaml"
-        brews = [{"date": "2026-02-19", "type": "pour_over", "dose_g": 18.0, "water_weight_g": 280.0}]
-        import_file.write_text(yaml.dump({"brewspec_version": "0.9", "brews": brews}))
+        brews = [{"date": "2026-02-19", "type": "pour_over", "dose_g": 18.0, "water_g": 280.0}]
+        import_file.write_text(yaml.dump({"brewspec_version": "1.0", "brews": brews}))
         result = runner.invoke(cli, ["--db", str(custom_db), "import", str(import_file)])
         assert result.exit_code == 0
         assert "1 brews added" in result.output
@@ -714,7 +714,7 @@ class TestExportById:
         runner.invoke(cli, ["export", out_file, "--id", "1"])
         content = (tmp_path / "single.yaml").read_text()
         doc = yaml.safe_load(content)
-        assert doc["brewspec_version"] == "0.9"
+        assert doc["brewspec_version"] == "1.0"
 
     def test_export_no_id_exports_all(self, runner, db_path, tmp_path):
         """AC-24: No --id exports all brews."""
@@ -746,7 +746,7 @@ class TestExportById:
         custom_db = tmp_path / "exp_test.db"
         conn = db_module.get_connection(db_path=custom_db)
         try:
-            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-02-19", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
         finally:
             conn.close()
@@ -771,7 +771,7 @@ class TestSchemaAdoption:
         out_file = str(tmp_path / "out.yaml")
         runner.invoke(cli, ["export", out_file])
         doc = yaml.safe_load((tmp_path / out_file).read_text())
-        assert doc["brewspec_version"] == "0.9"
+        assert doc["brewspec_version"] == "1.0"
 
     def test_import_rejects_v05_file(self, runner, db_path, tmp_path):
         """AC-35: v0.5 file rejected with error, exit 1."""
@@ -942,12 +942,12 @@ class TestBrewRatio:
         """AC-42: brew_ratio read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "brew_ratio": 15.5,
             }]
         }))
@@ -1125,12 +1125,12 @@ class TestCoffeeOrigins:
         """AC-50: import reads coffee.origins into coffee_origins column."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "coffee": {
                     "origins": [{"country": "Ethiopia", "region": "Yirgacheffe"}]
                 }
@@ -1151,7 +1151,7 @@ class TestCoffeeOrigins:
         try:
             # Insert a legacy row with coffee_origin but no coffee_origins
             conn.execute(
-                "INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_origin) "
+                "INSERT INTO brews (date, type, dose_g, water_g, coffee_origin) "
                 "VALUES (?, ?, ?, ?, ?)",
                 ("2026-01-01", "pour_over", 18.0, 280.0, json.dumps(["Ethiopia"]))
             )
@@ -1221,12 +1221,12 @@ class TestCoffeeOrigins:
         """MED-1: importing a YAML with varietal in origins[] shows varietal in `show` output."""
         import_file = tmp_path / "varietal_import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-03-10",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "coffee": {
                     "origins": [{"country": "Colombia", "varietal": "Castillo"}]
                 },
@@ -1253,7 +1253,7 @@ class TestCoffeeOrigins:
         conn = db_module.get_connection(db_path=db_path)
         try:
             conn.execute(
-                "INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_origin) "
+                "INSERT INTO brews (date, type, dose_g, water_g, coffee_origin) "
                 "VALUES (?, ?, ?, ?, ?)",
                 ("2026-01-01", "pour_over", 18.0, 280.0, json.dumps(["Ethiopia"]))
             )
@@ -1340,12 +1340,12 @@ class TestCoffeeName:
         """AC-50e: coffee.name read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "coffee": {"name": "Kenya AA"},
             }]
         }))
@@ -1534,12 +1534,12 @@ class TestEquipmentFields:
         """AC-56: equipment fields read from import file."""
         import_file = tmp_path / "import.yaml"
         import_file.write_text(yaml.dump({
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-02-19",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "equipment": {
                     "grinder": "Comandante",
                     "grinder_setting": 21.0,
@@ -1591,7 +1591,7 @@ class TestEquipmentFields:
         conn = db_module.get_connection(db_path=db_path)
         try:
             conn.execute(
-                "INSERT INTO brews (date, type, dose_g, water_weight_g) VALUES (?, ?, ?, ?)",
+                "INSERT INTO brews (date, type, dose_g, water_g) VALUES (?, ?, ?, ?)",
                 ("2026-02-19", "pour_over", 18.0, 280.0)
             )
             conn.commit()
@@ -1662,7 +1662,7 @@ class TestInteractiveTypeOnUpdate:
     def test_update_no_type_flag_no_change(self, runner, db_path):
         """AC-60: No --type flag means no type update attempted."""
         _add_brew(runner, brew_type="pour_over")
-        runner.invoke(cli, ["update", "1", "--notes", "test"])
+        runner.invoke(cli, ["update", "1", "--process-notes", "test"])
         conn = db_module.get_connection(db_path=db_path)
         try:
             row = db_module.get_brew(1, conn)

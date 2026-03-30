@@ -28,7 +28,7 @@ def _insert_minimal(db_path):
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
         db_module.insert_brew(brew, conn)
     finally:
@@ -42,12 +42,12 @@ def _insert_full(db_path):
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             method="Hario V60",
             water_temp_c=96.0,
             grind="medium_fine",
             duration_s=180,
-            notes="Bright acidity",
+            process_notes="Bright acidity",
             coffee=CoffeeInput(
                 roast_date="2026-01-20",
                 type="single_origin",
@@ -118,7 +118,7 @@ def test_export_document_structure(runner_with_db, tmp_path):
     runner_with_db.invoke(cli, ["export", out_file])
     doc = yaml.safe_load(Path(out_file).read_text())
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.9"
+    assert doc["brewspec_version"] == "1.0"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
 
@@ -272,7 +272,7 @@ def _insert_with_invalid_grind(db_path, grind_value: str):
     conn = db_module.get_connection(db_path=db_path)
     try:
         conn.execute(
-            "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+            "INSERT INTO brews (date, type, dose_g, water_g, grind) "
             "VALUES (?, ?, ?, ?, ?)",
             ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, grind_value),
         )
@@ -345,7 +345,7 @@ def test_export_ratings_in_result_subobject(runner_with_db, tmp_path):
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             result=ResultInput(ratings=RatingsInput(overall=4, acidity=5)),
         )
         db_module.insert_brew(brew, conn)

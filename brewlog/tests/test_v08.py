@@ -5,7 +5,7 @@ Covers:
 - Pydantic model validation: roaster, roast_level, elevation_masl, water_temp_c precision
 - DB migration: coffee_roaster and coffee_roast_level columns
 - insert_brew() and insert_brew_dict() with new fields
-- Serialise: export includes roaster, roast_level; BREWSPEC_VERSION is "0.9" (updated in CLI v0.8)
+- Serialise: export includes roaster, roast_level; BREWSPEC_VERSION is "1.0" (updated in CLI v1.0)
 - Import: v0.9 documents accepted, v0.7 documents rejected with updated message
 - add command: --roaster, --roast-level, --elevation-masl flags
 - update command: --roaster, --roast-level flags
@@ -262,7 +262,7 @@ def test_insert_brew_stores_roaster(tmp_path):
         date="2026-03-19",
         type="pour_over",
         dose_g=20.0,
-        water_weight_g=320.0,
+        water_g=320.0,
         coffee=CoffeeInput(roaster="Onyx"),
     )
     brew_id = db_module.insert_brew(brew, conn)
@@ -278,7 +278,7 @@ def test_insert_brew_stores_roast_level(tmp_path):
         date="2026-03-19",
         type="pour_over",
         dose_g=20.0,
-        water_weight_g=320.0,
+        water_g=320.0,
         coffee=CoffeeInput(roast_level="light"),
     )
     brew_id = db_module.insert_brew(brew, conn)
@@ -294,7 +294,7 @@ def test_insert_brew_stores_elevation_masl_in_origins_json(tmp_path):
         date="2026-03-19",
         type="pour_over",
         dose_g=20.0,
-        water_weight_g=320.0,
+        water_g=320.0,
         coffee=CoffeeInput(
             origins=[OriginInput(country="Ethiopia", elevation_masl=1950)]
         ),
@@ -314,7 +314,7 @@ def test_insert_brew_no_coffee_roaster_and_level_are_null(tmp_path):
         date="2026-03-19",
         type="pour_over",
         dose_g=20.0,
-        water_weight_g=320.0,
+        water_g=320.0,
     )
     brew_id = db_module.insert_brew(brew, conn)
     row = db_module.get_brew(brew_id, conn)
@@ -334,7 +334,7 @@ def test_insert_brew_dict_stores_roaster(tmp_path):
         "date": "2026-03-19",
         "type": "pour_over",
         "dose_g": 20.0,
-        "water_weight_g": 320.0,
+        "water_g": 320.0,
         "coffee": {"roaster": "Tim Wendelboe"},
     }
     brew_id = db_module.insert_brew_dict(brew_dict, conn)
@@ -351,7 +351,7 @@ def test_insert_brew_dict_stores_roast_level(tmp_path):
         "date": "2026-03-19",
         "type": "pour_over",
         "dose_g": 20.0,
-        "water_weight_g": 320.0,
+        "water_g": 320.0,
         "coffee": {"roast_level": "medium"},
     }
     brew_id = db_module.insert_brew_dict(brew_dict, conn)
@@ -368,7 +368,7 @@ def test_insert_brew_dict_elevation_masl_in_origins_json(tmp_path):
         "date": "2026-03-19",
         "type": "pour_over",
         "dose_g": 20.0,
-        "water_weight_g": 320.0,
+        "water_g": 320.0,
         "coffee": {
             "origins": [{"country": "Ethiopia", "elevation_masl": 2100}]
         },
@@ -386,15 +386,15 @@ def test_insert_brew_dict_elevation_masl_in_origins_json(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_brewspec_version_constant_is_09():
-    """BREWSPEC_VERSION constant in serialise.py is '0.9' (updated in v0.8 CLI)."""
-    assert BREWSPEC_VERSION == "0.9"
+    """BREWSPEC_VERSION constant in serialise.py is '1.0' (updated in v1.0 CLI)."""
+    assert BREWSPEC_VERSION == "1.0"
 
 
 def test_rows_to_brewspec_document_version_is_09(tmp_path):
-    """rows_to_brewspec_document() produces brewspec_version '0.9'."""
+    """rows_to_brewspec_document() produces brewspec_version '1.0'."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g)
+        INSERT INTO brews (date, type, dose_g, water_g)
         VALUES (?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0))
     conn.commit()
@@ -402,7 +402,7 @@ def test_rows_to_brewspec_document_version_is_09(tmp_path):
     conn.close()
 
     doc = rows_to_brewspec_document(rows)
-    assert doc["brewspec_version"] == "0.9"
+    assert doc["brewspec_version"] == "1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -413,7 +413,7 @@ def test_row_to_brew_dict_includes_roaster(tmp_path):
     """row_to_brew_dict() includes coffee.roaster when present."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_roaster)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_roaster)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "George Howell"))
     conn.commit()
@@ -429,7 +429,7 @@ def test_row_to_brew_dict_omits_roaster_when_null(tmp_path):
     """row_to_brew_dict() omits coffee.roaster when NULL."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_name)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_name)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "My Coffee"))
     conn.commit()
@@ -445,7 +445,7 @@ def test_row_to_brew_dict_includes_roast_level(tmp_path):
     """row_to_brew_dict() includes coffee.roast_level when present."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_roast_level)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_roast_level)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "dark"))
     conn.commit()
@@ -461,7 +461,7 @@ def test_row_to_brew_dict_omits_roast_level_when_null(tmp_path):
     """row_to_brew_dict() omits coffee.roast_level when NULL."""
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_name)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_name)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "My Coffee"))
     conn.commit()
@@ -478,7 +478,7 @@ def test_row_to_brew_dict_elevation_masl_round_trips(tmp_path):
     conn = db_module.get_connection(db_path=tmp_path / "test.db")
     origins_json = json.dumps([{"country": "Colombia", "elevation_masl": 1800}])
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_origins)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_origins)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, origins_json))
     conn.commit()
@@ -494,14 +494,14 @@ def test_row_to_brew_dict_elevation_masl_round_trips(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_bundled_schema_is_v09():
-    """brewlog/src/brewlog/brewspec.schema.json must declare version 0.9 (updated in CLI v0.8)."""
+    """brewlog/src/brewlog/brewspec.schema.json must declare version 1.0 (updated in CLI v1.0)."""
     import importlib.resources
     import json as json_mod
     with importlib.resources.files("brewlog").joinpath("brewspec.schema.json").open(
         "r", encoding="utf-8"
     ) as f:
         schema = json_mod.load(f)
-    assert schema["properties"]["brewspec_version"]["const"] == "0.9"
+    assert schema["properties"]["brewspec_version"]["const"] == "1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -509,14 +509,14 @@ def test_bundled_schema_is_v09():
 # ---------------------------------------------------------------------------
 
 def test_import_v09_doc_accepted(tmp_path):
-    """Importing a v0.9 document succeeds (CLI v0.8 adopts BrewSpec v0.9)."""
+    """Importing a v1.0 document succeeds (CLI v1.0 adopts BrewSpec v1.0)."""
     yaml_content = """
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
 """
     doc_path = tmp_path / "v09.yaml"
     doc_path.write_text(yaml_content)
@@ -529,14 +529,14 @@ brews:
 
 
 def test_import_v09_doc_with_roaster_stores_roaster(tmp_path):
-    """Importing a v0.9 document with coffee.roaster stores it in DB."""
+    """Importing a v1.0 document with coffee.roaster stores it in DB."""
     yaml_content = """
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
     coffee:
       roaster: "Onyx"
       roast_level: "light"
@@ -559,14 +559,14 @@ brews:
 
 
 def test_import_v09_doc_with_elevation_masl_stores_in_origins(tmp_path):
-    """Importing a v0.9 document with elevation_masl stores it in origins JSON."""
+    """Importing a v1.0 document with elevation_masl stores it in origins JSON."""
     yaml_content = """
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
     coffee:
       origins:
         - country: "Ethiopia"
@@ -594,14 +594,14 @@ brews:
 # ---------------------------------------------------------------------------
 
 def test_import_v07_file_rejected_with_v09_message(tmp_path):
-    """Importing a v0.7 document is rejected with a message referencing v0.9."""
+    """Importing a v0.7 document is rejected with a message referencing v1.0."""
     yaml_content = """
 brewspec_version: "0.7"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
 """
     doc_path = tmp_path / "v07.yaml"
     doc_path.write_text(yaml_content)
@@ -611,18 +611,18 @@ brews:
     result = runner.invoke(cli, ["--db", str(db_path), "import", str(doc_path)])
     assert result.exit_code == 1
     assert "0.7" in result.output
-    assert "0.9" in result.output
+    assert "1.0" in result.output
 
 
 def test_import_exact_v07_rejection_message(tmp_path):
-    """Exact rejection message for v0.7 file references v0.9 correctly."""
+    """Exact rejection message for v0.7 file references v1.0 correctly."""
     yaml_content = """
 brewspec_version: "0.7"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
 """
     doc_path = tmp_path / "v07.yaml"
     doc_path.write_text(yaml_content)
@@ -632,8 +632,8 @@ brews:
     result = runner.invoke(cli, ["--db", str(db_path), "import", str(doc_path)])
     assert result.exit_code == 1
     expected = (
-        "Error: This file uses BrewSpec v0.7, which is not supported by BrewLog v0.8.\n"
-        "BrewLog v0.8 requires BrewSpec v0.9."
+        "Error: This file uses BrewSpec v0.7, which is not supported by BrewLog v1.0.\n"
+        "BrewLog v1.0 requires BrewSpec v1.0."
     )
     assert expected in result.output
 
@@ -643,14 +643,14 @@ brews:
 # ---------------------------------------------------------------------------
 
 def test_import_export_roundtrip_v09_roaster_and_level(tmp_path):
-    """roaster and roast_level survive import → DB → export unchanged (v0.9 doc)."""
+    """roaster and roast_level survive import → DB → export unchanged (v1.0 doc)."""
     yaml_content = """
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-03-19"
     type: "pour_over"
     dose_g: 20.0
-    water_weight_g: 320.0
+    water_g: 320.0
     coffee:
       roaster: "Onyx"
       roast_level: "light"
@@ -668,7 +668,7 @@ brews:
     doc = rows_to_brewspec_document(rows)
     conn.close()
 
-    assert doc["brewspec_version"] == "0.9"
+    assert doc["brewspec_version"] == "1.0"
     brew = doc["brews"][0]
     assert brew["coffee"]["roaster"] == "Onyx"
     assert brew["coffee"]["roast_level"] == "light"
@@ -786,7 +786,7 @@ def test_update_cmd_roaster_flag_updates_column(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g)
+        INSERT INTO brews (date, type, dose_g, water_g)
         VALUES (?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0))
     conn.commit()
@@ -812,7 +812,7 @@ def test_update_cmd_roast_level_flag_updates_column(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g)
+        INSERT INTO brews (date, type, dose_g, water_g)
         VALUES (?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0))
     conn.commit()
@@ -838,7 +838,7 @@ def test_update_cmd_invalid_roast_level_rejected(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g)
+        INSERT INTO brews (date, type, dose_g, water_g)
         VALUES (?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0))
     conn.commit()
@@ -863,7 +863,7 @@ def test_show_displays_roaster(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_roaster)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_roaster)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "Tim Wendelboe"))
     conn.commit()
@@ -883,7 +883,7 @@ def test_show_displays_roast_level(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_roast_level)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_roast_level)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "medium"))
     conn.commit()
@@ -903,7 +903,7 @@ def test_show_omits_roaster_when_null(tmp_path):
     db_path = tmp_path / "test.db"
     conn = db_module.get_connection(db_path=db_path)
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_name)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_name)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, "My Coffee"))
     conn.commit()
@@ -923,7 +923,7 @@ def test_show_displays_elevation_masl_via_origins(tmp_path):
     conn = db_module.get_connection(db_path=db_path)
     origins_json = json.dumps([{"country": "Colombia", "elevation_masl": 1800}])
     conn.execute("""
-        INSERT INTO brews (date, type, dose_g, water_weight_g, coffee_origins)
+        INSERT INTO brews (date, type, dose_g, water_g, coffee_origins)
         VALUES (?, ?, ?, ?, ?)
     """, ("2026-03-19", "pour_over", 20.0, 320.0, origins_json))
     conn.commit()

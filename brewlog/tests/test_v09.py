@@ -59,7 +59,7 @@ def _add_brew(db_path, rating_overall=None):
     """Helper: insert a brew with optional overall rating."""
     conn = db_module.get_connection(db_path=db_path)
     try:
-        brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+        brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
         brew_id = db_module.insert_brew(brew, conn)
         if rating_overall is not None:
             db_module.update_brew(brew_id, {"result_rating_overall": rating_overall}, conn)
@@ -451,10 +451,10 @@ class TestListRatingFilter:
         """AC-5: --rating-min 7 returns only brews with overall rating >= 7."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-19", type="pour_over", dose_g=18.0, water_g=280.0)
             b1 = db_module.insert_brew(brew, conn)
             db_module.update_brew(b1, {"result_rating_overall": 7}, conn)
-            brew2 = BrewInput(date="2026-03-20", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew2 = BrewInput(date="2026-03-20", type="pour_over", dose_g=18.0, water_g=280.0)
             b2 = db_module.insert_brew(brew2, conn)
             db_module.update_brew(b2, {"result_rating_overall": 4}, conn)
         finally:
@@ -469,10 +469,10 @@ class TestListRatingFilter:
         """AC-5: --rating-max 3 returns only brews with overall rating <= 3."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-19", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-19", type="pour_over", dose_g=18.0, water_g=280.0)
             b1 = db_module.insert_brew(brew, conn)
             db_module.update_brew(b1, {"result_rating_overall": 3}, conn)
-            brew2 = BrewInput(date="2026-03-20", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew2 = BrewInput(date="2026-03-20", type="pour_over", dose_g=18.0, water_g=280.0)
             b2 = db_module.insert_brew(brew2, conn)
             db_module.update_brew(b2, {"result_rating_overall": 8}, conn)
         finally:
@@ -506,7 +506,7 @@ class TestGetBrewStats:
         """rating_distribution has exactly keys 1-9."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
             stats = db_module.get_brew_stats(conn)
         finally:
@@ -518,7 +518,7 @@ class TestGetBrewStats:
         """rating_distribution has no key 0."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
             stats = db_module.get_brew_stats(conn)
         finally:
@@ -529,7 +529,7 @@ class TestGetBrewStats:
         """Under old schema, keys 6-9 didn't exist; now they do."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
             db_module.insert_brew(brew, conn)
             stats = db_module.get_brew_stats(conn)
         finally:
@@ -543,7 +543,7 @@ class TestGetBrewStats:
         """Brew with rating 9 appears in distribution[9]."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
             bid = db_module.insert_brew(brew, conn)
             db_module.update_brew(bid, {"result_rating_overall": 9}, conn)
             stats = db_module.get_brew_stats(conn)
@@ -555,7 +555,7 @@ class TestGetBrewStats:
         """Buckets with no brews show 0."""
         conn = db_module.get_connection(db_path=db_path)
         try:
-            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+            brew = BrewInput(date="2026-03-21", type="pour_over", dose_g=18.0, water_g=280.0)
             bid = db_module.insert_brew(brew, conn)
             db_module.update_brew(bid, {"result_rating_overall": 5}, conn)
             stats = db_module.get_brew_stats(conn)
@@ -573,7 +573,7 @@ class TestGetBrewStats:
             for r, day in [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5),
                            (6, 6), (7, 7), (8, 8), (9, 9)]:
                 brew = BrewInput(date=f"2026-03-{day:02d}", type="pour_over",
-                                 dose_g=18.0, water_weight_g=280.0)
+                                 dose_g=18.0, water_g=280.0)
                 bid = db_module.insert_brew(brew, conn)
                 db_module.update_brew(bid, {"result_rating_overall": r}, conn)
             stats = db_module.get_brew_stats(conn)
@@ -606,7 +606,7 @@ class TestStatsDisplay:
         try:
             for r, day in [(2, 1), (5, 2), (5, 3)]:
                 brew = BrewInput(date=f"2026-03-{day:02d}", type="pour_over",
-                                 dose_g=18.0, water_weight_g=280.0)
+                                 dose_g=18.0, water_g=280.0)
                 bid = db_module.insert_brew(brew, conn)
                 db_module.update_brew(bid, {"result_rating_overall": r}, conn)
         finally:
@@ -628,7 +628,7 @@ class TestStatsDisplay:
         conn = db_module.get_connection(db_path=db_path)
         try:
             brew = BrewInput(date="2026-03-21", type="pour_over",
-                             dose_g=18.0, water_weight_g=280.0)
+                             dose_g=18.0, water_g=280.0)
             bid = db_module.insert_brew(brew, conn)
             db_module.update_brew(bid, {"result_rating_overall": 1}, conn)
         finally:
@@ -643,8 +643,8 @@ class TestStatsDisplay:
 # ===========================================================================
 
 def test_brewspec_version_is_0_9():
-    """AC-13: BREWSPEC_VERSION == '0.9'."""
-    assert BREWSPEC_VERSION == "0.9"
+    """AC-13: BREWSPEC_VERSION == '1.0' (updated in v1.0)."""
+    assert BREWSPEC_VERSION == "1.0"
 
 
 # ===========================================================================
@@ -658,7 +658,7 @@ def test_export_produces_brewspec_version_0_9(runner, db_path, tmp_path):
     result = runner.invoke(cli, ["export", str(out_file)])
     assert result.exit_code == 0
     data = yaml.safe_load(out_file.read_text())
-    assert data["brewspec_version"] == "0.9"
+    assert data["brewspec_version"] == "1.0"
 
 
 def test_export_rating_9_round_trips(runner, db_path, tmp_path):
@@ -689,14 +689,14 @@ class TestImportV09:
         return p
 
     def test_import_v09_document_accepted(self, runner, db_path, tmp_path):
-        """AC-15: v0.9 document with rating 9 imports without error."""
+        """AC-15: v1.0 document with rating 9 imports without error."""
         doc = {
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "result": {"ratings": {"overall": 9}},
             }],
         }
@@ -707,12 +707,12 @@ class TestImportV09:
     def test_import_v09_document_rating_7_stored(self, runner, db_path, tmp_path):
         """AC-15: imported rating of 7 stored correctly in DB."""
         doc = {
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "result": {"ratings": {"overall": 7}},
             }],
         }
@@ -728,14 +728,14 @@ class TestImportV09:
             conn.close()
 
     def test_import_v09_document_all_ratings_1_through_9_valid(self, runner, db_path, tmp_path):
-        """AC-15: v0.9 document with all dimensions at 9 accepted."""
+        """AC-15: v1.0 document with all dimensions at 9 accepted."""
         doc = {
-            "brewspec_version": "0.9",
+            "brewspec_version": "1.0",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
                 "result": {"ratings": {
                     "overall": 9,
                     "fragrance": 8,
@@ -763,7 +763,7 @@ class TestImportV09:
                 "date": "2026-03-21",
                 "type": "pour_over",
                 "dose_g": 18.0,
-                "water_weight_g": 280.0,
+                "water_g": 280.0,
             }],
         }
         p = self._write_brewspec(tmp_path, doc)
@@ -783,14 +783,14 @@ class TestBundledSchema:
         return json.loads(schema_path.read_text())
 
     def test_bundled_schema_version_const_is_0_9(self):
-        """D-3: brewspec_version const is '0.9'."""
+        """D-3: brewspec_version const is '1.0' (updated in v1.0)."""
         schema = self._load_schema()
-        assert schema["properties"]["brewspec_version"]["const"] == "0.9"
+        assert schema["properties"]["brewspec_version"]["const"] == "1.0"
 
     def test_bundled_schema_title_mentions_v0_9(self):
-        """D-3: schema title references v0.9."""
+        """D-3: schema title references v1.0 (updated in v1.0)."""
         schema = self._load_schema()
-        assert "0.9" in schema["title"]
+        assert "1.0" in schema["title"]
 
     def test_bundled_schema_ratings_overall_max_is_9(self):
         """D-3: ratings.overall maximum is 9."""

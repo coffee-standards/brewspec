@@ -1,14 +1,14 @@
-brewspec_version: "0.9"
+brewspec_version: "1.0"
 brews:
   - date: "2026-02-19T08:30:00Z"
     type: pour_over
     dose_g: 18.0
-    water_weight_g: 280.0
+    water_g: 280.0
     method: Hario V60
     water_temp_c: 96.0
     grind: medium_fine
     duration_s: 180
-    notes: Bright acidity
+    process_notes: Bright acidity
     coffee:
       roast_date: "2026-01-20"
       type: single_origin

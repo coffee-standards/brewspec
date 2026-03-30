@@ -27,7 +27,7 @@ def _populate_brews(db_path, n: int):
                 date=f"2026-02-{i + 1:02d}T08:30:00Z",
                 type="pour_over",
                 dose_g=18.0,
-                water_weight_g=280.0,
+                water_g=280.0,
             )
             db_module.insert_brew(brew, conn)
     finally:
@@ -43,7 +43,7 @@ def _populate_brews_with_method_and_rating(db_path, n: int):
                 date=f"2026-02-{i + 1:02d}T08:30:00Z",
                 type="pour_over",
                 dose_g=18.0,
-                water_weight_g=280.0,
+                water_g=280.0,
                 method="V60",
                 result=ResultInput(ratings=RatingsInput(overall=4)),
             )
@@ -190,7 +190,7 @@ def _insert_brew_with_ey(db_path, ey: float) -> None:
             date="2026-02-01T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             result=ResultInput(ey=ey),
         )
         db_module.insert_brew(brew, conn)
@@ -206,7 +206,7 @@ def _insert_brew_with_brix(db_path, brix: float) -> None:
             date="2026-02-01T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             result=ResultInput(brix=brix),
         )
         db_module.insert_brew(brew, conn)
@@ -222,7 +222,7 @@ def _insert_brew_with_tasting_notes(db_path, notes: str) -> None:
             date="2026-02-01T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             result=ResultInput(tasting_notes=notes),
         )
         db_module.insert_brew(brew, conn)
@@ -238,7 +238,7 @@ def _insert_brew_with_grinder(db_path, grinder: str) -> None:
             date="2026-02-01T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             equipment=EquipmentInput(grinder=grinder),
         )
         db_module.insert_brew(brew, conn)
@@ -254,7 +254,7 @@ def _insert_brew_with_brewer(db_path, brewer: str) -> None:
             date="2026-02-01T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             equipment=EquipmentInput(brewer=brewer),
         )
         db_module.insert_brew(brew, conn)

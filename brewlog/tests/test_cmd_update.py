@@ -68,7 +68,7 @@ def test_update_by_id(runner, db_path, monkeypatch):
     monkeypatch.setattr(db_module, "DB_PATH", db_path)
     _add_brew(runner)
 
-    result = runner.invoke(cli, ["update", "1", "--method", "V60", "--notes", "Clean finish"])
+    result = runner.invoke(cli, ["update", "1", "--method", "V60", "--process-notes", "Clean finish"])
     assert result.exit_code == 0
     assert "Brew #1 updated." in result.output
 
@@ -76,7 +76,7 @@ def test_update_by_id(runner, db_path, monkeypatch):
     try:
         row = db_module.get_brew(1, conn)
         assert row["method"] == "V60"
-        assert row["notes"] == "Clean finish"
+        assert row["process_notes"] == "Clean finish"
     finally:
         conn.close()
 

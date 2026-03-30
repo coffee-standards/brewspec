@@ -58,7 +58,7 @@ def _minimal_brew():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
 
 
@@ -67,12 +67,12 @@ def _full_brew():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         method="Hario V60",
         water_temp_c=96.0,
         grind="medium_fine",
         duration_s=180,
-        notes="Bright acidity",
+        process_notes="Bright acidity",
         coffee=CoffeeInput(
             roast_date="2026-01-20",
             type="single_origin",
@@ -113,7 +113,7 @@ def test_insert_brew_all_fields(tmp_db):
     assert row["type"] == "pour_over"
     assert row["method"] == "Hario V60"
     assert row["dose_g"] == 18.0
-    assert row["water_weight_g"] == 280.0
+    assert row["water_g"] == 280.0
     assert row["water_temp_c"] == 96.0
     assert row["grind"] == "medium_fine"
     assert row["duration_s"] == 180
@@ -121,7 +121,7 @@ def test_insert_brew_all_fields(tmp_db):
     assert row["result_ey"] == 20.5
     assert row["result_brix"] == 1.5
     assert row["result_tasting_notes"] == "Bright citrus"
-    assert row["notes"] == "Bright acidity"
+    assert row["process_notes"] == "Bright acidity"
     assert row["coffee_roast_date"] == "2026-01-20"
     assert row["coffee_type"] == "single_origin"
     assert row["coffee_name"] == "Ethiopia Natural"
@@ -140,7 +140,7 @@ def test_insert_brew_origin_serialised(tmp_db):
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         coffee=CoffeeInput(origins=[
             OriginInput(country="Ethiopia"),
             OriginInput(country="Colombia"),
@@ -193,7 +193,7 @@ def _insert_n_brews(conn, n: int):
             date=f"2026-02-{i + 1:02d}T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
         db_module.insert_brew(brew, conn)
 
@@ -243,7 +243,7 @@ def test_insert_brew_dict_minimal(tmp_db):
         "date": "2026-02-19T08:30:00Z",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
     }
     brew_id = db_module.insert_brew_dict(brew_dict, tmp_db)
     tmp_db.commit()
@@ -259,12 +259,12 @@ def test_insert_brew_dict_full(tmp_db):
         "date": "2026-02-19T08:30:00Z",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
         "method": "Hario V60",
         "water_temp_c": 96.0,
         "grind": "medium_fine",
         "duration_s": 180,
-        "notes": "Bright acidity",
+        "process_notes": "Bright acidity",
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
@@ -295,7 +295,7 @@ def test_insert_brew_dict_no_dedup(tmp_db):
         "date": "2026-02-19T08:30:00Z",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
     }
     id1 = db_module.insert_brew_dict(brew_dict, tmp_db)
     tmp_db.commit()
@@ -317,15 +317,15 @@ def test_parameterised_query_safety(tmp_db):
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         method=malicious,
-        notes=malicious,
+        process_notes=malicious,
     )
     brew_id = db_module.insert_brew(brew, tmp_db)
     row = db_module.get_brew(brew_id, tmp_db)
     assert row is not None
     assert row["method"] == malicious
-    assert row["notes"] == malicious
+    assert row["process_notes"] == malicious
     # Table still exists
     cursor = tmp_db.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='brews'"
@@ -390,7 +390,7 @@ def test_update_brew_accepts_all_valid_columns(tmp_db):
     brew_id = db_module.insert_brew(_minimal_brew(), tmp_db)
     valid_updates = {
         "method": "V60",
-        "notes": "test",
+        "process_notes": "test",
         "result_brix": 1.5,
         "result_rating_overall": 4,
     }
@@ -522,7 +522,7 @@ def test_insert_brew_dict_stores_individual_rating_columns(tmp_db):
         "date": "2026-02-22",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
         "result": {
             "tds": 1.38,
             "ey": 20.1,
@@ -559,7 +559,7 @@ def test_insert_brew_stores_individual_rating_columns(tmp_db):
         date="2026-02-22",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         result=ResultInput(
             tds=1.38,
             ratings=RatingsInput(
@@ -588,7 +588,7 @@ def test_insert_brew_stores_individual_rating_columns(tmp_db):
 
 def _insert_brew_with_rating(conn, date: str, overall):
     """Helper: insert a brew and update result_rating_overall column."""
-    brew = BrewInput(date=date, type="pour_over", dose_g=18.0, water_weight_g=280.0)
+    brew = BrewInput(date=date, type="pour_over", dose_g=18.0, water_g=280.0)
     brew_id = db_module.insert_brew(brew, conn)
     if overall is not None:
         db_module.update_brew(brew_id, {"result_rating_overall": overall}, conn)
@@ -658,7 +658,7 @@ def test_list_brews_filtered_since_and_until(tmp_db):
 
 def test_list_brews_filtered_since_with_datetime_stored(tmp_db):
     """AC-10: substr comparison works with stored YYYY-MM-DDTHH:MM:SSZ dates."""
-    brew = BrewInput(date="2026-02-22T09:15:00Z", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+    brew = BrewInput(date="2026-02-22T09:15:00Z", type="pour_over", dose_g=18.0, water_g=280.0)
     db_module.insert_brew(brew, tmp_db)
     rows = db_module.list_brews_filtered(tmp_db, all_rows=True, since="2026-02-22")
     assert len(rows) == 1
@@ -666,7 +666,7 @@ def test_list_brews_filtered_since_with_datetime_stored(tmp_db):
 
 def test_list_brews_filtered_until_with_datetime_stored(tmp_db):
     """AC-10: until comparison works with stored YYYY-MM-DDTHH:MM:SSZ dates."""
-    brew = BrewInput(date="2026-02-22T09:15:00Z", type="pour_over", dose_g=18.0, water_weight_g=280.0)
+    brew = BrewInput(date="2026-02-22T09:15:00Z", type="pour_over", dose_g=18.0, water_g=280.0)
     db_module.insert_brew(brew, tmp_db)
     rows = db_module.list_brews_filtered(tmp_db, all_rows=True, until="2026-02-22")
     assert len(rows) == 1
