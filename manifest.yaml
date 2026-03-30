@@ -227,8 +227,12 @@ maintenance:
     product: "BrewSpec"
     priority: P2
     tier: standard
-    status: ready_for_review
+    status: done
     assigned_to: null
+    completed_date: "2026-03-31"
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-refactor-schema-id-canonical-url.yaml
     source: health-report
     health_finding: DRIFT-1
     health_report: reviews/2026-03-31-system-steward-health-report.yaml
@@ -236,6 +240,9 @@ maintenance:
     url_decision: "https://brewspec.coffee/schema/v1.0.json (versioned, stable identity)"
     artifacts:
       design: specs/designs/refactor-schema-id-canonical-url.md
+    review_carry_forward:
+      - "LOW: rename test_bundled_schema_is_v0_9 to test_bundled_schema_is_v1_0 in brewlog/tests/test_brewspec_schema.py and update its docstring (stale name, correct assertion — cosmetic only)."
+      - "MEDIUM: 6 stale version-assertion tests in test_cmd_welcome.py, test_cmd_v04.py, test_cmd_v05.py assert '0.8.0' against the current v1.0.0 binary. Predate this refactor; should be updated or removed in the next maintenance pass."
     description: >
       The architecture principle (specs/arch/principles.md) states: "The canonical
       schema URL lives at brewspec.coffee/schema/. The JSON Schema $id references
