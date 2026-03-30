@@ -268,6 +268,7 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-31"
     review: reviews/2026-03-31-reviewer-maintenance-express.yaml
+    pr: https://github.com/coffee-standards/brewspec/pull/13
     source: health-report
     health_finding: GAP-1
     health_report: reviews/2026-03-31-system-steward-health-report.yaml
@@ -296,6 +297,7 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-31"
     review: reviews/2026-03-31-reviewer-maintenance-express.yaml
+    pr: https://github.com/coffee-standards/brewspec/pull/13
     source: health-report
     health_finding: TEST-1
     health_report: reviews/2026-03-31-system-steward-health-report.yaml
@@ -320,6 +322,7 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-31"
     review: reviews/2026-03-31-reviewer-maintenance-express.yaml
+    pr: https://github.com/coffee-standards/brewspec/pull/13
     source: health-report
     health_finding: DEP-1
     health_report: reviews/2026-03-31-system-steward-health-report.yaml
@@ -343,6 +346,7 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-31"
     review: reviews/2026-03-31-reviewer-maintenance-express.yaml
+    pr: https://github.com/coffee-standards/brewspec/pull/13
     source_task: refactor-schema-id-canonical-url
     description: >
       Six test functions in brewlog/tests/ assert the CLI version string "0.8.0"
