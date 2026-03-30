@@ -30,6 +30,17 @@ from brewlog.serialise import row_to_brew_dict, rows_to_brewspec_document, BREWS
 
 
 # ---------------------------------------------------------------------------
+# Note on stderr / stdout mixing
+# ---------------------------------------------------------------------------
+# Click's CliRunner mixes stderr into stdout by default (mix_stderr defaults
+# to True in Click 8).  As a result, assertions against result.output capture
+# both stdout and stderr output — error messages emitted via click.echo(...,
+# err=True) or sys.stderr are visible in result.output without any extra
+# configuration.  Tests below rely on this default behaviour.
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
 # Pydantic model: CoffeeInput.roaster validation
 # ---------------------------------------------------------------------------
 

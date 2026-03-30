@@ -199,6 +199,10 @@ def _rebuild_brews_table(conn: sqlite3.Connection) -> None:
     later migrations that are absent from an older DB produce NULL values,
     which is correct.
     """
+    # Note: v0.8+ columns (coffee_roaster, coffee_roast_level) and any other
+    # columns added by later migration versions are intentionally excluded from
+    # this CREATE TABLE statement.  _apply_migrations() adds them via ALTER
+    # TABLE after the rebuild completes, which is the correct order.
     conn.executescript("""
         ALTER TABLE brews RENAME TO brews_old;
 
