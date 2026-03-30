@@ -77,7 +77,7 @@ _OPTIONAL_COLS = [
 # Fixed always-visible trailing numeric columns
 _NUMERIC_COLS = [
     ("dose_g",         "Dose (g)",   True, 9),
-    ("water_weight_g", "Water (g)",  True, 10),
+    ("water_g",        "Water (g)",  True, 10),
 ]
 
 # Rating column — optional, uses legacy fallback
@@ -188,7 +188,7 @@ def _render_table(rows) -> None:
             parts.append(f"{method:<{15}}")
 
         parts.append(f"{row['dose_g']:>{9}.1f}")
-        parts.append(f"{row['water_weight_g']:>{10}.1f}")
+        parts.append(f"{row['water_g']:>{10}.1f}")
 
         if show_ey:
             ey = row["result_ey"]

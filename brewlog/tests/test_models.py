@@ -19,12 +19,12 @@ def test_brew_input_valid_minimal():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.date == "2026-02-19T08:30:00Z"
     assert brew.type == "pour_over"
     assert brew.dose_g == 18.0
-    assert brew.water_weight_g == 280.0
+    assert brew.water_g == 280.0
     assert brew.method is None
     assert brew.coffee is None
     assert brew.water is None
@@ -38,13 +38,13 @@ def test_brew_input_valid_all_fields():
         date="2026-02-19T08:30:00Z",
         type="immersion",
         dose_g=20.0,
-        water_weight_g=300.0,
+        water_g=300.0,
         brew_ratio=15.0,
         method="French Press",
         water_temp_c=95.0,
         grind="coarse",
         duration_s=240,
-        notes="Smooth and balanced",
+        process_notes="Smooth and balanced",
         coffee=CoffeeInput(
             roast_date="2026-01-15",
             type="blend",
@@ -68,7 +68,7 @@ def test_brew_input_valid_all_fields():
     assert brew.water_temp_c == 95.0
     assert brew.grind == "coarse"
     assert brew.duration_s == 240
-    assert brew.notes == "Smooth and balanced"
+    assert brew.process_notes == "Smooth and balanced"
     assert brew.coffee is not None
     assert brew.coffee.name == "House Blend"
     assert len(brew.coffee.origins) == 2
@@ -91,7 +91,7 @@ def test_brew_input_date_only_accepted():
         date="2026-02-21",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.date == "2026-02-21"
 
@@ -102,7 +102,7 @@ def test_brew_input_date_full_datetime_accepted():
         date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.date == "2026-02-21T08:30:00Z"
 
@@ -114,7 +114,7 @@ def test_brew_input_invalid_date_format():
             date="not-a-date",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -125,7 +125,7 @@ def test_brew_input_invalid_date_missing_z():
             date="2026-02-19T08:30:00",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -136,7 +136,7 @@ def test_brew_input_invalid_date_impossible():
             date="2026-13-01T00:00:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -147,7 +147,7 @@ def test_brew_input_invalid_date_wrong_order():
             date="21-02-2026",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -162,7 +162,7 @@ def test_brew_input_invalid_type_enum():
             date="2026-02-19T08:30:00Z",
             type="drip",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -173,7 +173,7 @@ def test_brew_input_valid_all_types():
             date="2026-02-19T08:30:00Z",
             type=brew_type,
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
         assert brew.type == brew_type
 
@@ -189,7 +189,7 @@ def test_brew_input_dose_zero():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=0,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
@@ -200,22 +200,22 @@ def test_brew_input_dose_negative():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=-1,
-            water_weight_g=280.0,
+            water_g=280.0,
         )
 
 
 # ---------------------------------------------------------------------------
-# BrewInput — water_weight_g validation
+# BrewInput — water_g validation
 # ---------------------------------------------------------------------------
 
 def test_brew_input_water_weight_zero():
-    """water_weight_g=0 rejected."""
+    """water_g=0 rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=0,
+            water_g=0,
         )
 
 
@@ -229,7 +229,7 @@ def test_brew_input_temp_boundary_low():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         water_temp_c=0,
     )
     assert brew.water_temp_c == 0
@@ -241,7 +241,7 @@ def test_brew_input_temp_boundary_high():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         water_temp_c=100,
     )
     assert brew.water_temp_c == 100
@@ -254,7 +254,7 @@ def test_brew_input_temp_out_of_range():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             water_temp_c=101,
         )
 
@@ -266,7 +266,7 @@ def test_brew_input_temp_below_zero():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             water_temp_c=-1,
         )
 
@@ -282,7 +282,7 @@ def test_brew_input_duration_zero():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             duration_s=0,
         )
 
@@ -294,7 +294,7 @@ def test_brew_input_duration_negative():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             duration_s=-1,
         )
 
@@ -312,7 +312,7 @@ def test_brew_input_grind_enum_all_values_accepted(grind_value):
         date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         grind=grind_value,
     )
     assert brew.grind == grind_value
@@ -325,7 +325,7 @@ def test_brew_input_grind_freeform_rejected():
             date="2026-02-21T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             grind="setting 15",
         )
 
@@ -337,7 +337,7 @@ def test_brew_input_grind_wrong_case_rejected():
             date="2026-02-21T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             grind="Medium",
         )
 
@@ -349,7 +349,7 @@ def test_brew_input_grind_empty_string_rejected():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             grind="",
         )
 
@@ -360,7 +360,7 @@ def test_brew_input_grind_omitted_accepted():
         date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.grind is None
 
@@ -376,20 +376,20 @@ def test_brew_input_method_empty_string():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             method="",
         )
 
 
 def test_brew_input_notes_empty_string():
-    """notes="" rejected."""
+    """process_notes="" rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
-            notes="",
+            water_g=280.0,
+            process_notes="",
         )
 
 
@@ -400,7 +400,7 @@ def test_brew_input_method_whitespace_only():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             method="   ",
         )
 
@@ -417,7 +417,7 @@ def test_brew_input_with_result_tds_ey():
         date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         result=ResultInput(tds=1.38, ey=20.1),
     )
     assert brew.result is not None
@@ -431,7 +431,7 @@ def test_brew_input_result_omitted():
         date="2026-02-21T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.result is None
 
@@ -444,7 +444,7 @@ def test_brew_input_with_full_result():
         date="2026-02-21",
         type="pour_over",
         dose_g=20.0,
-        water_weight_g=320.0,
+        water_g=320.0,
         result=ResultInput(
             tds=1.38,
             ey=20.1,
@@ -568,15 +568,15 @@ def test_coffee_input_name_empty_rejected():
 
 
 def test_coffee_input_name_maxlength_accepted():
-    """AC v0.6: coffee.name of exactly 150 chars is accepted."""
-    coffee = CoffeeInput(name="x" * 150)
-    assert len(coffee.name) == 150
+    """AC v1.0: coffee.name of exactly 100 chars is accepted (maxLength reduced from 150 to 100 in v1.0)."""
+    coffee = CoffeeInput(name="x" * 100)
+    assert len(coffee.name) == 100
 
 
 def test_coffee_input_name_maxlength_exceeded():
-    """AC v0.6: coffee.name of 151 chars is rejected."""
+    """AC v1.0: coffee.name of 101 chars is rejected."""
     with pytest.raises(ValidationError):
-        CoffeeInput(name="x" * 151)
+        CoffeeInput(name="x" * 101)
 
 
 def test_coffee_input_all_none_valid():
@@ -715,7 +715,7 @@ def test_brew_input_method_maxlength_accepted():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         method="x" * 100,
     )
     assert len(brew.method) == 100
@@ -728,7 +728,7 @@ def test_brew_input_method_maxlength_exceeded():
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             method="x" * 101,
         )
 
@@ -738,26 +738,26 @@ def test_brew_input_method_maxlength_exceeded():
 # ---------------------------------------------------------------------------
 
 def test_brew_input_notes_maxlength_accepted():
-    """notes of exactly 2000 chars is accepted."""
+    """process_notes of exactly 2000 chars is accepted."""
     brew = BrewInput(
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
-        notes="x" * 2000,
+        water_g=280.0,
+        process_notes="x" * 2000,
     )
-    assert len(brew.notes) == 2000
+    assert len(brew.process_notes) == 2000
 
 
 def test_brew_input_notes_maxlength_exceeded():
-    """notes of 2001 chars is rejected."""
+    """process_notes of 2001 chars is rejected."""
     with pytest.raises(ValidationError):
         BrewInput(
             date="2026-02-19T08:30:00Z",
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
-            notes="x" * 2001,
+            water_g=280.0,
+            process_notes="x" * 2001,
         )
 
 
@@ -771,7 +771,7 @@ def test_brew_input_with_equipment():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
         equipment=EquipmentInput(grinder="Comandante C40", brewer="Hario V60"),
     )
     assert brew.equipment is not None
@@ -785,7 +785,7 @@ def test_brew_input_equipment_omitted():
         date="2026-02-19T08:30:00Z",
         type="pour_over",
         dose_g=18.0,
-        water_weight_g=280.0,
+        water_g=280.0,
     )
     assert brew.equipment is None
 

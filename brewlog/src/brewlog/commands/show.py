@@ -39,6 +39,7 @@ def _display_origins(origins: list[dict]) -> None:
         ("lot",            "Lot:"),
         ("harvest_year",   "Harvest Year:"),
         ("elevation_masl", "Elevation (m):"),
+        ("cupping_notes",  "Cupping Notes:"),
     ]
 
     if len(origins) == 1:
@@ -59,7 +60,8 @@ def _display_origins(origins: list[dict]) -> None:
 
 # All result columns used for has_results detection (AC-35)
 _RESULT_COLS = (
-    "result_tds", "result_ey", "result_brix", "result_yield_g", "result_tasting_notes",
+    "result_tds", "result_ey", "result_brix", "result_yield_g",
+    "result_water_g", "result_tasting_notes",
     "result_rating_overall", "result_rating_fragrance", "result_rating_aroma",
     "result_rating_flavour", "result_rating_aftertaste", "result_rating_acidity",
     "result_rating_sweetness", "result_rating_mouthfeel",
@@ -108,7 +110,7 @@ def show(ctx: click.Context, id: int) -> None:
         _print_field("Method:", row["method"])
 
     _print_field("Dose:", row["dose_g"], "g")
-    _print_field("Water weight:", row["water_weight_g"], "g")
+    _print_field("Water:", row["water_g"], "g")
 
     # brew_ratio: new in v0.5 (AC-40)
     if row["brew_ratio"] is not None:
@@ -123,8 +125,12 @@ def show(ctx: click.Context, id: int) -> None:
     if row["duration_s"] is not None:
         _print_field("Duration:", row["duration_s"], "s")
 
-    if row["notes"] is not None:
-        _print_field("Notes:", row["notes"])
+    if row["process_notes"] is not None:
+        _print_field("Process Notes:", row["process_notes"])
+
+    # brew-level yield_g: recipe target (new in v1.0)
+    if row["yield_g"] is not None:
+        _print_field("Target yield (g):", row["yield_g"])
 
     # -- Results section (AC-35) --
     # Include legacy result_ratings JSON in has_results check for backward compat
@@ -142,6 +148,8 @@ def show(ctx: click.Context, id: int) -> None:
             _print_field("EY (%):", row["result_ey"])
         if row["result_brix"] is not None:
             _print_field("Brix:", row["result_brix"])
+        if row["result_water_g"] is not None:
+            _print_field("Actual water (g):", row["result_water_g"])
         if row["result_yield_g"] is not None:
             _print_field("Yield:", f"{row['result_yield_g']}g")
         if row["result_tasting_notes"] is not None:
@@ -168,7 +176,7 @@ def show(ctx: click.Context, id: int) -> None:
         row[f] is not None
         for f in (
             "coffee_roast_date", "coffee_type", "coffee_name", "coffee_origins",
-            "coffee_roaster", "coffee_roast_level",
+            "coffee_roaster", "coffee_roast_level", "coffee_cupping_notes",
         )
     )
     if has_coffee:
@@ -185,6 +193,8 @@ def show(ctx: click.Context, id: int) -> None:
             _print_field("Roast date:", row["coffee_roast_date"])
         if row["coffee_type"] is not None:
             _print_field("Type:", row["coffee_type"])
+        if row["coffee_cupping_notes"] is not None:
+            _print_field("Cupping Notes:", row["coffee_cupping_notes"])
         if row["coffee_origins"] is not None:
             origins_data = json.loads(row["coffee_origins"])
             _display_origins(origins_data)
@@ -199,8 +209,11 @@ def show(ctx: click.Context, id: int) -> None:
     # -- Equipment section -- (AC-55)
     has_equipment = any(
         row[f] is not None
-        for f in ("equipment_grinder", "equipment_brewer",
-                  "equipment_grinder_setting", "equipment_notes")
+        for f in (
+            "equipment_grinder", "equipment_brewer",
+            "equipment_grinder_setting", "equipment_notes",
+            "equipment_pressure_bar", "equipment_flow_rate_ml_s",
+        )
     )
     if has_equipment:
         click.echo("")
@@ -214,3 +227,7 @@ def show(ctx: click.Context, id: int) -> None:
             _print_field("Brewer:", row["equipment_brewer"])
         if row["equipment_notes"] is not None:
             _print_field("Notes:", row["equipment_notes"])
+        if row["equipment_pressure_bar"] is not None:
+            _print_field("Pressure (bar):", row["equipment_pressure_bar"])
+        if row["equipment_flow_rate_ml_s"] is not None:
+            _print_field("Flow Rate (ml/s):", row["equipment_flow_rate_ml_s"])

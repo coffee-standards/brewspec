@@ -34,12 +34,14 @@ UPDATABLE_COLUMNS: frozenset[str] = frozenset({
     "grind",
     "water_temp_c",
     "duration_s",
-    "notes",
+    "process_notes",
     "brew_ratio",
+    "yield_g",
     "result_tds",
     "result_ey",
     "result_brix",
     "result_yield_g",
+    "result_water_g",
     "result_tasting_notes",
     "result_rating_overall",
     "result_rating_fragrance",
@@ -57,11 +59,14 @@ UPDATABLE_COLUMNS: frozenset[str] = frozenset({
     "coffee_process",
     "coffee_roaster",
     "coffee_roast_level",
+    "coffee_cupping_notes",
     "water_ppm",
     "equipment_grinder",
     "equipment_brewer",
     "equipment_grinder_setting",
     "equipment_notes",
+    "equipment_pressure_bar",
+    "equipment_flow_rate_ml_s",
 })
 
 
@@ -100,6 +105,14 @@ _V8_MIGRATION_COLUMNS: dict[str, str] = {
     "coffee_roast_level": "TEXT",
 }
 
+_V10_MIGRATION_COLUMNS: dict[str, str] = {
+    "yield_g":                  "REAL",
+    "result_water_g":           "REAL",
+    "coffee_cupping_notes":     "TEXT",
+    "equipment_pressure_bar":   "REAL",
+    "equipment_flow_rate_ml_s": "REAL",
+}
+
 
 # ---------------------------------------------------------------------------
 # Connection management
@@ -132,13 +145,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             type                      TEXT,
             method                    TEXT,
             dose_g                    REAL,
-            water_weight_g            REAL,
+            water_g                   REAL,
             brew_ratio                REAL,
             water_volume_ml           REAL,
             water_temp_c              REAL,
             grind                     TEXT,
             duration_s                INTEGER,
-            notes                     TEXT,
+            process_notes             TEXT,
             coffee_roast_date         TEXT,
             coffee_type               TEXT,
             coffee_name               TEXT,
@@ -164,7 +177,12 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             result_rating_aftertaste  INTEGER,
             result_rating_acidity     INTEGER,
             result_rating_sweetness   INTEGER,
-            result_rating_mouthfeel   INTEGER
+            result_rating_mouthfeel   INTEGER,
+            yield_g                   REAL,
+            result_water_g            REAL,
+            coffee_cupping_notes      TEXT,
+            equipment_pressure_bar    REAL,
+            equipment_flow_rate_ml_s  REAL
         );
         CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
     """)
@@ -212,13 +230,13 @@ def _rebuild_brews_table(conn: sqlite3.Connection) -> None:
             type                      TEXT,
             method                    TEXT,
             dose_g                    REAL,
-            water_weight_g            REAL,
+            water_g                   REAL,
             brew_ratio                REAL,
             water_volume_ml           REAL,
             water_temp_c              REAL,
             grind                     TEXT,
             duration_s                INTEGER,
-            notes                     TEXT,
+            process_notes             TEXT,
             coffee_roast_date         TEXT,
             coffee_type               TEXT,
             coffee_name               TEXT,
@@ -250,17 +268,19 @@ def _rebuild_brews_table(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_brews_date ON brews (date DESC);
     """)
 
-    # Copy rows column-by-column; columns absent from the old table default
-    # to NULL via COALESCE-style absence — SQLite inserts NULL for missing
-    # columns in the source when they don't exist in the old table.
+    # Copy rows column-by-column.
+    # The new brews table uses water_g and process_notes (renamed from
+    # water_weight_g and notes in v1.0). Build the INSERT … SELECT with
+    # explicit aliasing for renamed columns so pre-v0.7 data is preserved.
     old_cols = {
         row[1]
         for row in conn.execute("PRAGMA table_info(brews_old)").fetchall()
     }
-    all_cols = [
-        "id", "date", "type", "method", "dose_g", "water_weight_g",
+    # Columns that keep the same name in old and new schema
+    same_cols = [
+        "id", "date", "type", "method", "dose_g",
         "brew_ratio", "water_volume_ml", "water_temp_c", "grind", "duration_s",
-        "notes", "coffee_roast_date", "coffee_type", "coffee_name",
+        "coffee_roast_date", "coffee_type", "coffee_name",
         "coffee_origins", "coffee_origin", "coffee_varietal", "coffee_process",
         "water_ppm", "equipment_grinder", "equipment_brewer",
         "equipment_grinder_setting", "equipment_notes",
@@ -271,10 +291,24 @@ def _rebuild_brews_table(conn: sqlite3.Connection) -> None:
         "result_rating_aftertaste", "result_rating_acidity",
         "result_rating_sweetness", "result_rating_mouthfeel",
     ]
-    present = [c for c in all_cols if c in old_cols]
-    cols_sql = ", ".join(present)
+    present_same = [c for c in same_cols if c in old_cols]
+
+    # Build INSERT col list and SELECT col list (may differ for renamed cols)
+    insert_cols = list(present_same)
+    select_cols = list(present_same)
+
+    # Handle renamed columns: water_weight_g -> water_g, notes -> process_notes
+    if "water_weight_g" in old_cols:
+        insert_cols.append("water_g")
+        select_cols.append("water_weight_g")
+    if "notes" in old_cols:
+        insert_cols.append("process_notes")
+        select_cols.append("notes")
+
+    ins_sql = ", ".join(insert_cols)
+    sel_sql = ", ".join(select_cols)
     conn.execute(
-        f"INSERT INTO brews ({cols_sql}) SELECT {cols_sql} FROM brews_old"  # noqa: S608
+        f"INSERT INTO brews ({ins_sql}) SELECT {sel_sql} FROM brews_old"  # noqa: S608
     )
     conn.execute("DROP TABLE brews_old")
     conn.commit()
@@ -291,8 +325,32 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
     }
-    all_migration_columns = {**_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS, **_V6_MIGRATION_COLUMNS, **_V7_MIGRATION_COLUMNS, **_V8_MIGRATION_COLUMNS}
+    all_migration_columns = {
+        **_V3_MIGRATION_COLUMNS, **_V5_MIGRATION_COLUMNS,
+        **_V6_MIGRATION_COLUMNS, **_V7_MIGRATION_COLUMNS, **_V8_MIGRATION_COLUMNS,
+    }
     for col, col_type in all_migration_columns.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
+
+    # V10: Rename water_weight_g -> water_g and notes -> process_notes
+    # Rebuild existing set after V3-V8 column additions
+    existing = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(brews)").fetchall()
+    }
+    if "water_weight_g" in existing:
+        conn.execute("ALTER TABLE brews RENAME COLUMN water_weight_g TO water_g")
+    if "notes" in existing:
+        conn.execute("ALTER TABLE brews RENAME COLUMN notes TO process_notes")
+
+    # Rebuild existing set after renames
+    existing = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(brews)").fetchall()
+    }
+    # V10: Add new columns
+    for col, col_type in _V10_MIGRATION_COLUMNS.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE brews ADD COLUMN {col} {col_type}")  # noqa: S608
 
@@ -371,22 +429,27 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
     ratings = result.ratings if result else None
 
     # Serialise coffee.origins list of OriginInput objects to JSON
+    # cupping_notes on OriginInput is included via model_dump(exclude_none=True)
     origins_json = None
     if coffee and coffee.origins:
         origins_json = json.dumps([o.model_dump(exclude_none=True) for o in coffee.origins])
 
     sql = """
         INSERT INTO brews (
-            date, type, method, dose_g, water_weight_g,
+            date, type, method, dose_g, water_g,
             brew_ratio,
             water_temp_c, grind, duration_s,
-            notes,
+            process_notes,
+            yield_g,
             coffee_roast_date, coffee_type, coffee_name, coffee_origins,
             coffee_roaster, coffee_roast_level,
+            coffee_cupping_notes,
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
+            equipment_pressure_bar, equipment_flow_rate_ml_s,
             result_tds, result_ey, result_brix, result_yield_g,
+            result_water_g,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
             result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
@@ -396,12 +459,16 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
             ?,
             ?, ?, ?,
             ?,
+            ?,
             ?, ?, ?, ?,
             ?, ?,
             ?,
+            ?,
+            ?, ?,
             ?, ?,
             ?, ?,
             ?, ?, ?, ?,
+            ?,
             ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -413,27 +480,32 @@ def insert_brew(brew: "BrewInput", conn: sqlite3.Connection) -> int:
         brew.type,
         brew.method,
         brew.dose_g,
-        brew.water_weight_g,
+        brew.water_g,
         brew.brew_ratio,
         brew.water_temp_c,
         brew.grind,
         brew.duration_s,
-        brew.notes,
+        brew.process_notes,
+        brew.yield_g,
         coffee.roast_date if coffee else None,
         coffee.type if coffee else None,
         coffee.name if coffee else None,
         origins_json,
         coffee.roaster if coffee else None,
         coffee.roast_level if coffee else None,
+        coffee.cupping_notes if coffee else None,
         water.ppm if water else None,
         equipment.grinder if equipment else None,
         equipment.brewer if equipment else None,
         equipment.grinder_setting if equipment else None,
         equipment.notes if equipment else None,
+        equipment.pressure_bar if equipment else None,
+        equipment.flow_rate_ml_s if equipment else None,
         result.tds if result else None,
         result.ey if result else None,
         result.brix if result else None,
         result.yield_g if result else None,
+        result.water_g if result else None,
         result.tasting_notes if result else None,
         ratings.overall if ratings else None,
         ratings.fragrance if ratings else None,
@@ -467,16 +539,20 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
 
     sql = """
         INSERT INTO brews (
-            date, type, method, dose_g, water_weight_g,
+            date, type, method, dose_g, water_g,
             brew_ratio,
             water_temp_c, grind, duration_s,
-            notes,
+            process_notes,
+            yield_g,
             coffee_roast_date, coffee_type, coffee_name, coffee_origins,
             coffee_roaster, coffee_roast_level,
+            coffee_cupping_notes,
             water_ppm,
             equipment_grinder, equipment_brewer,
             equipment_grinder_setting, equipment_notes,
+            equipment_pressure_bar, equipment_flow_rate_ml_s,
             result_tds, result_ey, result_brix, result_yield_g,
+            result_water_g,
             result_tasting_notes,
             result_rating_overall, result_rating_fragrance, result_rating_aroma,
             result_rating_flavour, result_rating_aftertaste, result_rating_acidity,
@@ -486,12 +562,16 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
             ?,
             ?, ?, ?,
             ?,
+            ?,
             ?, ?, ?, ?,
             ?, ?,
             ?,
+            ?,
+            ?, ?,
             ?, ?,
             ?, ?,
             ?, ?, ?, ?,
+            ?,
             ?,
             ?, ?, ?,
             ?, ?, ?,
@@ -503,27 +583,32 @@ def insert_brew_dict(brew_dict: dict, conn: sqlite3.Connection) -> int:
         brew_dict.get("type"),
         brew_dict.get("method"),
         brew_dict.get("dose_g"),
-        brew_dict.get("water_weight_g"),
+        brew_dict.get("water_g"),
         brew_dict.get("brew_ratio"),
         brew_dict.get("water_temp_c"),
         brew_dict.get("grind"),
         brew_dict.get("duration_s"),
-        brew_dict.get("notes"),
+        brew_dict.get("process_notes"),
+        brew_dict.get("yield_g"),
         coffee.get("roast_date"),
         coffee.get("type"),
         coffee.get("name"),
         json.dumps(origins) if origins else None,
         coffee.get("roaster"),
         coffee.get("roast_level"),
+        coffee.get("cupping_notes"),
         water.get("ppm"),
         equipment.get("grinder"),
         equipment.get("brewer"),
         equipment.get("grinder_setting"),
         equipment.get("notes"),
+        equipment.get("pressure_bar"),
+        equipment.get("flow_rate_ml_s"),
         result.get("tds"),
         result.get("ey"),
         result.get("brix"),
         result.get("yield_g"),
+        result.get("water_g"),
         result.get("tasting_notes"),
         ratings.get("overall"),
         ratings.get("fragrance"),
@@ -730,7 +815,7 @@ def search_brews(
 ) -> list[sqlite3.Row]:
     """
     Search brews by case-insensitive substring match across:
-      notes, result_tasting_notes, coffee_name, coffee_origins, coffee_origin.
+      process_notes, result_tasting_notes, coffee_name, coffee_origins, coffee_origin.
 
     Uses LIKE ? with %query% parameter — no f-string interpolation of the query value.
     Returns rows ordered by id DESC.
@@ -740,7 +825,7 @@ def search_brews(
     sql = """
         SELECT * FROM brews
         WHERE (
-            notes LIKE ?
+            process_notes LIKE ?
             OR result_tasting_notes LIKE ?
             OR coffee_name LIKE ?
             OR coffee_origins LIKE ?

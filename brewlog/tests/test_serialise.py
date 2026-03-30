@@ -26,7 +26,7 @@ def _minimal_dict():
         "date": "2026-02-19T08:30:00Z",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
     }
 
 
@@ -35,12 +35,12 @@ def _full_dict():
         "date": "2026-02-19T08:30:00Z",
         "type": "pour_over",
         "dose_g": 18.0,
-        "water_weight_g": 280.0,
+        "water_g": 280.0,
         "method": "Hario V60",
         "water_temp_c": 96.0,
         "grind": "medium_fine",
         "duration_s": 180,
-        "notes": "Bright acidity",
+        "process_notes": "Bright acidity",
         "coffee": {
             "roast_date": "2026-01-20",
             "type": "single_origin",
@@ -65,7 +65,7 @@ def test_row_to_brew_dict_minimal(tmp_db):
     assert result["date"] == "2026-02-19T08:30:00Z"
     assert result["type"] == "pour_over"
     assert result["dose_g"] == 18.0
-    assert result["water_weight_g"] == 280.0
+    assert result["water_g"] == 280.0
 
 
 def test_row_to_brew_dict_no_nulls(tmp_db):
@@ -78,7 +78,7 @@ def test_row_to_brew_dict_no_nulls(tmp_db):
     # Optional fields should not be present at all
     assert "method" not in result
     assert "grind" not in result
-    assert "notes" not in result
+    assert "process_notes" not in result
     assert "water_temp_c" not in result
     assert "coffee" not in result
     assert "water" not in result
@@ -164,7 +164,7 @@ def test_rows_to_brewspec_document_structure(tmp_db):
     rows = db_module.get_all_brews(tmp_db)
     doc = serialise.rows_to_brewspec_document(rows)
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "0.9"
+    assert doc["brewspec_version"] == "1.0"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
     assert len(doc["brews"]) == 1
@@ -380,7 +380,7 @@ def test_row_to_brew_dict_invalid_grind_omitted(tmp_db):
     """AC-11: freeform grind not in enum is omitted from main output."""
     # Directly insert a row with a non-enum grind value via raw SQL
     tmp_db.execute(
-        "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+        "INSERT INTO brews (date, type, dose_g, water_g, grind) "
         "VALUES (?, ?, ?, ?, ?)",
         ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, "setting 15"),
     )
@@ -394,7 +394,7 @@ def test_row_to_brew_dict_invalid_grind_omitted(tmp_db):
 def test_row_to_brew_dict_invalid_grind_sentinel_set(tmp_db):
     """AC-11: _invalid_grind sentinel key set when grind is non-enum."""
     tmp_db.execute(
-        "INSERT INTO brews (date, type, dose_g, water_weight_g, grind) "
+        "INSERT INTO brews (date, type, dose_g, water_g, grind) "
         "VALUES (?, ?, ?, ?, ?)",
         ("2026-02-19T08:30:00Z", "pour_over", 18.0, 280.0, "medium-fine"),
     )

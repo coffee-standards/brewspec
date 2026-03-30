@@ -81,6 +81,7 @@ def _build_origins_from_flags(
     origin_varietal: tuple,
     origin_plain: tuple,
     elevation_masl: int | None = None,
+    origin_cupping_notes: str | None = None,
 ) -> list[OriginInput] | None:
     """
     Build a list of OriginInput objects from the positional-parallel flag tuples.
@@ -88,25 +89,36 @@ def _build_origins_from_flags(
     The structured --origin-* flags take precedence over plain --origin flags.
     If no structured origin flags are given but --origin is, fall back to plain string origins.
     elevation_masl applies to the first origin entry when provided.
+    origin_cupping_notes is applied to the first origin entry when provided.
     """
     has_structured = any([
         origin_name, origin_country, origin_region, origin_subregion,
         origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
     ])
 
-    if not has_structured and not origin_plain and elevation_masl is None:
+    if not has_structured and not origin_plain and elevation_masl is None and origin_cupping_notes is None:
         return None
 
+    if not has_structured and not origin_plain and elevation_masl is None and origin_cupping_notes is not None:
+        # Only origin_cupping_notes given — create a single origin with just that field
+        return [OriginInput(cupping_notes=origin_cupping_notes)]
+
     if not has_structured and not origin_plain and elevation_masl is not None:
-        # Only elevation_masl given — create a single origin with just that field
-        return [OriginInput(elevation_masl=elevation_masl)]
+        # Only elevation_masl (and possibly cupping_notes) given
+        return [OriginInput(elevation_masl=elevation_masl, cupping_notes=origin_cupping_notes)]
 
     if not has_structured and origin_plain:
         # Legacy: plain string origins
         origins = [OriginInput(country=o) for o in origin_plain]
         # Apply elevation_masl to first entry if provided
         if elevation_masl is not None and origins:
-            origins[0] = OriginInput(country=origins[0].country, elevation_masl=elevation_masl)
+            origins[0] = OriginInput(
+                country=origins[0].country,
+                elevation_masl=elevation_masl,
+                cupping_notes=origin_cupping_notes if len(origins) > 0 else None,
+            )
+        elif origin_cupping_notes is not None and origins:
+            origins[0] = OriginInput(country=origins[0].country, cupping_notes=origin_cupping_notes)
         return origins
 
     # Structured: positional-parallel approach
@@ -122,8 +134,9 @@ def _build_origins_from_flags(
 
     origins = []
     for i in range(max_len):
-        # elevation_masl applies to first origin entry
+        # elevation_masl and origin_cupping_notes apply to first origin entry
         elev = elevation_masl if i == 0 else None
+        cup_notes = origin_cupping_notes if i == 0 else None
         origin = OriginInput(
             name=_get(origin_name, i),
             country=_get(origin_country, i),
@@ -135,6 +148,7 @@ def _build_origins_from_flags(
             harvest_year=_get(origin_year, i),
             varietal=_get(origin_varietal, i),
             elevation_masl=elev,
+            cupping_notes=cup_notes,
         )
         origins.append(origin)
     return origins if origins else None
@@ -152,8 +166,8 @@ def _build_origins_from_flags(
               help="Brew type: immersion, pour_over, espresso, hybrid.")
 @click.option("--dose",        "dose",         type=float, default=None,
               help="Coffee dose in grams (> 0).")
-@click.option("--water",       "water_weight", type=float, default=None,
-              help="Water weight in grams (> 0).")
+@click.option("--water",       "water_g",      type=float, default=None,
+              help="Water in grams (> 0).")
 @click.option("--brew-ratio",  "brew_ratio",   type=float, default=None,
               help="Water-to-coffee ratio (> 0). e.g. 15.5")
 @click.option("--method",      "method",       type=str,   default=None,
@@ -167,14 +181,32 @@ def _build_origins_from_flags(
               ))
 @click.option("--duration",    "duration",     type=int,   default=None,
               help="Brew duration in seconds (> 0).")
-@click.option("--notes",       "notes",        type=str,   default=None,
-              help="Brew process notes.")
+@click.option("--process-notes", "process_notes", type=str, default=None,
+              help=(
+                  "Operational preparation notes (e.g. 'rinsed filter, 30s bloom'). "
+                  "For sensory impressions use --tasting-notes."
+              ))
+@click.option("--target-yield", "target_yield", type=float, default=None,
+              help=(
+                  "Recipe target output weight in grams (> 0). For espresso dialling — "
+                  "the intended liquid yield. For actual output weight use --yield-g."
+              ))
+@click.option("--actual-water", "actual_water", type=float, default=None,
+              help=(
+                  "Actual water used in grams (> 0). Record when actual water deviates "
+                  "from the recipe target (--water)."
+              ))
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
               help="Coffee classification: single_origin or blend.")
 @click.option("--coffee-name", "coffee_name",  type=str,   default=None,
               help="Coffee product name or descriptive label (e.g. 'Ethiopia Yirgacheffe').")
+@click.option("--coffee-cupping-notes", "coffee_cupping_notes", type=str, default=None,
+              help=(
+                  "Sensory notes on the coffee as a whole — bag description or "
+                  "pre-brew cupping impressions."
+              ))
 @click.option("--roaster",     "roaster",      type=str,   default=None,
               help="Roaster name (company or person who roasted the coffee).")
 @click.option("--roast-level", "roast_level",  type=str,   default=None,
@@ -202,6 +234,11 @@ def _build_origins_from_flags(
               help="Harvest year, e.g. 2025 (repeatable).")
 @click.option("--origin-varietal",  "origin_varietal",  type=str, multiple=True, default=(),
               help="Coffee varietal for this origin entry (repeatable).")
+@click.option("--origin-cupping-notes", "origin_cupping_notes", type=str, default=None,
+              help=(
+                  "Sensory notes for the origin component (or the single origin "
+                  "for single-origin coffees)."
+              ))
 @click.option("--water-ppm",   "water_ppm",    type=float, default=None,
               help="Water mineral content in ppm (>= 0).")
 @click.option("--tds",         "tds",          type=float, default=None,
@@ -215,7 +252,7 @@ def _build_origins_from_flags(
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
               help=(
                   "Sensory tasting notes — impressions of the cup. "
-                  "For operational brew-process notes use --notes."
+                  "For operational brew-process notes use --process-notes."
               ))
 @click.option("--rating",         "rating_retired",    type=int, default=None, hidden=True)
 @click.option("--rating-overall", "rating_overall",    type=int, default=None,
@@ -242,21 +279,28 @@ def _build_origins_from_flags(
               help="Brewer/dripper name or description.")
 @click.option("--equipment-notes", "equipment_notes", type=str, default=None,
               help="Equipment state notes (e.g. 'Burrs replaced 2026-01').")
+@click.option("--pressure-bar", "pressure_bar", type=float, default=None,
+              help="Line or lever pressure in bars (> 0). Primarily for espresso.")
+@click.option("--flow-rate",   "flow_rate_ml_s", type=float, default=None,
+              help="Volumetric flow rate in ml/s (> 0). Useful for espresso profiling.")
 def add(
     ctx,
-    date, brew_type, dose, water_weight,
+    date, brew_type, dose, water_g,
     brew_ratio,
-    method, temp, grind, duration, notes,
-    roast_date, coffee_type, coffee_name,
+    method, temp, grind, duration, process_notes,
+    target_yield, actual_water,
+    roast_date, coffee_type, coffee_name, coffee_cupping_notes,
     roaster, roast_level, elevation_masl,
     origin,
     origin_name, origin_country, origin_region, origin_subregion,
     origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+    origin_cupping_notes,
     water_ppm, tds, ey, brix, yield_g, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
     grinder, grinder_setting, brewer, equipment_notes,
+    pressure_bar, flow_rate_ml_s,
 ) -> None:
     """Log a new brew."""
 
@@ -309,9 +353,35 @@ def add(
             click.echo("Error: --origin-varietal must not be empty.", err=True)
             sys.exit(1)
 
+    # -- Validate new v1.0 flags --
+
+    if target_yield is not None and target_yield <= 0:
+        click.echo("Error: --target-yield must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if actual_water is not None and actual_water <= 0:
+        click.echo("Error: --actual-water must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if coffee_cupping_notes is not None and not coffee_cupping_notes.strip():
+        click.echo("Error: --coffee-cupping-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    if origin_cupping_notes is not None and not origin_cupping_notes.strip():
+        click.echo("Error: --origin-cupping-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    if pressure_bar is not None and pressure_bar <= 0:
+        click.echo("Error: --pressure-bar must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if flow_rate_ml_s is not None and flow_rate_ml_s <= 0:
+        click.echo("Error: --flow-rate must be greater than 0.", err=True)
+        sys.exit(1)
+
     # -- Tip: shown only in fully interactive mode (no required flags given) --
 
-    if date is None and brew_type is None and dose is None and water_weight is None:
+    if date is None and brew_type is None and dose is None and water_g is None:
         click.echo(
             'Tip: add optional details with flags, e.g. --method "V60" --rating-overall 4'
             ' --tasting-notes "Bright acidity"  (run --help for all options)'
@@ -334,8 +404,8 @@ def add(
     if dose is None:
         dose = _prompt_positive_float("Coffee dose in grams")
 
-    if water_weight is None:
-        water_weight = _prompt_positive_float("Water weight in grams")
+    if water_g is None:
+        water_g = _prompt_positive_float("Water in grams")
 
     # -- Validate rating dimensions (1-9) --
     _RATING_DIMS = {
@@ -363,8 +433,10 @@ def add(
         origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
     ])
     has_coffee = any([
-        roast_date, coffee_type, coffee_name, roaster, roast_level,
+        roast_date, coffee_type, coffee_name, coffee_cupping_notes,
+        roaster, roast_level,
         origin, has_structured_origin, elevation_masl is not None,
+        origin_cupping_notes is not None,
     ])
     coffee_obj = None
     if has_coffee:
@@ -374,11 +446,13 @@ def add(
                 origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
                 origin,
                 elevation_masl=elevation_masl,
+                origin_cupping_notes=origin_cupping_notes,
             )
             coffee_obj = CoffeeInput(
                 roast_date=roast_date,
                 type=coffee_type,
                 name=coffee_name,
+                cupping_notes=coffee_cupping_notes,
                 roaster=roaster,
                 roast_level=roast_level,
                 origins=origins_list,
@@ -395,7 +469,7 @@ def add(
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
             sys.exit(1)
 
-    has_equipment = any(v is not None for v in (grinder, brewer, grinder_setting, equipment_notes))
+    has_equipment = any(v is not None for v in (grinder, brewer, grinder_setting, equipment_notes, pressure_bar, flow_rate_ml_s))
     equipment_obj = None
     if has_equipment:
         try:
@@ -404,6 +478,8 @@ def add(
                 brewer=brewer,
                 grinder_setting=grinder_setting,
                 notes=equipment_notes,
+                pressure_bar=pressure_bar,
+                flow_rate_ml_s=flow_rate_ml_s,
             )
         except ValidationError as exc:
             click.echo(f"Error: {exc.errors()[0]['msg']}", err=True)
@@ -411,7 +487,7 @@ def add(
 
     result_obj = None
     has_any_rating = any(v is not None for v in _RATING_DIMS.values())
-    has_result = any(v is not None for v in (tds, ey, brix, yield_g, tasting_notes)) or has_any_rating
+    has_result = any(v is not None for v in (tds, ey, brix, yield_g, actual_water, tasting_notes)) or has_any_rating
     if has_result:
         ratings_obj = None
         if has_any_rating:
@@ -435,6 +511,7 @@ def add(
                 ey=ey,
                 brix=brix,
                 yield_g=yield_g,
+                water_g=actual_water,
                 tasting_notes=tasting_notes,
                 ratings=ratings_obj,
             )
@@ -447,13 +524,14 @@ def add(
             date=date,
             type=brew_type,
             dose_g=dose,
-            water_weight_g=water_weight,
+            water_g=water_g,
             brew_ratio=brew_ratio,
             method=method or None,
             water_temp_c=temp,
             grind=grind,
             duration_s=duration,
-            notes=notes,
+            process_notes=process_notes,
+            yield_g=target_yield,
             coffee=coffee_obj,
             water=water_obj,
             equipment=equipment_obj,

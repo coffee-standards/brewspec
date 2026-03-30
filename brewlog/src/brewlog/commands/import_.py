@@ -1,11 +1,11 @@
 """
 `brewlog import` command.
 
-Imports brews from a BrewSpec v0.9 YAML or JSON file.
+Imports brews from a BrewSpec v1.0 YAML or JSON file.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
-Deduplicates based on date + type + dose_g + water_weight_g.
+Deduplicates based on date + type + dose_g + water_g.
 """
 
 from __future__ import annotations
@@ -18,30 +18,32 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v0.9 BrewSpec files.
+# Verbatim error message for non-v1.0 BrewSpec files.
 # The {version} placeholder is replaced with the version string found in the file.
-_V09_REQUIRED_MSG = """\
-Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v0.8.
-BrewLog v0.8 requires BrewSpec v0.9.
+_V10_REQUIRED_MSG = """\
+Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v1.0.
+BrewLog v1.0 requires BrewSpec v1.0.
 
-To migrate your file from v0.8 to v0.9, make the following changes:
-  1. Bump brewspec_version from "0.8" to "0.9"
+To migrate your file from v0.9 to v1.0, make the following changes:
+  1. Bump brewspec_version from "0.9" to "1.0"
+  2. Rename water_weight_g to water_g
+  3. Rename notes to process_notes
 
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
 
 def _brew_exists(brew_dict: dict, conn) -> bool:
     """
-    Return True if a brew with the same date, type, dose_g, and water_weight_g exists.
+    Return True if a brew with the same date, type, dose_g, and water_g exists.
     All four fields use exact equality (parameterised). AC-15.
     """
     row = conn.execute(
-        "SELECT 1 FROM brews WHERE date = ? AND type = ? AND dose_g = ? AND water_weight_g = ? LIMIT 1",
+        "SELECT 1 FROM brews WHERE date = ? AND type = ? AND dose_g = ? AND water_g = ? LIMIT 1",
         (
             brew_dict.get("date"),
             brew_dict.get("type"),
             brew_dict.get("dose_g"),
-            brew_dict.get("water_weight_g"),
+            brew_dict.get("water_g"),
         )
     ).fetchone()
     return row is not None
@@ -51,7 +53,7 @@ def _brew_exists(brew_dict: dict, conn) -> bool:
 @click.argument("path", type=str)
 @click.pass_context
 def import_cmd(ctx: click.Context, path: str) -> None:
-    """Import brews from a BrewSpec v0.9 YAML or JSON file."""
+    """Import brews from a BrewSpec v1.0 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
     in_path = serialise.validate_import_path(path)
@@ -89,11 +91,11 @@ def import_cmd(ctx: click.Context, path: str) -> None:
         click.echo("Error: file content is not a valid BrewSpec document.", err=True)
         sys.exit(1)
 
-    # -- Check for non-v0.9 BrewSpec version before schema validation --
+    # -- Check for non-v1.0 BrewSpec version before schema validation --
     file_version = str(doc.get("brewspec_version", ""))
-    if file_version != "0.9":
+    if file_version != "1.0":
         version_label = file_version if file_version else "(unknown)"
-        click.echo(_V09_REQUIRED_MSG.format(version=version_label), err=True)
+        click.echo(_V10_REQUIRED_MSG.format(version=version_label), err=True)
         sys.exit(1)
 
     # -- Schema validation (before any DB writes or dedup checks) AC-19 --

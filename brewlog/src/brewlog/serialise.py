@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-BREWSPEC_VERSION = "0.9"
+BREWSPEC_VERSION = "1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ _RATING_DIMS = [
 
 def row_to_brew_dict(row: sqlite3.Row) -> dict:
     """
-    Convert a sqlite3.Row to a BrewSpec v0.9 brew dict.
+    Convert a sqlite3.Row to a BrewSpec v1.0 brew dict.
 
     Rules:
     - NULL columns are omitted entirely (no null values in output).
@@ -65,19 +65,23 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
     brew: dict = {}
 
     # Formerly-required fields — now optional in v0.7; omit if NULL
-    for field in ("date", "type", "dose_g", "water_weight_g"):
+    for field in ("date", "type", "dose_g", "water_g"):
         if r.get(field) is not None:
             brew[field] = r[field]
 
     # Optional brew-level fields (not grind — handled separately below)
     # Note: water_volume_ml is excluded — removed in v0.6
-    for field in ("method", "water_temp_c", "duration_s", "notes"):
+    for field in ("method", "water_temp_c", "duration_s", "process_notes"):
         if r.get(field) is not None:
             brew[field] = r[field]
 
     # brew_ratio: new v0.5 field
     if r.get("brew_ratio") is not None:
         brew["brew_ratio"] = r["brew_ratio"]
+
+    # yield_g: new v1.0 brew-level recipe target
+    if r.get("yield_g") is not None:
+        brew["yield_g"] = r["yield_g"]
 
     # grind: validate against enum; omit and set sentinel if invalid (AC-11)
     if r.get("grind") is not None:
@@ -98,6 +102,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         coffee["roaster"] = r["coffee_roaster"]
     if r.get("coffee_roast_level") is not None:
         coffee["roast_level"] = r["coffee_roast_level"]
+    if r.get("coffee_cupping_notes") is not None:
+        coffee["cupping_notes"] = r["coffee_cupping_notes"]
     if r.get("coffee_origins") is not None:
         coffee["origins"] = json.loads(r["coffee_origins"])
     elif r.get("coffee_origin") is not None:
@@ -127,6 +133,10 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         equipment["grinder_setting"] = r["equipment_grinder_setting"]
     if r.get("equipment_notes") is not None:
         equipment["notes"] = r["equipment_notes"]
+    if r.get("equipment_pressure_bar") is not None:
+        equipment["pressure_bar"] = r["equipment_pressure_bar"]
+    if r.get("equipment_flow_rate_ml_s") is not None:
+        equipment["flow_rate_ml_s"] = r["equipment_flow_rate_ml_s"]
     if equipment:
         brew["equipment"] = equipment
 
@@ -140,6 +150,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         result["brix"] = r["result_brix"]
     if r.get("result_yield_g") is not None:
         result["yield_g"] = r["result_yield_g"]
+    if r.get("result_water_g") is not None:
+        result["water_g"] = r["result_water_g"]
     if r.get("result_tasting_notes") is not None:
         result["tasting_notes"] = r["result_tasting_notes"]
 
@@ -159,8 +171,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v0.9 document dict.
-    Returns {"brewspec_version": "0.9", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec v1.0 document dict.
+    Returns {"brewspec_version": "1.0", "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.

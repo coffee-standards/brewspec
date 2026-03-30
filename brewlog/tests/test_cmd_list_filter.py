@@ -35,7 +35,7 @@ def _insert(db_path, date, brew_type, method=None):
             date=date,
             type=brew_type,
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             method=method,
         )
         db_module.insert_brew(brew, conn)
@@ -325,7 +325,7 @@ def _insert_with_rating(db_path, date, overall_rating):
             date=date,
             type="pour_over",
             dose_g=18.0,
-            water_weight_g=280.0,
+            water_g=280.0,
             result=ResultInput(ratings=RatingsInput(overall=overall_rating)),
         )
         db_module.insert_brew(brew, conn)
@@ -442,7 +442,7 @@ def test_filter_rating_min_with_type(runner, db_path):
             date="2026-02-02T08:00:00Z",
             type="espresso",
             dose_g=18.0,
-            water_weight_g=36.0,
+            water_g=36.0,
             result=ResultInput(ratings=RatingsInput(overall=4)),
         )
         db_module.insert_brew(brew, conn)

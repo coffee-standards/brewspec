@@ -40,10 +40,23 @@ from brewlog.prompts import prompt_brew_type
               help="Water temperature in Celsius (0-100).")
 @click.option("--duration",    "duration",     type=int,   default=None,
               help="Brew duration in seconds (> 0).")
-@click.option("--notes",       "notes",        type=str,   default=None,
-              help="Brew process notes.")
+@click.option("--process-notes", "process_notes", type=str, default=None,
+              help=(
+                  "Operational preparation notes (e.g. 'rinsed filter, 30s bloom'). "
+                  "For sensory impressions use --tasting-notes."
+              ))
 @click.option("--brew-ratio",  "brew_ratio",   type=float, default=None,
               help="Water-to-coffee ratio (> 0).")
+@click.option("--target-yield", "target_yield", type=float, default=None,
+              help=(
+                  "Recipe target output weight in grams (> 0). For espresso dialling — "
+                  "the intended liquid yield. For actual output weight use --yield-g."
+              ))
+@click.option("--actual-water", "actual_water", type=float, default=None,
+              help=(
+                  "Actual water used in grams (> 0). Record when actual water deviates "
+                  "from the recipe target (--water)."
+              ))
 @click.option("--tds",         "tds",          type=float, default=None,
               help="TDS percentage (> 0).")
 @click.option("--ey",          "ey",           type=float, default=None,
@@ -55,7 +68,7 @@ from brewlog.prompts import prompt_brew_type
 @click.option("--tasting-notes", "tasting_notes", type=str, default=None,
               help=(
                   "Sensory tasting notes — impressions of the cup. "
-                  "For operational brew-process notes use --notes."
+                  "For operational brew-process notes use --process-notes."
               ))
 @click.option("--rating",         "rating_retired", type=int, default=None, hidden=True)
 @click.option("--rating-overall", "rating_overall",    type=int, default=None,
@@ -80,6 +93,11 @@ from brewlog.prompts import prompt_brew_type
               help="Coffee classification: single_origin or blend.")
 @click.option("--coffee-name", "coffee_name",  type=str,   default=None,
               help="Coffee product name or descriptive label.")
+@click.option("--coffee-cupping-notes", "coffee_cupping_notes", type=str, default=None,
+              help=(
+                  "Sensory notes on the coffee as a whole — bag description or "
+                  "pre-brew cupping impressions."
+              ))
 @click.option("--roaster",     "roaster",      type=str,   default=None,
               help="Roaster name (company or person who roasted the coffee).")
 @click.option("--roast-level", "roast_level",  type=str,   default=None,
@@ -105,6 +123,11 @@ from brewlog.prompts import prompt_brew_type
               help="Harvest year (repeatable).")
 @click.option("--origin-varietal",  "origin_varietal",  type=str, multiple=True, default=(),
               help="Coffee varietal for this origin entry (repeatable).")
+@click.option("--origin-cupping-notes", "origin_cupping_notes", type=str, default=None,
+              help=(
+                  "Sensory notes for the origin component (or the single origin "
+                  "for single-origin coffees)."
+              ))
 @click.option("--varietal",    "varietal",     type=str,   default=None,
               help="Coffee varietal. Legacy flag.")
 @click.option("--process",     "process",      type=str,   default=None,
@@ -119,21 +142,29 @@ from brewlog.prompts import prompt_brew_type
               help="Brewer/dripper name.")
 @click.option("--equipment-notes", "equipment_notes", type=str, default=None,
               help="Equipment state notes.")
+@click.option("--pressure-bar", "pressure_bar", type=float, default=None,
+              help="Line or lever pressure in bars (> 0). Primarily for espresso.")
+@click.option("--flow-rate",   "flow_rate_ml_s", type=float, default=None,
+              help="Volumetric flow rate in ml/s (> 0). Useful for espresso profiling.")
 def update(
     ctx,
     brew_id,
     brew_type,
-    method, grind, temp, duration, notes, brew_ratio, tds, ey, brix, yield_g, tasting_notes,
+    method, grind, temp, duration, process_notes, brew_ratio,
+    target_yield, actual_water,
+    tds, ey, brix, yield_g, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
     rating_aftertaste, rating_acidity, rating_sweetness, rating_mouthfeel,
-    roast_date, coffee_type, coffee_name,
+    roast_date, coffee_type, coffee_name, coffee_cupping_notes,
     roaster, roast_level,
     origin,
     origin_name, origin_country, origin_region, origin_subregion,
     origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+    origin_cupping_notes,
     varietal, process,
     water_ppm, grinder, grinder_setting, brewer, equipment_notes,
+    pressure_bar, flow_rate_ml_s,
 ) -> None:
     """Update optional fields on an existing brew.
 
@@ -251,8 +282,8 @@ def update(
         )
         sys.exit(1)
 
-    if notes is not None and (len(notes.strip()) == 0 or len(notes) > 2000):
-        click.echo("Error: notes must be 1-2000 characters", err=True)
+    if process_notes is not None and (len(process_notes.strip()) == 0 or len(process_notes) > 2000):
+        click.echo("Error: --process-notes must be 1-2000 characters", err=True)
         sys.exit(1)
 
     if tasting_notes is not None and (len(tasting_notes.strip()) == 0 or len(tasting_notes) > 2000):
@@ -283,147 +314,201 @@ def update(
         click.echo("Error: brewer must be 1-100 characters", err=True)
         sys.exit(1)
 
-    # -- Build origins JSON if any structured origin flag was supplied --
+    # -- Validate new v1.0 flags --
 
-    has_structured_origin = any([
-        origin_name, origin_country, origin_region, origin_subregion,
-        origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
-    ])
-
-    origins_json = None
-    if has_structured_origin:
-        max_len = max(
-            len(origin_name), len(origin_country), len(origin_region),
-            len(origin_subregion), len(origin_producer), len(origin_process),
-            len(origin_lot), len(origin_year), len(origin_varietal),
-        )
-
-        def _get(tpl: tuple, i: int):
-            return tpl[i] if i < len(tpl) else None
-
-        origins_list = []
-        for i in range(max_len):
-            o: dict = {}
-            if _get(origin_name, i):
-                o["name"] = _get(origin_name, i)
-            if _get(origin_country, i):
-                o["country"] = _get(origin_country, i)
-            if _get(origin_region, i):
-                o["region"] = _get(origin_region, i)
-            if _get(origin_subregion, i):
-                o["subregion"] = _get(origin_subregion, i)
-            if _get(origin_producer, i):
-                o["producer"] = _get(origin_producer, i)
-            if _get(origin_process, i):
-                o["process"] = _get(origin_process, i)
-            if _get(origin_lot, i):
-                o["lot"] = _get(origin_lot, i)
-            if _get(origin_year, i):
-                o["harvest_year"] = _get(origin_year, i)
-            if _get(origin_varietal, i):
-                o["varietal"] = _get(origin_varietal, i)
-            origins_list.append(o)
-        origins_json = json.dumps(origins_list)
-    elif origin:
-        # Legacy plain string origins
-        origins_json = json.dumps([{"country": o} for o in origin])
-
-    # -- Build updates dict (DB column -> value) --
-
-    updates: dict = {}
-
-    if brew_type is not None:
-        updates["type"] = brew_type
-    if method is not None:
-        updates["method"] = method
-    if grind is not None:
-        updates["grind"] = grind
-    if temp is not None:
-        updates["water_temp_c"] = temp
-    if duration is not None:
-        updates["duration_s"] = duration
-    if notes is not None:
-        updates["notes"] = notes
-    if brew_ratio is not None:
-        updates["brew_ratio"] = brew_ratio
-    if tds is not None:
-        updates["result_tds"] = tds
-    if ey is not None:
-        updates["result_ey"] = ey
-    if brix is not None:
-        updates["result_brix"] = brix
-    if yield_g is not None:
-        updates["result_yield_g"] = yield_g
-    if tasting_notes is not None:
-        updates["result_tasting_notes"] = tasting_notes
-    # AC-31: individual rating columns (no JSON sentinel pattern)
-    if rating_overall is not None:
-        updates["result_rating_overall"] = rating_overall
-    if rating_fragrance is not None:
-        updates["result_rating_fragrance"] = rating_fragrance
-    if rating_aroma is not None:
-        updates["result_rating_aroma"] = rating_aroma
-    if rating_flavour is not None:
-        updates["result_rating_flavour"] = rating_flavour
-    if rating_aftertaste is not None:
-        updates["result_rating_aftertaste"] = rating_aftertaste
-    if rating_acidity is not None:
-        updates["result_rating_acidity"] = rating_acidity
-    if rating_sweetness is not None:
-        updates["result_rating_sweetness"] = rating_sweetness
-    if rating_mouthfeel is not None:
-        updates["result_rating_mouthfeel"] = rating_mouthfeel
-    if roast_date is not None:
-        updates["coffee_roast_date"] = roast_date
-    if coffee_type is not None:
-        updates["coffee_type"] = coffee_type
-    if coffee_name is not None:
-        updates["coffee_name"] = coffee_name
-    if roaster is not None:
-        updates["coffee_roaster"] = roaster
-    if roast_level is not None:
-        updates["coffee_roast_level"] = roast_level
-    if origins_json is not None:
-        updates["coffee_origins"] = origins_json
-    if varietal is not None:
-        updates["coffee_varietal"] = varietal
-    if process is not None:
-        updates["coffee_process"] = process
-    if water_ppm is not None:
-        updates["water_ppm"] = water_ppm
-    if grinder is not None:
-        updates["equipment_grinder"] = grinder
-    if grinder_setting is not None:
-        updates["equipment_grinder_setting"] = grinder_setting
-    if brewer is not None:
-        updates["equipment_brewer"] = brewer
-    if equipment_notes is not None:
-        updates["equipment_notes"] = equipment_notes
-
-    if not updates:
-        click.echo(
-            "Error: no fields to update — provide at least one flag (run --help for options)",
-            err=True,
-        )
+    if target_yield is not None and target_yield <= 0:
+        click.echo("Error: --target-yield must be greater than 0.", err=True)
         sys.exit(1)
 
-    # -- Resolve brew ID --
+    if actual_water is not None and actual_water <= 0:
+        click.echo("Error: --actual-water must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if coffee_cupping_notes is not None and not coffee_cupping_notes.strip():
+        click.echo("Error: --coffee-cupping-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    if origin_cupping_notes is not None and not origin_cupping_notes.strip():
+        click.echo("Error: --origin-cupping-notes must not be empty.", err=True)
+        sys.exit(1)
+
+    if pressure_bar is not None and pressure_bar <= 0:
+        click.echo("Error: --pressure-bar must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if flow_rate_ml_s is not None and flow_rate_ml_s <= 0:
+        click.echo("Error: --flow-rate must be greater than 0.", err=True)
+        sys.exit(1)
+
+    # -- Resolve brew ID early (needed for origin_cupping_notes read-back) --
 
     db_path = ctx.obj.get("db_path") if ctx.obj else None
     conn = db.get_connection(db_path=db_path)
     try:
         if brew_id is None:
-            brew_id = db.get_latest_brew_id(conn)
-            if brew_id is None:
+            brew_id_resolved = db.get_latest_brew_id(conn)
+            if brew_id_resolved is None:
                 click.echo("Error: no brews logged yet", err=True)
                 sys.exit(1)
+        else:
+            brew_id_resolved = brew_id
 
-        found = db.update_brew(brew_id, updates, conn)
+        # -- Build origins JSON if any structured origin flag was supplied --
+
+        has_structured_origin = any([
+            origin_name, origin_country, origin_region, origin_subregion,
+            origin_producer, origin_process, origin_lot, origin_year, origin_varietal,
+        ])
+
+        origins_json = None
+        if has_structured_origin:
+            max_len = max(
+                len(origin_name), len(origin_country), len(origin_region),
+                len(origin_subregion), len(origin_producer), len(origin_process),
+                len(origin_lot), len(origin_year), len(origin_varietal),
+            )
+
+            def _get(tpl: tuple, i: int):
+                return tpl[i] if i < len(tpl) else None
+
+            origins_list = []
+            for i in range(max_len):
+                o: dict = {}
+                if _get(origin_name, i):
+                    o["name"] = _get(origin_name, i)
+                if _get(origin_country, i):
+                    o["country"] = _get(origin_country, i)
+                if _get(origin_region, i):
+                    o["region"] = _get(origin_region, i)
+                if _get(origin_subregion, i):
+                    o["subregion"] = _get(origin_subregion, i)
+                if _get(origin_producer, i):
+                    o["producer"] = _get(origin_producer, i)
+                if _get(origin_process, i):
+                    o["process"] = _get(origin_process, i)
+                if _get(origin_lot, i):
+                    o["lot"] = _get(origin_lot, i)
+                if _get(origin_year, i):
+                    o["harvest_year"] = _get(origin_year, i)
+                if _get(origin_varietal, i):
+                    o["varietal"] = _get(origin_varietal, i)
+                # Apply origin_cupping_notes to first entry
+                if i == 0 and origin_cupping_notes is not None:
+                    o["cupping_notes"] = origin_cupping_notes
+                origins_list.append(o)
+            origins_json = json.dumps(origins_list)
+        elif origin:
+            # Legacy plain string origins
+            origins_list = [{"country": o} for o in origin]
+            if origin_cupping_notes is not None and origins_list:
+                origins_list[0]["cupping_notes"] = origin_cupping_notes
+            origins_json = json.dumps(origins_list)
+        elif origin_cupping_notes is not None:
+            # No structured origin flags — read existing origins, patch first entry
+            row = db.get_brew(brew_id_resolved, conn)
+            if row and row["coffee_origins"]:
+                existing_origins = json.loads(row["coffee_origins"])
+            else:
+                existing_origins = [{}]
+            if existing_origins:
+                existing_origins[0]["cupping_notes"] = origin_cupping_notes
+            origins_json = json.dumps(existing_origins)
+
+        # -- Build updates dict (DB column -> value) --
+
+        updates: dict = {}
+
+        if brew_type is not None:
+            updates["type"] = brew_type
+        if method is not None:
+            updates["method"] = method
+        if grind is not None:
+            updates["grind"] = grind
+        if temp is not None:
+            updates["water_temp_c"] = temp
+        if duration is not None:
+            updates["duration_s"] = duration
+        if process_notes is not None:
+            updates["process_notes"] = process_notes
+        if brew_ratio is not None:
+            updates["brew_ratio"] = brew_ratio
+        if target_yield is not None:
+            updates["yield_g"] = target_yield
+        if actual_water is not None:
+            updates["result_water_g"] = actual_water
+        if tds is not None:
+            updates["result_tds"] = tds
+        if ey is not None:
+            updates["result_ey"] = ey
+        if brix is not None:
+            updates["result_brix"] = brix
+        if yield_g is not None:
+            updates["result_yield_g"] = yield_g
+        if tasting_notes is not None:
+            updates["result_tasting_notes"] = tasting_notes
+        # AC-31: individual rating columns (no JSON sentinel pattern)
+        if rating_overall is not None:
+            updates["result_rating_overall"] = rating_overall
+        if rating_fragrance is not None:
+            updates["result_rating_fragrance"] = rating_fragrance
+        if rating_aroma is not None:
+            updates["result_rating_aroma"] = rating_aroma
+        if rating_flavour is not None:
+            updates["result_rating_flavour"] = rating_flavour
+        if rating_aftertaste is not None:
+            updates["result_rating_aftertaste"] = rating_aftertaste
+        if rating_acidity is not None:
+            updates["result_rating_acidity"] = rating_acidity
+        if rating_sweetness is not None:
+            updates["result_rating_sweetness"] = rating_sweetness
+        if rating_mouthfeel is not None:
+            updates["result_rating_mouthfeel"] = rating_mouthfeel
+        if roast_date is not None:
+            updates["coffee_roast_date"] = roast_date
+        if coffee_type is not None:
+            updates["coffee_type"] = coffee_type
+        if coffee_name is not None:
+            updates["coffee_name"] = coffee_name
+        if coffee_cupping_notes is not None:
+            updates["coffee_cupping_notes"] = coffee_cupping_notes
+        if roaster is not None:
+            updates["coffee_roaster"] = roaster
+        if roast_level is not None:
+            updates["coffee_roast_level"] = roast_level
+        if origins_json is not None:
+            updates["coffee_origins"] = origins_json
+        if varietal is not None:
+            updates["coffee_varietal"] = varietal
+        if process is not None:
+            updates["coffee_process"] = process
+        if water_ppm is not None:
+            updates["water_ppm"] = water_ppm
+        if grinder is not None:
+            updates["equipment_grinder"] = grinder
+        if grinder_setting is not None:
+            updates["equipment_grinder_setting"] = grinder_setting
+        if brewer is not None:
+            updates["equipment_brewer"] = brewer
+        if equipment_notes is not None:
+            updates["equipment_notes"] = equipment_notes
+        if pressure_bar is not None:
+            updates["equipment_pressure_bar"] = pressure_bar
+        if flow_rate_ml_s is not None:
+            updates["equipment_flow_rate_ml_s"] = flow_rate_ml_s
+
+        if not updates:
+            click.echo(
+                "Error: no fields to update — provide at least one flag (run --help for options)",
+                err=True,
+            )
+            sys.exit(1)
+
+        found = db.update_brew(brew_id_resolved, updates, conn)
     finally:
         conn.close()
 
     if not found:
-        click.echo(f"Error: brew #{brew_id} not found", err=True)
+        click.echo(f"Error: brew #{brew_id_resolved} not found", err=True)
         sys.exit(1)
 
-    click.echo(f"Brew #{brew_id} updated.")
+    click.echo(f"Brew #{brew_id_resolved} updated.")

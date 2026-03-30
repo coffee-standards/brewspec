@@ -52,7 +52,7 @@ def _insert_brew(db_path, **kwargs):
             date=kwargs.get("date", "2026-02-19T08:30:00Z"),
             type=kwargs.get("type", "pour_over"),
             dose_g=kwargs.get("dose_g", 18.0),
-            water_weight_g=kwargs.get("water_weight_g", 280.0),
+            water_g=kwargs.get("water_g", 280.0),
         )
         db_module.insert_brew(brew, conn)
     finally:
@@ -67,7 +67,7 @@ def _insert_legacy_ratings_row(db_path, overall: int):
     conn = db_module.get_connection(db_path=db_path)
     try:
         conn.execute(
-            "INSERT INTO brews (date, type, dose_g, water_weight_g, result_ratings) "
+            "INSERT INTO brews (date, type, dose_g, water_g, result_ratings) "
             "VALUES (?, ?, ?, ?, ?)",
             (
                 "2026-02-10T08:00:00Z",
@@ -130,7 +130,7 @@ class TestListLegacyRatingFallback:
         conn = db_module.get_connection(db_path=db_path)
         try:
             conn.execute(
-                "INSERT INTO brews (date, type, dose_g, water_weight_g, result_ratings) "
+                "INSERT INTO brews (date, type, dose_g, water_g, result_ratings) "
                 "VALUES (?, ?, ?, ?, ?)",
                 (
                     "2026-02-10T08:00:00Z",
@@ -228,7 +228,7 @@ class TestListColumnVisibility:
                 date="2026-02-20T08:00:00Z",
                 type="pour_over",
                 dose_g=18.0,
-                water_weight_g=280.0,
+                water_g=280.0,
                 method="V60",
             )
             db_module.insert_brew(brew, conn)
@@ -290,7 +290,7 @@ class TestListColumnVisibility:
                 date="2026-02-22T08:00:00Z",
                 type="pour_over",
                 dose_g=18.0,
-                water_weight_g=280.0,
+                water_g=280.0,
                 method="Chemex",
             )
             db_module.insert_brew(brew, conn)
@@ -337,7 +337,7 @@ class TestCsvExport:
         assert len(header) > 0
 
     def test_csv_export_has_required_headers(self, runner, db_path, tmp_path):
-        """CSV header includes required fields: date, type, dose_g, water_weight_g."""
+        """CSV header includes required fields: date, type, dose_g, water_g."""
         _insert_brew(db_path)
         out_file = str(tmp_path / "export.csv")
         runner.invoke(cli, ["export", out_file, "--format", "csv"])
@@ -347,7 +347,7 @@ class TestCsvExport:
         assert "date" in headers
         assert "type" in headers
         assert "dose_g" in headers
-        assert "water_weight_g" in headers
+        assert "water_g" in headers
 
     def test_csv_export_one_row_per_brew(self, runner, db_path, tmp_path):
         """CSV has one data row per brew."""
@@ -374,7 +374,7 @@ class TestCsvExport:
         assert row["date"] == "2026-02-19T08:30:00Z"
         assert row["type"] == "pour_over"
         assert float(row["dose_g"]) == 18.0
-        assert float(row["water_weight_g"]) == 280.0
+        assert float(row["water_g"]) == 280.0
 
     def test_csv_export_null_fields_empty_string(self, runner, db_path, tmp_path):
         """Null fields are represented as empty string (not 'None' or 'null')."""
@@ -483,7 +483,7 @@ class TestCsvExport:
                 date="2026-02-19T08:30:00Z",
                 type="pour_over",
                 dose_g=18.0,
-                water_weight_g=280.0,
+                water_g=280.0,
                 method="V60",
                 result=ResultInput(ratings=RatingsInput(overall=4)),
             )
