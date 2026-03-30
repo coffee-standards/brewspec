@@ -218,6 +218,105 @@ maintenance:
   # Status flow: backlog → ready_for_dev → ready_for_review → ready_for_deploy → done
 
   # ──────────────────────────────────────────────────────────────────────────
+  # Health report findings — 2026-03-31
+  # Source: reviews/2026-03-31-system-steward-health-report.yaml
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - id: refactor-schema-id-canonical-url
+    type: refactor
+    product: "BrewSpec"
+    priority: P2
+    tier: standard
+    status: ready_for_review
+    assigned_to: null
+    source: health-report
+    health_finding: DRIFT-1
+    health_report: reviews/2026-03-31-system-steward-health-report.yaml
+    pipeline: "steward → architect → dev → reviewer"
+    url_decision: "https://brewspec.coffee/schema/v1.0.json (versioned, stable identity)"
+    artifacts:
+      design: specs/designs/refactor-schema-id-canonical-url.md
+    description: >
+      The architecture principle (specs/arch/principles.md) states: "The canonical
+      schema URL lives at brewspec.coffee/schema/. The JSON Schema $id references
+      this URL." The deployed schema sets $id to the raw GitHub CDN URL
+      (https://raw.githubusercontent.com/coffee-standards/brewspec/main/brewspec.schema.json)
+      instead.
+
+      Architect input required first: confirm the exact target URL path
+      (brewspec.coffee/schema/brewspec.schema.json vs
+      brewspec.coffee/schema/v1.0/brewspec.schema.json) and whether the schema
+      file is already served at that path by the site. Both the $id update in
+      brewspec.schema.json and the site serving the file at that path must land
+      together — otherwise $id will reference a broken URL.
+
+  - id: refactor-v10-migration-transaction
+    type: refactor
+    product: "BrewLog CLI"
+    priority: P3
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    source: health-report
+    health_finding: GAP-1
+    health_report: reviews/2026-03-31-system-steward-health-report.yaml
+    description: >
+      The brewlog-cli-v1.0 design (section 2.5) requires the V10 migration to
+      execute as a single transaction with one conn.commit() at the end.
+      The implementation in _apply_migrations() (brewlog/src/brewlog/db.py) has
+      two commit paths: an early conn.commit() at line 393 (early return when
+      coffee_origin column is absent, before Steps A and B) and the normal commit
+      at line 412. In a failure between the V10 DDL and the data coercion steps,
+      DDL would already be committed while coercion remains incomplete.
+
+      Fix: restructure _apply_migrations() so V10 DDL, Step A (grinder_setting
+      coercion), and Step B (origin migration) all execute before a single
+      conn.commit() call, regardless of whether coffee_origin is present.
+      Add or update a test to verify transaction atomicity (failure mid-migration
+      leaves the DB in the pre-migration state).
+
+  - id: refactor-stale-test-names-brewlog
+    type: refactor
+    product: "BrewLog CLI"
+    priority: P3
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    source: health-report
+    health_finding: TEST-1
+    health_report: reviews/2026-03-31-system-steward-health-report.yaml
+    description: >
+      Two test functions in brewlog/tests/test_brewspec_schema.py have names that
+      contradict what they test. test_bundled_schema_is_v0_9 (line 60) asserts the
+      schema title is "BrewSpec v1.0". test_version_must_be_0_9 (line 69) tests
+      that brewspec_version must be "1.0". Both test v1.0 behaviour correctly but
+      their names describe v0.9 expectations — a CI failure on these tests produces
+      a misleading error message.
+
+      Fix: rename test_bundled_schema_is_v0_9 → test_bundled_schema_is_v1_0 and
+      test_version_must_be_0_9 → test_version_must_be_1_0. Two one-line changes.
+
+  - id: refactor-update-jsonschema
+    type: refactor
+    product: "BrewSpec"
+    priority: P3
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    source: health-report
+    health_finding: DEP-1
+    health_report: reviews/2026-03-31-system-steward-health-report.yaml
+    description: >
+      jsonschema 4.19.2 is installed; latest is 4.26.0 (7 minor versions behind).
+      Versions 4.20–4.26 contain bug fixes and Draft 2020-12 compatibility
+      improvements. No security advisories apply to 4.19.2, but staying 7 minor
+      versions behind in the primary validation library is worth addressing.
+
+      Fix: update the lower-bound pin in requirements.txt from >=4.17.0 to >=4.26.0
+      and in brewlog/pyproject.toml from >=4.18 to >=4.26. Run both test suites
+      (pytest tests/ at root, pytest tests/ in brewlog/) to confirm compatibility.
+
+  # ──────────────────────────────────────────────────────────────────────────
   # Carry-forward chores (surfaced during archiving)
   # ──────────────────────────────────────────────────────────────────────────
 
