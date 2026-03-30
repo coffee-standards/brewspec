@@ -57,7 +57,7 @@ def test_schema_is_valid_draft_2020_12(schema):
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
 
 
-def test_bundled_schema_is_v0_9(schema):
+def test_bundled_schema_is_v1_0(schema):
     """Bundled schema must declare version 1.0."""
     assert schema["title"] == "BrewSpec v1.0"
 
@@ -66,7 +66,7 @@ def test_bundled_schema_is_v0_9(schema):
 # Version const
 # ---------------------------------------------------------------------------
 
-def test_version_must_be_0_9(validator):
+def test_version_must_be_1_0(validator):
     """brewspec_version is required and must be exactly '1.0'. Other values rejected."""
     # Missing version
     with pytest.raises(ValidationError):
