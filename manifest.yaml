@@ -190,92 +190,6 @@ tasks:
       to site/public/schema/. Update product version to 1.0 in manifest products
       section.
 
-  - id: brewspec-v0.9
-    name: "BrewSpec v0.9"
-    type: feature
-    product: "BrewSpec"
-    priority: P1
-    tier: standard
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-22"
-    review_verdict: PASS
-    review_date: "2026-03-21"
-    review: reviews/2026-03-21-reviewer-brewspec-v0.9.yaml
-    tag: v0.9
-    artifacts:
-      spec: specs/products/brewspec-v0.9.md
-      design: specs/designs/brewspec-v0.9.md
-      adr: specs/decisions/ADR-001-ratings-scale-cva-hedonic.md
-    depends_on:
-      - brewspec-v0.8
-    description: >
-      Align ratings with the SCA Coffee Value Assessment (CVA) standard
-      (SCA-104, adopted 2024). Two breaking changes:
-
-      1. Update minimum/maximum on all ratings fields from 1-5 to 1-9.
-         The CVA uses a 9-point hedonic scale (1 = dislike extremely,
-         9 = like extremely).
-
-      2. Rename ratings.body → ratings.mouthfeel to match CVA terminology.
-
-      Also:
-      3. Update rating descriptions to reflect the 1-9 scale and CVA semantics.
-      4. Update all valid/invalid examples that reference ratings.
-      5. Update the spec document.
-
-      Existing 1-5 values remain valid under the expanded 1-9 range. The
-      body → mouthfeel rename is a breaking field change.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # BrewLog CLI
-  # Open tasks first, then done (newest → oldest).
-  # ──────────────────────────────────────────────────────────────────────────
-
-  - id: brewlog-cli-v0.8
-    name: "BrewLog CLI v0.8"
-    type: feature
-    product: "BrewLog CLI"
-    priority: P1
-    tier: standard
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-22"
-    review_verdict: PASS
-    review_date: "2026-03-21"
-    review: reviews/2026-03-21-reviewer-brewlog-cli-v0.8.yaml
-    tag: brewlog-v0.8
-    depends_on:
-      - brewlog-cli-v0.7
-      - brewspec-v0.9
-    artifacts:
-      spec: specs/products/brewlog-cli-v0.8.md
-      design: specs/designs/brewlog-cli-v0.8.md
-    description: >
-      BrewSpec v0.9 adoption. Rating range change from 1-5 to 1-9 across
-      Pydantic model, CLI prompts/flags, list filters, and stats display.
-      No DB migration needed — mouthfeel column already exists, and INTEGER
-      columns accept the wider range without schema change. Bundle updated
-      v0.9 schema. Bump BREWSPEC_VERSION to 0.9. TDD.
-
-  - id: brewspec-site-v0.9
-    name: "BrewSpec Site — v0.9 Update"
-    type: feature
-    product: "BrewSpec"
-    priority: P1
-    tier: express
-    status: done
-    assigned_to: null
-    completed_date: "2026-03-22"
-    depends_on:
-      - brewspec-v0.9
-      - brewspec-site-v0.8
-    description: >
-      Update brewspec.coffee landing page for v0.9. Bump version references
-      from 0.8 to 0.9 in Hero eyebrow and schema link. Update Examples section
-      YAML to show v0.9 rating scale (1-9) and mouthfeel field (renamed from
-      body). Update WhatItCovers section if ratings are mentioned. Add v0.9
-      schema to site/public/schema/.
 
 maintenance:
   # Bugs, carry-forward fixes, and health-report refactors.
@@ -295,7 +209,8 @@ maintenance:
     type: chore
     product: "BrewSpec"
     priority: P3
-    status: backlog
+    tier: express
+    status: ready_for_review
     assigned_to: null
     description: >
       Carry-forward test/schema hygiene items from archived reviews.
@@ -304,11 +219,24 @@ maintenance:
          brewspec_version: "0.2" — bump to current version so it tests the intended
          failure (bad type enum) rather than version mismatch.
 
+      2. (from brewspec-v1.0 review) tests/test_brewspec_schema.py lines 91 and 96 —
+         stale test function names test_schema_title_is_v0_9 and
+         test_version_must_be_0_9. Assertions are correct; only the names are stale.
+         Rename to test_schema_title_is_v1_0 and test_version_must_be_1_0.
+
+      3. (from brewspec-v1.0 review) brewspec.schema.json — brew.water_g description
+         reads "Recipe target water weight in grams." should read
+         "Recipe target water in grams." (no validation impact).
+
+      4. (from brewspec-v1.0 review) examples/invalid/v0.2_format.yaml — comment
+         still references "the v0.3 schema"; update to reference the current schema.
+
   - id: carry-forward-code-cleanup
     type: chore
     product: "BrewLog CLI"
     priority: P3
-    status: backlog
+    tier: express
+    status: ready_for_dev
     assigned_to: null
     description: >
       Carry-forward code comment and CI cleanup items from archived reviews.
@@ -328,6 +256,9 @@ maintenance:
 # Archive — completed tasks older than 7 days
 # ──────────────────────────────────────────────────────────────────────────
 archive:
+  - {id: brewspec-v0.9, name: "BrewSpec v0.9", status: done, completed_date: '2026-03-22', tag: v0.9}
+  - {id: brewlog-cli-v0.8, name: "BrewLog CLI v0.8", status: done, completed_date: '2026-03-22', tag: brewlog-v0.8}
+  - {id: brewspec-site-v0.9, name: "BrewSpec Site — v0.9 Update", status: done, completed_date: '2026-03-22'}
   - {id: brewspec-v0.8, name: "BrewSpec v0.8", status: done, completed_date: '2026-03-19', tag: v0.8}
   - {id: brewspec-site-v0.8, name: "BrewSpec Site — v0.8 Update", status: done, completed_date: '2026-03-19'}
   - {id: brewlog-cli-v0.7, name: "BrewLog CLI v0.7", status: done, completed_date: '2026-03-19', tag: brewlog-v0.7}
