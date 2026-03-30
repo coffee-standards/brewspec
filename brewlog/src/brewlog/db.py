@@ -389,25 +389,22 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
         row[1]
         for row in conn.execute("PRAGMA table_info(brews)").fetchall()
     }
-    if "coffee_origin" not in existing_after:
-        conn.commit()
-        return
-
-    origin_rows = conn.execute(
-        "SELECT id, coffee_origin FROM brews "
-        "WHERE coffee_origin IS NOT NULL AND coffee_origins IS NULL"
-    ).fetchall()
-    for row in origin_rows:
-        try:
-            countries = json.loads(row[1])
-            if isinstance(countries, list):
-                origins_obj = [{"country": c} for c in countries if isinstance(c, str)]
-                conn.execute(
-                    "UPDATE brews SET coffee_origins = ? WHERE id = ?",
-                    (json.dumps(origins_obj), row[0])
-                )
-        except (json.JSONDecodeError, TypeError):
-            pass  # Malformed legacy data: leave coffee_origins NULL
+    if "coffee_origin" in existing_after:
+        origin_rows = conn.execute(
+            "SELECT id, coffee_origin FROM brews "
+            "WHERE coffee_origin IS NOT NULL AND coffee_origins IS NULL"
+        ).fetchall()
+        for row in origin_rows:
+            try:
+                countries = json.loads(row[1])
+                if isinstance(countries, list):
+                    origins_obj = [{"country": c} for c in countries if isinstance(c, str)]
+                    conn.execute(
+                        "UPDATE brews SET coffee_origins = ? WHERE id = ?",
+                        (json.dumps(origins_obj), row[0])
+                    )
+            except (json.JSONDecodeError, TypeError):
+                pass  # Malformed legacy data: leave coffee_origins NULL
 
     conn.commit()
 
