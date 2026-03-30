@@ -21,7 +21,7 @@ SCHEMA_RESOURCE_NAME = "brewspec.schema.json"
 
 
 def _load_schema() -> dict:
-    """Load the bundled BrewSpec v0.4 schema using importlib.resources."""
+    """Load the bundled BrewSpec v1.0 schema using importlib.resources."""
     with importlib.resources.files("brewlog").joinpath(SCHEMA_RESOURCE_NAME).open(
         "r", encoding="utf-8"
     ) as f:
@@ -34,7 +34,7 @@ _VALIDATOR = Draft202012Validator(_SCHEMA)
 
 def validate_document(doc: dict) -> list[str]:
     """
-    Validate a parsed BrewSpec document dict against the v0.4 JSON Schema.
+    Validate a parsed BrewSpec document dict against the v1.0 JSON Schema.
     Returns a list of error message strings. Empty list means valid.
     """
     errors = sorted(_VALIDATOR.iter_errors(doc), key=lambda e: list(e.path))

@@ -376,6 +376,18 @@ def test_updatable_columns_does_not_contain_date():
     assert "date" not in UPDATABLE_COLUMNS
 
 
+def test_updatable_columns_does_not_contain_dose_g():
+    """AC-32: 'dose_g' must NOT be in UPDATABLE_COLUMNS (non-updatable required field)."""
+    from brewlog.db import UPDATABLE_COLUMNS
+    assert "dose_g" not in UPDATABLE_COLUMNS
+
+
+def test_updatable_columns_does_not_contain_water_g():
+    """AC-32: 'water_g' must NOT be in UPDATABLE_COLUMNS (non-updatable required field)."""
+    from brewlog.db import UPDATABLE_COLUMNS
+    assert "water_g" not in UPDATABLE_COLUMNS
+
+
 def test_update_brew_rejects_unknown_column(tmp_db):
     """AC-1: update_brew with an unknown column raises AssertionError."""
     import pytest as _pytest
