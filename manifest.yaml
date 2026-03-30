@@ -188,8 +188,8 @@ tasks:
     product: "BrewSpec"
     priority: P1
     tier: express
-    status: building
-    assigned_to: backend-dev
+    status: ready_for_review
+    assigned_to: null
     depends_on:
       - brewspec-v1.0
       - brewlog-cli-v1.0
@@ -253,8 +253,8 @@ maintenance:
     product: "BrewLog CLI"
     priority: P3
     tier: express
-    status: building
-    assigned_to: backend-dev
+    status: ready_for_review
+    assigned_to: null
     source_task: brewlog-cli-v1.0
     description: >
       Carry-forward items from brewlog-cli-v1.0 review (non-blocking, Low severity).
