@@ -60,7 +60,7 @@
         "water_g": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "description": "Recipe target water weight in grams. Must be > 0. Renamed from water_weight_g in v1.0. Context: brew-level fields represent recipe intent (target); result-level fields represent actual measurements."
+          "description": "Recipe target water in grams. Must be > 0. Renamed from water_weight_g in v1.0. Context: brew-level fields represent recipe intent (target); result-level fields represent actual measurements."
         },
         "yield_g": {
           "type": "number",

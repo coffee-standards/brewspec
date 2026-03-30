@@ -1,4 +1,4 @@
-# Invalid: brewspec_version "0.2" is rejected by the v0.3 schema
+# Invalid: brewspec_version "0.2" is rejected by the v1.0 schema
 brewspec_version: "0.2"
 brews:
   - date: "2026-02-15T08:30:00Z"
