@@ -248,6 +248,27 @@ maintenance:
       4. (from brewspec-v1.0 review) examples/invalid/v0.2_format.yaml — comment
          still references "the v0.3 schema"; update to reference the current schema.
 
+  - id: carry-forward-brewlog-v1.0
+    type: chore
+    product: "BrewLog CLI"
+    priority: P3
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    source_task: brewlog-cli-v1.0
+    description: >
+      Carry-forward items from brewlog-cli-v1.0 review (non-blocking, Low severity).
+
+      1. brewlog/src/brewlog/schema.py lines 24 and 37 — stale docstrings say
+         "BrewSpec v0.4 schema" in both the module docstring and the _load_schema()
+         docstring. Update to reference "BrewSpec v1.0 schema".
+
+      2. No regression guard test asserting `water_g` not in UPDATABLE_COLUMNS.
+         AC-32 requires `water_g` to be a non-updatable required field (same as
+         `dose_g`). The implementation is correct but the guard test is missing.
+         Add a test in test_v10_migration.py or test_db.py:
+         `assert "water_g" not in db.UPDATABLE_COLUMNS`.
+
   - id: carry-forward-code-cleanup
     type: chore
     product: "BrewLog CLI"
