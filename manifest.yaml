@@ -359,6 +359,30 @@ maintenance:
       six affected test functions. Confirm pytest passes clean across the full
       brewlog test suite afterwards.
 
+  - id: refactor-stale-test-function-names-version-cmds
+    type: refactor
+    product: "BrewLog CLI"
+    priority: P3
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-31"
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    source_task: maintenance-express-2026-03-31
+    pr: https://github.com/coffee-standards/brewspec/pull/13
+    description: >
+      Six test function names in the version-assertion test files still referenced
+      "0.8.0" or "v080" even though the assertions inside them were corrected to
+      "1.0.0" in fix-stale-version-assertions-brewlog. Affected files:
+      brewlog/tests/test_cmd_welcome.py, test_cmd_v04.py, test_cmd_v05.py.
+
+      Fix: renamed all six test functions so their names match the assertions
+      they contain (test_version_is_0_8_0 → test_version_is_1_0_0,
+      test_welcome_screen_shows_0_8_0 → test_welcome_screen_shows_1_0_0,
+      test_welcome_screen_shows_v080 → test_welcome_screen_shows_v100,
+      test_version_flag_shows_v080 → test_version_flag_shows_v100).
+
   # ──────────────────────────────────────────────────────────────────────────
   # Carry-forward chores (surfaced during archiving)
   # ──────────────────────────────────────────────────────────────────────────

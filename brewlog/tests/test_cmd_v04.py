@@ -508,13 +508,13 @@ class TestCsvExport:
 class TestVersionBump:
     """v1.0.0 version string appears in the welcome screen and --version output."""
 
-    def test_welcome_screen_shows_v080(self, runner):
+    def test_welcome_screen_shows_v100(self, runner):
         """Welcome screen shows 'BrewLog v1.0.0'."""
         result = runner.invoke(cli, [])
         assert result.exit_code == 0
         assert "1.0.0" in result.output
 
-    def test_version_flag_shows_v080(self, runner):
+    def test_version_flag_shows_v100(self, runner):
         """--version outputs 1.0.0."""
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
