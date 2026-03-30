@@ -5,13 +5,13 @@ import Footer from '../components/Footer.astro';
 ---
 <Base
   title="BrewSpec Field Reference — Every field in the schema"
-  description="Complete field reference for BrewSpec v0.9: every field, type, constraint, and description."
+  description="Complete field reference for BrewSpec v1.0: every field, type, constraint, and description."
 >
   <Nav />
   <main>
     <section id="schema-hero">
       <div class="content-width">
-        <p class="schema-eyebrow">v0.9 Field Reference</p>
+        <p class="schema-eyebrow">v1.0 Field Reference</p>
         <h1>What's in the schema.</h1>
         <p class="schema-intro">
           Every field BrewSpec defines: type, constraints, and what it's for.
@@ -37,11 +37,11 @@ import Footer from '../components/Footer.astro';
           </ul>
           <div class="sidebar-footer">
             <a
-              href="https://brewspec.coffee/schema/v0.9.json"
+              href="https://brewspec.coffee/schema/v1.0.json"
               class="sidebar-schema-link"
               target="_blank"
               rel="noopener noreferrer"
-            >v0.9.json ↗</a>
+            >v1.0.json ↗</a>
           </div>
         </nav>
       </aside>
@@ -66,8 +66,8 @@ import Footer from '../components/Footer.astro';
                   <td><code>brewspec_version</code></td>
                   <td>string</td>
                   <td>Yes</td>
-                  <td>const: <code>"0.9"</code></td>
-                  <td>Must be the literal string "0.9".</td>
+                  <td>const: <code>"1.0"</code></td>
+                  <td>Must be the literal string "1.0".</td>
                 </tr>
                 <tr>
                   <td><code>brews</code></td>
@@ -114,10 +114,10 @@ import Footer from '../components/Footer.astro';
                   <td>Coffee dose in grams.</td>
                 </tr>
                 <tr>
-                  <td><code>water_weight_g</code></td>
+                  <td><code>water_g</code></td>
                   <td>number</td>
                   <td>&gt; 0</td>
-                  <td>Water weight in grams.</td>
+                  <td>Recipe target water in grams.</td>
                 </tr>
                 <tr>
                   <td><code>brew_ratio</code></td>
@@ -168,10 +168,16 @@ import Footer from '../components/Footer.astro';
                   <td>Brew duration in seconds.</td>
                 </tr>
                 <tr>
-                  <td><code>notes</code></td>
+                  <td><code>yield_g</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Recipe target yield in grams (intended output weight).</td>
+                </tr>
+                <tr>
+                  <td><code>process_notes</code></td>
                   <td>string</td>
                   <td>maxLength: 2000</td>
-                  <td>Brew-process notes.</td>
+                  <td>Operational observations about preparation.</td>
                 </tr>
                 <tr>
                   <td><code>result</code></td>
@@ -201,7 +207,7 @@ import Footer from '../components/Footer.astro';
                 <tr>
                   <td><code>name</code></td>
                   <td>string</td>
-                  <td>maxLength: 150</td>
+                  <td>maxLength: 100</td>
                   <td>Branded product name or descriptive label.</td>
                 </tr>
                 <tr>
@@ -233,6 +239,12 @@ import Footer from '../components/Footer.astro';
                   <td>array</td>
                   <td>minItems: 1</td>
                   <td>Structured origin records.</td>
+                </tr>
+                <tr>
+                  <td><code>cupping_notes</code></td>
+                  <td>string</td>
+                  <td>maxLength: 2000</td>
+                  <td>Sensory notes for the coffee (bag description or pre-brew cupping).</td>
                 </tr>
               </tbody>
             </table>
@@ -313,6 +325,12 @@ import Footer from '../components/Footer.astro';
                   <td>&gt; 0</td>
                   <td>Growing elevation in meters above sea level.</td>
                 </tr>
+                <tr>
+                  <td><code>cupping_notes</code></td>
+                  <td>string</td>
+                  <td>maxLength: 2000</td>
+                  <td>Per-component sensory notes for this origin.</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -376,6 +394,18 @@ import Footer from '../components/Footer.astro';
                   <td>Dial position or click setting. Integer or decimal tenths.</td>
                 </tr>
                 <tr>
+                  <td><code>pressure_bar</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Line or lever pressure in bars (primarily espresso).</td>
+                </tr>
+                <tr>
+                  <td><code>flow_rate_ml_s</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Volumetric flow rate in ml/s (espresso profiling and pour-over).</td>
+                </tr>
+                <tr>
                   <td><code>notes</code></td>
                   <td>string</td>
                   <td>maxLength: 2000</td>
@@ -422,7 +452,13 @@ import Footer from '../components/Footer.astro';
                   <td><code>yield_g</code></td>
                   <td>number</td>
                   <td>&gt; 0</td>
-                  <td>Output weight in grams (espresso: liquid in cup).</td>
+                  <td>Actual output weight in grams (espresso: liquid in cup).</td>
+                </tr>
+                <tr>
+                  <td><code>water_g</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Actual water used in grams (captures deviation from recipe target).</td>
                 </tr>
                 <tr>
                   <td><code>tasting_notes</code></td>

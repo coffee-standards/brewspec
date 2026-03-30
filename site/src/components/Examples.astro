@@ -5,27 +5,28 @@
 // fragrance, aroma, and sweetness.
 import CodeBlock from './CodeBlock.astro';
 
-const pourOverYaml = `brewspec_version: "0.9"
+const pourOverYaml = `brewspec_version: "1.0"
 brews:
   - date: "2026-02-25"
     type: "pour_over"
     dose_g: 18
-    water_weight_g: 280`;
+    water_g: 280`;
 
 // Full espresso example — all 8 SCA rating dimensions present:
 // overall, fragrance, aroma, flavour, acidity, aftertaste, sweetness, mouthfeel
-// v0.9: ratings scale updated to 1-9 (CVA hedonic scale).
-const espressoYaml = `brewspec_version: "0.9"
+// v1.0: water_g (renamed from water_weight_g), process_notes (renamed from notes),
+// and new equipment fields pressure_bar and flow_rate_ml_s.
+const espressoYaml = `brewspec_version: "1.0"
 brews:
   - date: "2026-02-25T08:30:00Z"
     type: "espresso"
     dose_g: 18
-    water_weight_g: 36
+    water_g: 36
     water_temp_c: 94
     grind: "espresso"
     duration_s: 28
     method: "La Marzocco Linea Mini"
-    notes: "Re-calibrated grinder after three weeks"
+    process_notes: "Re-calibrated grinder after three weeks"
     coffee:
       name: "El Paraiso Washed Castillo"
       roaster: "Onyx"
@@ -42,6 +43,8 @@ brews:
     equipment:
       grinder: "Niche Zero"
       brewer: "La Marzocco Linea Mini"
+      pressure_bar: 9.0
+      flow_rate_ml_s: 1.8
     result:
       yield_g: 36
       tds: 9.2

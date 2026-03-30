@@ -2,12 +2,12 @@
 // Hero.astro — Section 1: split layout, headline + live YAML preview
 import { Code } from 'astro:components';
 
-const heroYaml = `brewspec_version: "0.9"
+const heroYaml = `brewspec_version: "1.0"
 brews:
   - date: "2026-03-15"
     type: "pour_over"
     dose_g: 18
-    water_weight_g: 280
+    water_g: 280
     water_temp_c: 93
     duration_s: 210
     coffee:
@@ -30,7 +30,7 @@ brews:
   <div class="hero-layout wide-width">
     <!-- Left: text content -->
     <div class="hero-text">
-      <p class="hero-eyebrow fade-in-1">Open format · v0.9 · Apache 2.0</p>
+      <p class="hero-eyebrow fade-in-1">Open format · v1.0 · Apache 2.0</p>
       <p class="hero-headline fade-in-2">Coffee brewing,<br>precisely described.</p>
       <p class="hero-subheadline fade-in-3">
         <span class="brewspec-wordmark">Brew<span class="brewspec-wordmark-accent">Spec</span></span>
