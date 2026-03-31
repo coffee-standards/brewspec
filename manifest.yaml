@@ -76,6 +76,69 @@ tasks:
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
 
+  - id: brewspec-result-dose-duration
+    name: "BrewSpec — backport result.dose_g and result.duration_s"
+    type: feature
+    product: "BrewSpec"
+    priority: P1
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-03-31"
+    pr: https://github.com/coffee-standards/brewspec/pull/14
+    depends_on:
+      - brewspec-v1.0
+    description: >
+      Backport result.dose_g and result.duration_s to the v1.0 schema, completing
+      recipe/result field symmetry for all four core brew measurements. Both fields
+      were present at the brew (recipe) level but absent from the result object.
+      Additive, non-breaking. Updates all three schema copies (root, site, brewlog),
+      adds 8 schema validation tests, updates espresso_full_symmetry.yaml example,
+      updates ADR-002 symmetry table, and updates brewspec-v1.0.md.
+
+  - id: brewlog-result-dose-duration
+    name: "BrewLog CLI — adopt result.dose_g and result.duration_s"
+    type: feature
+    product: "BrewLog CLI"
+    priority: P1
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    depends_on:
+      - brewspec-result-dose-duration
+      - brewlog-cli-v1.0
+    description: >
+      Adopt the two new result fields added in brewspec-result-dose-duration.
+
+      New fields (both optional, number, exclusiveMinimum: 0):
+      - result.dose_g: actual coffee dose used. CLI flag --actual-dose.
+        DB column: result_dose_g. Pydantic field: dose_g on BrewResult model.
+      - result.duration_s: actual extraction time in seconds. CLI flag: --actual-duration.
+        DB column: result_duration_s. Pydantic field: duration_s on BrewResult model.
+
+      Schema copy in brewlog/src/brewlog/brewspec.schema.json is already updated
+      (done in brewspec-result-dose-duration). No migration complexity — additive
+      columns only, nullable. Add DB migration step, Pydantic fields, CLI add/update
+      flags, import/export serialisation, and tests. TDD.
+
+  - id: brewspec-site-result-dose-duration
+    name: "BrewSpec Site — document result.dose_g and result.duration_s"
+    type: feature
+    product: "BrewSpec"
+    priority: P2
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    depends_on:
+      - brewspec-result-dose-duration
+      - brewspec-site-v1.0
+    description: >
+      Update brewspec.coffee landing page to reflect the two new result fields.
+      Find all places in the site source that describe the result object or list
+      result fields and add result.dose_g and result.duration_s. Update any
+      YAML examples in the site that demonstrate result fields. No copy or
+      design sign-off needed — this is a factual field list update.
+
   - id: brewspec-v1.0
     name: "BrewSpec v1.0"
     type: feature
