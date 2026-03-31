@@ -478,8 +478,6 @@ maintenance:
     review_verdict: PASS
     review_date: "2026-03-30"
     review: reviews/2026-03-30-reviewer-carry-forward-test-coverage.yaml
-    review_carry_forward:
-      - "LOW: tests/test_brewspec_schema.py — legacy test functions at lines 91 (test_schema_title_is_v1_0) and 96 (test_version_must_be_1_0) are now dead code, shadowed by identically named functions at lines 2010 and 2015. Remove or consolidate the legacy section in a future cleanup pass."
     description: >
       Carry-forward test/schema hygiene items from archived reviews.
 
