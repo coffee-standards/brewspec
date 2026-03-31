@@ -297,8 +297,11 @@ maintenance:
     product: "BrewSpec"
     priority: P3
     tier: express
-    status: ready_for_review
+    status: ready_for_deploy
     assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-refactor-002-adr-002.yaml
     description: >
       Fix an internal inconsistency in specs/decisions/ADR-002-recipe-result-field-symmetry.md.
       The Decision prose said "Two new optional fields are added: brew.yield_g and result.water_g",
