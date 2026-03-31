@@ -29,9 +29,13 @@ Because v1.0 was already a breaking version (combining four breaking changes), b
 
 ## Decision
 
-In BrewSpec v1.0, `brew.water_weight_g` is renamed to `brew.water_g`. Two new optional fields are added: `brew.yield_g` (recipe target output weight) and `result.water_g` (actual water used). The existing `result.yield_g` is unchanged.
+This decision was delivered in two phases:
 
-> We will establish recipe/result symmetry by renaming `brew.water_weight_g` to `brew.water_g` and adding `brew.yield_g` and `result.water_g`, creating matching pairs for both water and yield at the recipe (intent) and result (measurement) levels.
+**Phase 1 — BrewSpec v1.0 (this ADR's original scope):** `brew.water_weight_g` is renamed to `brew.water_g`. Two new optional fields are added: `brew.yield_g` (recipe target output weight) and `result.water_g` (actual water used). The existing `result.yield_g` is unchanged.
+
+**Phase 2 — Follow-on task `brewspec-result-dose-duration` (PR #14):** `result.dose_g` (actual coffee dose used) and `result.duration_s` (actual extraction time) are added, completing full symmetry for all four core brew measurements. Both fields were already present at the brew (recipe) level; this phase backported their result-level counterparts. Additive, non-breaking.
+
+> We will establish recipe/result symmetry by renaming `brew.water_weight_g` to `brew.water_g` and adding `brew.yield_g`, `result.water_g`, `result.dose_g`, and `result.duration_s`, creating matching pairs for all four core brew measurements at the recipe (intent) and result (measurement) levels.
 
 The full symmetry table is:
 
@@ -77,7 +81,7 @@ The full symmetry table is:
 
 **Positive:**
 - Consistent `field_unit` naming across all measurement fields — tool builders apply one pattern
-- Brewers can now record both recipe intent and actual measurement for water and yield — enabling deviation tracking
+- Brewers can now record both recipe intent and actual measurement for all four core brew variables (dose, water, yield, duration) — enabling deviation tracking across the full brew
 - Espresso dialling workflow is fully representable: `brew.yield_g` (target) alongside `result.yield_g` (actual) in the same document
 - `brew_ratio` description can be updated to reference `brew.water_g` without a field name change
 
@@ -86,7 +90,8 @@ The full symmetry table is:
 - Every v0.9 example file that uses `water_weight_g` must be updated. Every invalid example that uses `water_weight_g` must be reviewed to confirm its intended failure case still holds.
 
 **Neutral / What changes:**
-- BrewLog CLI must rename its `water_weight_g` column and Pydantic field to `water_g`, add `yield_g` to the brew model, and add `water_g` to the result model (tracked under `brewlog-cli-v1.0`)
+- Phase 1 (v1.0): BrewLog CLI must rename its `water_weight_g` column and Pydantic field to `water_g`, add `yield_g` to the brew model, and add `water_g` to the result model (tracked under `brewlog-cli-v1.0`)
+- Phase 2 (PR #14): BrewLog CLI adds `result.dose_g` and `result.duration_s` columns, Pydantic fields, and CLI flags (tracked under `brewlog-result-dose-duration`)
 - The `brew_ratio` description in the schema references `water_weight_g`; it must be updated to `water_g` in this version bump (no field change, description-only update)
 - The `result.yield_g` description references `water_weight_g`; it must also be updated to `brew.water_g`
 
