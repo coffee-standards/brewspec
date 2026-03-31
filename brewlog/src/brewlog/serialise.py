@@ -152,6 +152,10 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
         result["yield_g"] = r["result_yield_g"]
     if r.get("result_water_g") is not None:
         result["water_g"] = r["result_water_g"]
+    if r.get("result_dose_g") is not None:
+        result["dose_g"] = r["result_dose_g"]
+    if r.get("result_duration_s") is not None:
+        result["duration_s"] = r["result_duration_s"]
     if r.get("result_tasting_notes") is not None:
         result["tasting_notes"] = r["result_tasting_notes"]
 

@@ -196,6 +196,15 @@ def _build_origins_from_flags(
                   "Actual water used in grams (> 0). Record when actual water deviates "
                   "from the recipe target (--water)."
               ))
+@click.option("--actual-dose", "actual_dose", type=float, default=None,
+              help=(
+                  "Actual coffee dose used in grams (> 0). Record when actual dose deviates "
+                  "from the recipe target (--dose)."
+              ))
+@click.option("--actual-duration", "actual_duration", type=float, default=None,
+              help=(
+                  "Actual extraction time in seconds (> 0). Record the measured shot or brew time."
+              ))
 @click.option("--roast-date",  "roast_date",   type=str,   default=None,
               help="Coffee roast date (YYYY-MM-DD).")
 @click.option("--coffee-type", "coffee_type",  type=str,   default=None,
@@ -288,7 +297,7 @@ def add(
     date, brew_type, dose, water_g,
     brew_ratio,
     method, temp, grind, duration, process_notes,
-    target_yield, actual_water,
+    target_yield, actual_water, actual_dose, actual_duration,
     roast_date, coffee_type, coffee_name, coffee_cupping_notes,
     roaster, roast_level, elevation_masl,
     origin,
@@ -377,6 +386,14 @@ def add(
 
     if flow_rate_ml_s is not None and flow_rate_ml_s <= 0:
         click.echo("Error: --flow-rate must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if actual_dose is not None and actual_dose <= 0:
+        click.echo("Error: --actual-dose must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if actual_duration is not None and actual_duration <= 0:
+        click.echo("Error: --actual-duration must be greater than 0.", err=True)
         sys.exit(1)
 
     # -- Tip: shown only in fully interactive mode (no required flags given) --
@@ -487,7 +504,7 @@ def add(
 
     result_obj = None
     has_any_rating = any(v is not None for v in _RATING_DIMS.values())
-    has_result = any(v is not None for v in (tds, ey, brix, yield_g, actual_water, tasting_notes)) or has_any_rating
+    has_result = any(v is not None for v in (tds, ey, brix, yield_g, actual_water, actual_dose, actual_duration, tasting_notes)) or has_any_rating
     if has_result:
         ratings_obj = None
         if has_any_rating:
@@ -512,6 +529,8 @@ def add(
                 brix=brix,
                 yield_g=yield_g,
                 water_g=actual_water,
+                dose_g=actual_dose,
+                duration_s=actual_duration,
                 tasting_notes=tasting_notes,
                 ratings=ratings_obj,
             )
