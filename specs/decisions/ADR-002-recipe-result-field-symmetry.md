@@ -37,8 +37,10 @@ The full symmetry table is:
 
 | Intent (recipe) | Actual (result) |
 |---|---|
+| `brew.dose_g` | `result.dose_g` |
 | `brew.water_g` | `result.water_g` |
 | `brew.yield_g` | `result.yield_g` |
+| `brew.duration_s` | `result.duration_s` |
 
 ---
 

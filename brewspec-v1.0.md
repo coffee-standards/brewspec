@@ -143,8 +143,10 @@ Context: result-level fields represent actual measurements, as opposed to brew-l
 | `tds` | number | No | > 0 (exclusive) | TDS percentage of finished brew. | `1.38`, `8.5` |
 | `ey` | number | No | > 0 (exclusive) | Extraction yield as a percentage. | `20.5`, `21.3` |
 | `brix` | number | No | >= 0 | Dissolved sugar content in degrees Brix. 0 is valid. | `4.2`, `0` |
+| `dose_g` | number | No | > 0 (exclusive) | Actual coffee dose used in grams. May differ from the recipe target `brew.dose_g`. | `17.8`, `18.2` |
 | `water_g` | number | No | > 0 (exclusive) | Actual water used in grams. May differ from the recipe target `brew.water_g`. New in v1.0. | `318`, `35.5` |
 | `yield_g` | number | No | > 0 (exclusive) | Actual output weight of the brew in grams. For espresso, this is the liquid weight in the cup. Distinct from the recipe target `brew.yield_g`. | `36.5`, `42.0` |
+| `duration_s` | number | No | > 0 (exclusive) | Actual brew or shot duration in seconds. May differ from the recipe target `brew.duration_s`. | `29`, `185` |
 | `tasting_notes` | string | No | minLength 1, maxLength 2000 | Sensory description of the brew. For brew-process notes, use the brew-level `process_notes` field. | `"Bright citrus acidity, caramel sweetness"` |
 | `ratings` | object | No | See Ratings Object | Multi-dimensional sensory ratings. | |
 
@@ -185,6 +187,10 @@ Context: result-level fields represent actual measurements, as opposed to brew-l
 
 **`result.water_g`** (number, optional, > 0) — Actual water used in grams. Captures the actual water weight poured during the brew, which may deviate from the recipe target (`brew.water_g`). New in v1.0.
 
+**`result.dose_g`** (number, optional, > 0) — Actual coffee dose used in grams. Records the dose weighed out for this brew, which may deviate from the recipe target (`brew.dose_g`) due to grinder retention or distribution loss.
+
+**`result.duration_s`** (number, optional, > 0) — Actual brew or shot duration in seconds. Records the measured extraction time, which may deviate from the recipe target (`brew.duration_s`), especially for espresso.
+
 **`coffee.cupping_notes`** (string, optional, minLength 1, maxLength 2000) — Sensory notes on the coffee as a whole, typically from a bag description or pre-brew cupping session. For single-origin coffees, describes the overall character. For blends, describes the blend as a whole. New in v1.0.
 
 **`origin.cupping_notes`** (string, optional, minLength 1, maxLength 2000) — Per-component sensory notes. For single-origin coffees, this field carries the cupping note for the whole coffee — following the same pattern as `origin.name` mirroring `coffee.name`. For blends, each component carries its own notes. New in v1.0.
@@ -195,13 +201,16 @@ Context: result-level fields represent actual measurements, as opposed to brew-l
 
 ### Design Notes
 
-**Water/yield field symmetry** — The v1.0 field naming follows a deliberate recipe/result symmetry:
-- `brew.water_g` = recipe target water (what you intend to put in)
-- `brew.yield_g` = recipe target yield (what you intend to collect)
-- `result.water_g` = actual water used (what you measured after brewing)
-- `result.yield_g` = actual yield (what you collected in the cup)
+**Recipe/result field symmetry** — The v1.0 field naming follows a deliberate recipe/result symmetry:
 
-The brew level represents recipe intent; the result level represents actual measurement.
+| Recipe intent (`brew.*`) | Actual measurement (`result.*`) |
+|---|---|
+| `brew.dose_g` | `result.dose_g` |
+| `brew.water_g` | `result.water_g` |
+| `brew.yield_g` | `result.yield_g` |
+| `brew.duration_s` | `result.duration_s` |
+
+The brew level represents recipe intent; the result level represents actual measurement. With `result.dose_g` and `result.yield_g` both present, actual brew ratio can be computed without a stored field — and the delta between recipe ratio and actual ratio is the core diagnostic signal for shot-to-shot tracking.
 
 **Notes field differentiation** — v1.0 introduces three distinct notes fields:
 - `brew.process_notes` — operational observations about the preparation (renamed from `brew.notes`)
@@ -323,7 +332,7 @@ Valid examples in `examples/valid/`:
 - `examples/valid/pour_over.yaml` — Single origin pour over with full brew parameters
 - `examples/valid/espresso.yaml` — Espresso with dose and recipe water, `process_notes`
 - `examples/valid/espresso_with_yield.yaml` — Espresso with `result.yield_g`
-- `examples/valid/espresso_full_symmetry.yaml` — Espresso demonstrating full water/yield symmetry: `brew.water_g`, `brew.yield_g`, `result.water_g`, `result.yield_g`, `equipment.pressure_bar`, `equipment.flow_rate_ml_s`
+- `examples/valid/espresso_full_symmetry.yaml` — Espresso demonstrating full recipe/result symmetry: `brew.dose_g`, `brew.water_g`, `brew.yield_g`, `brew.duration_s` alongside `result.dose_g`, `result.water_g`, `result.yield_g`, `result.duration_s`, `equipment.pressure_bar`, `equipment.flow_rate_ml_s`
 - `examples/valid/pour_over_cupping_notes.yaml` — Pour over demonstrating `coffee.cupping_notes`, `origin.cupping_notes`, and `brew.process_notes`
 - `examples/valid/minimal_no_required_fields.yaml` — Brew with no required fields
 - `examples/valid/immersion_minimal.yaml` — Minimal brew document
