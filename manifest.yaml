@@ -102,8 +102,11 @@ tasks:
     product: "BrewLog CLI"
     priority: P1
     tier: express
-    status: ready_for_review
+    status: ready_for_deploy
     assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-brewlog-result-dose-duration.yaml
     depends_on:
       - brewspec-result-dose-duration
       - brewlog-cli-v1.0
