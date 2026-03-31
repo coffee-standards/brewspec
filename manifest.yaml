@@ -132,8 +132,12 @@ tasks:
     product: "BrewSpec"
     priority: P2
     tier: express
-    status: ready_for_dev
+    status: ready_for_review
     assigned_to: null
+    artifacts:
+      - site/src/components/WhatItCovers.astro
+      - site/src/pages/schema.astro
+      - site/src/content.test.ts
     depends_on:
       - brewspec-result-dose-duration
       - brewspec-site-v1.0
