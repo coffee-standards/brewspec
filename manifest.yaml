@@ -102,7 +102,7 @@ tasks:
     product: "BrewLog CLI"
     priority: P1
     tier: express
-    status: ready_for_dev
+    status: ready_for_review
     assigned_to: null
     depends_on:
       - brewspec-result-dose-duration
