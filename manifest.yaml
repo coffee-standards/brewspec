@@ -132,12 +132,13 @@ tasks:
     product: "BrewSpec"
     priority: P2
     tier: express
-    status: ready_for_review
+    status: done
     assigned_to: null
-    artifacts:
-      - site/src/components/WhatItCovers.astro
-      - site/src/pages/schema.astro
-      - site/src/content.test.ts
+    completed_date: "2026-03-31"
+    pr: https://github.com/coffee-standards/brewspec/pull/16
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-brewspec-site-result-dose-duration.yaml
     depends_on:
       - brewspec-result-dose-duration
       - brewspec-site-v1.0
@@ -147,6 +148,9 @@ tasks:
       result fields and add result.dose_g and result.duration_s. Update any
       YAML examples in the site that demonstrate result fields. No copy or
       design sign-off needed — this is a factual field list update.
+    review_carry_forward:
+      - "HIGH: content.test.ts imports vitest which is not in package.json devDependencies — tests cannot run; two assertions also use wrong pattern (> 0 vs &gt; 0 HTML entity)"
+      - "LOW: Examples.astro espresso result block does not show dose_g or duration_s"
 
   - id: brewspec-v1.0
     name: "BrewSpec v1.0"
