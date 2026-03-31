@@ -295,7 +295,39 @@ maintenance:
   # ──────────────────────────────────────────────────────────────────────────
   # Health report findings — 2026-03-31
   # Source: reviews/2026-03-31-system-steward-health-report.yaml
+  #         reviews/2026-03-31-system-steward-health-report-2.yaml
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: refactor-002-adr-002-decision-prose-update
+    name: "Update ADR-002 Decision prose to reflect completed full symmetry"
+    type: refactor
+    product: "BrewSpec"
+    priority: P3
+    tier: express
+    status: ready_for_dev
+    assigned_to: null
+    source: health-report
+    health_finding: ADR-1
+    health_report: reviews/2026-03-31-system-steward-health-report-2.yaml
+    description: >
+      ADR-002 (specs/decisions/ADR-002-recipe-result-field-symmetry.md)
+      contains an internal inconsistency. The Decision section prose (line 32)
+      says "Two new optional fields are added: brew.yield_g and result.water_g"
+      and implies result.dose_g and result.duration_s were pre-existing, while
+      the symmetry table in the same section shows all four pairs and the
+      Consequences section (line 89) only lists brew.yield_g and result.water_g
+      in "What changes."
+
+      result.dose_g and result.duration_s were added as a post-v1.0 backport
+      in PR #14, not as part of the original v1.0 ADR scope. The ADR symmetry
+      table was updated in PR #14, but the prose was not.
+
+      Fix: update the Decision prose and Consequences section of ADR-002 to
+      accurately reflect the two-phase delivery: (1) v1.0 added brew.yield_g
+      and result.water_g; (2) the follow-on brewspec-result-dose-duration task
+      (PR #14) completed the symmetry by adding result.dose_g and
+      result.duration_s. The symmetry table is correct and should not change.
+      No implementation changes are required — this is a documentation-only fix.
 
   - id: refactor-schema-id-canonical-url
     type: refactor
