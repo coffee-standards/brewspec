@@ -1,8 +1,12 @@
-# Valid: demonstrates full water/yield symmetry in v1.0.
-# brew.water_g = recipe target water input (what you intend to put in)
-# brew.yield_g = recipe target output weight (what you intend to collect)
-# result.water_g = actual water used (may differ from target)
-# result.yield_g = actual output weight collected in the cup
+# Valid: demonstrates full recipe/result symmetry in v1.0.
+# brew.dose_g    = recipe target dose (what you intend to use)
+# brew.water_g   = recipe target water input (what you intend to put in)
+# brew.yield_g   = recipe target output weight (what you intend to collect)
+# brew.duration_s = recipe target extraction time
+# result.dose_g   = actual dose weighed out (may differ from target)
+# result.water_g  = actual water used (may differ from target)
+# result.yield_g  = actual output weight collected in the cup
+# result.duration_s = actual measured extraction time
 # equipment.pressure_bar and equipment.flow_rate_ml_s are new in v1.0.
 brewspec_version: "1.0"
 brews:
@@ -20,8 +24,10 @@ brews:
       pressure_bar: 9.0
       flow_rate_ml_s: 2.5
     result:
+      dose_g: 17.8
       water_g: 35.5
       yield_g: 35.8
+      duration_s: 29
       tds: 9.1
       ey: 19.6
       tasting_notes: "Rich caramel, dark chocolate, syrupy mouthfeel"

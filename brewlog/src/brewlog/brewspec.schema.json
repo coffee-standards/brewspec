@@ -329,6 +329,16 @@
           "exclusiveMinimum": 0,
           "description": "Actual output weight of the brew in grams. For espresso, this is the liquid collected in the cup (distinct from brew.water_g, which is the input water target). For other brew types, yield_g may approximate water_g less absorbed water. Must be > 0 if present."
         },
+        "dose_g": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Actual coffee dose used in grams. Must be > 0 if present. Records the actual dose weighed out for this brew, which may deviate from the recipe target (brew.dose_g)."
+        },
+        "duration_s": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Actual brew or shot duration in seconds. Must be > 0 if present. Records the measured extraction time, which may deviate from the recipe target (brew.duration_s)."
+        },
         "tasting_notes": {
           "type": "string",
           "minLength": 1,

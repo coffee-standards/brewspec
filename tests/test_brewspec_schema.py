@@ -2108,6 +2108,68 @@ def test_schema_result_has_water_g(schema):
     assert "water_g" in schema["$defs"]["result"]["properties"]
 
 
+def test_result_dose_g_accepted(validator):
+    """result.dose_g is accepted (actual dose used)."""
+    validator.validate({
+        "brewspec_version": "1.0",
+        "brews": [{"result": {"dose_g": 17.8}}]
+    })
+
+
+def test_result_dose_g_zero_rejected(validator):
+    """result.dose_g: 0 is rejected (exclusiveMinimum: 0)."""
+    with pytest.raises(ValidationError):
+        validator.validate({
+            "brewspec_version": "1.0",
+            "brews": [{"result": {"dose_g": 0}}]
+        })
+
+
+def test_result_dose_g_negative_rejected(validator):
+    """result.dose_g: -5 is rejected."""
+    with pytest.raises(ValidationError):
+        validator.validate({
+            "brewspec_version": "1.0",
+            "brews": [{"result": {"dose_g": -5}}]
+        })
+
+
+def test_schema_result_has_dose_g(schema):
+    """$defs/result/properties must contain dose_g."""
+    assert "dose_g" in schema["$defs"]["result"]["properties"]
+
+
+def test_result_duration_s_accepted(validator):
+    """result.duration_s is accepted (actual extraction time)."""
+    validator.validate({
+        "brewspec_version": "1.0",
+        "brews": [{"result": {"duration_s": 29}}]
+    })
+
+
+def test_result_duration_s_zero_rejected(validator):
+    """result.duration_s: 0 is rejected (exclusiveMinimum: 0)."""
+    with pytest.raises(ValidationError):
+        validator.validate({
+            "brewspec_version": "1.0",
+            "brews": [{"result": {"duration_s": 0}}]
+        })
+
+
+def test_result_duration_s_negative_rejected(validator):
+    """result.duration_s: -10 is rejected."""
+    with pytest.raises(ValidationError):
+        validator.validate({
+            "brewspec_version": "1.0",
+            "brews": [{"result": {"duration_s": -10}}]
+        })
+
+
+def test_schema_result_has_duration_s(schema):
+    """$defs/result/properties must contain duration_s."""
+    assert "duration_s" in schema["$defs"]["result"]["properties"]
+
+
 # ---------------------------------------------------------------------------
 # AC-3: coffee.name maxLength reduced from 150 to 100
 # ---------------------------------------------------------------------------
