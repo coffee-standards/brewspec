@@ -149,7 +149,6 @@ tasks:
       YAML examples in the site that demonstrate result fields. No copy or
       design sign-off needed — this is a factual field list update.
     review_carry_forward:
-      - "HIGH: content.test.ts imports vitest which is not in package.json devDependencies — tests cannot run; two assertions also use wrong pattern (> 0 vs &gt; 0 HTML entity)"
       - "LOW: Examples.astro espresso result block does not show dose_g or duration_s"
 
   - id: brewspec-v1.0
