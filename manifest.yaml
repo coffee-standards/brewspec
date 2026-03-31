@@ -304,8 +304,13 @@ maintenance:
     product: "BrewSpec"
     priority: P3
     tier: express
-    status: ready_for_dev
+    status: done
+    completed_date: "2026-03-31"
     assigned_to: null
+    pr: https://github.com/coffee-standards/brewspec/pull/17
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-refactor-002-adr-002.yaml
     source: health-report
     health_finding: ADR-1
     health_report: reviews/2026-03-31-system-steward-health-report-2.yaml
