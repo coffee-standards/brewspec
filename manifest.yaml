@@ -102,11 +102,13 @@ tasks:
     product: "BrewLog CLI"
     priority: P1
     tier: express
-    status: ready_for_deploy
+    status: done
     assigned_to: null
+    completed_date: "2026-03-31"
     review_verdict: PASS
     review_date: "2026-03-31"
     review: reviews/2026-03-31-reviewer-brewlog-result-dose-duration.yaml
+    pr: https://github.com/coffee-standards/brewspec/pull/15
     depends_on:
       - brewspec-result-dose-duration
       - brewlog-cli-v1.0
