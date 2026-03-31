@@ -277,6 +277,8 @@ class ResultInput(BaseModel):
     brix: Optional[float] = None
     yield_g: Optional[float] = None
     water_g: Optional[float] = None       # new in v1.0: actual water used
+    dose_g: Optional[float] = None        # new in v1.0 (schema update): actual dose used
+    duration_s: Optional[float] = None    # new in v1.0 (schema update): actual extraction time
     tasting_notes: Optional[str] = None
     ratings: Optional[RatingsInput] = None
 
@@ -306,6 +308,20 @@ class ResultInput(BaseModel):
     def validate_result_water_g(cls, v: Optional[float]) -> Optional[float]:
         if v is not None and v <= 0:
             raise ValueError("water_g must be > 0")
+        return v
+
+    @field_validator("dose_g")
+    @classmethod
+    def validate_result_dose_g(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v <= 0:
+            raise ValueError("dose_g must be > 0")
+        return v
+
+    @field_validator("duration_s")
+    @classmethod
+    def validate_result_duration_s(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v <= 0:
+            raise ValueError("duration_s must be > 0")
         return v
 
     @field_validator("tasting_notes")

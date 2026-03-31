@@ -57,6 +57,15 @@ from brewlog.prompts import prompt_brew_type
                   "Actual water used in grams (> 0). Record when actual water deviates "
                   "from the recipe target (--water)."
               ))
+@click.option("--actual-dose", "actual_dose", type=float, default=None,
+              help=(
+                  "Actual coffee dose used in grams (> 0). Record when actual dose deviates "
+                  "from the recipe target (--dose)."
+              ))
+@click.option("--actual-duration", "actual_duration", type=float, default=None,
+              help=(
+                  "Actual extraction time in seconds (> 0). Record the measured shot or brew time."
+              ))
 @click.option("--tds",         "tds",          type=float, default=None,
               help="TDS percentage (> 0).")
 @click.option("--ey",          "ey",           type=float, default=None,
@@ -151,7 +160,7 @@ def update(
     brew_id,
     brew_type,
     method, grind, temp, duration, process_notes, brew_ratio,
-    target_yield, actual_water,
+    target_yield, actual_water, actual_dose, actual_duration,
     tds, ey, brix, yield_g, tasting_notes,
     rating_retired,
     rating_overall, rating_fragrance, rating_aroma, rating_flavour,
@@ -340,6 +349,14 @@ def update(
         click.echo("Error: --flow-rate must be greater than 0.", err=True)
         sys.exit(1)
 
+    if actual_dose is not None and actual_dose <= 0:
+        click.echo("Error: --actual-dose must be greater than 0.", err=True)
+        sys.exit(1)
+
+    if actual_duration is not None and actual_duration <= 0:
+        click.echo("Error: --actual-duration must be greater than 0.", err=True)
+        sys.exit(1)
+
     # -- Resolve brew ID early (needed for origin_cupping_notes read-back) --
 
     db_path = ctx.obj.get("db_path") if ctx.obj else None
@@ -436,6 +453,10 @@ def update(
             updates["yield_g"] = target_yield
         if actual_water is not None:
             updates["result_water_g"] = actual_water
+        if actual_dose is not None:
+            updates["result_dose_g"] = actual_dose
+        if actual_duration is not None:
+            updates["result_duration_s"] = actual_duration
         if tds is not None:
             updates["result_tds"] = tds
         if ey is not None:
