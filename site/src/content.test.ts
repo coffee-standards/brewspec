@@ -56,11 +56,11 @@ describe('schema.astro — Result section table', () => {
   it('documents result.dose_g description', () => {
     const resultSection = source.slice(source.indexOf('id="result"'));
     // Should describe what the field records
-    expect(resultSection).toMatch(/dose_g[\s\S]*?number[\s\S]*?> 0/);
+    expect(resultSection).toMatch(/dose_g[\s\S]*?number[\s\S]*?&gt; 0/);
   });
 
   it('documents result.duration_s description', () => {
     const resultSection = source.slice(source.indexOf('id="result"'));
-    expect(resultSection).toMatch(/duration_s[\s\S]*?number[\s\S]*?> 0/);
+    expect(resultSection).toMatch(/duration_s[\s\S]*?number[\s\S]*?&gt; 0/);
   });
 });
