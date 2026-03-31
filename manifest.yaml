@@ -292,6 +292,25 @@ maintenance:
   #
   # Status flow: backlog → ready_for_dev → ready_for_review → ready_for_deploy → done
 
+  - id: refactor-002-adr-002-decision-prose-update
+    type: refactor
+    product: "BrewSpec"
+    priority: P3
+    tier: express
+    status: ready_for_deploy
+    assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-03-31"
+    review: reviews/2026-03-31-reviewer-refactor-002-adr-002.yaml
+    description: >
+      Fix an internal inconsistency in specs/decisions/ADR-002-recipe-result-field-symmetry.md.
+      The Decision prose said "Two new optional fields are added: brew.yield_g and result.water_g",
+      but the symmetry table directly below showed all four recipe/result pairs including
+      result.dose_g and result.duration_s. The Consequences section only mentioned brew.yield_g
+      and result.water_g. Updated Decision prose and Consequences to describe the two-phase
+      delivery: Phase 1 (v1.0) added brew.yield_g and result.water_g; Phase 2 (PR #14) added
+      result.dose_g and result.duration_s. The symmetry table was already correct and untouched.
+
   # ──────────────────────────────────────────────────────────────────────────
   # Health report findings — 2026-03-31
   # Source: reviews/2026-03-31-system-steward-health-report.yaml
