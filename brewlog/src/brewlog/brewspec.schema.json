@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://brewspec.coffee/schema/v1.0.json",
-  "title": "BrewSpec v1.0",
+  "$id": "https://brewspec.coffee/schema/v1.1.json",
+  "title": "BrewSpec v1.1",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "1.0",
-      "description": "The BrewSpec version. Must be \"1.0\"."
+      "const": "1.1",
+      "description": "The BrewSpec version. Must be \"1.1\"."
     },
     "brews": {
       "type": "array",
@@ -251,6 +251,17 @@
           "type": "number",
           "minimum": 0,
           "description": "Water total dissolved solids in parts per million. Must be >= 0 if present."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["tap", "filtered", "reverse_osmosis", "bottled", "engineered"],
+          "description": "Water source category. New in v1.1."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Free-text water descriptor — water profile, mineral content notes, brand name for bottled water, or treatment description. Distinct from equipment.notes (equipment maintenance state) and brew.process_notes (operational prep observations). New in v1.1."
         }
       }
     },
@@ -296,6 +307,19 @@
           "exclusiveMinimum": 0,
           "description": "Volumetric flow rate in millilitres per second. Must be > 0. Useful for espresso profiling and controlled pour-over. New in v1.0.",
           "examples": [2.5, 1.8, 3.0]
+        },
+        "burr_set": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Identifier for the burr set installed in the grinder — model name, material, serial number, or descriptive label (e.g. 'HU-32 98mm SSP', 'Burr set #2', 'Stock burrs'). Complements equipment.grinder (model) and equipment.grinder_setting (dial position). New in v1.1.",
+          "examples": ["HU-32 98mm SSP", "Burr set #2", "Stock burrs", "Versalab 98mm"]
+        },
+        "rpm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Grinder rotational speed in RPM. Must be > 0. Relevant for variable-speed grinders where RPM affects grind character and particle distribution. New in v1.1.",
+          "examples": [300, 450, 600]
         }
       }
     },
