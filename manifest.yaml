@@ -60,7 +60,7 @@ products:
     status: "in_progress"
     description: "Open source standard for describing coffee brews (YAML/JSON). The trust anchor — free and open forever."
     spec: specs/products/brewspec.md
-    current_version: "1.0"
+    current_version: "1.1"
   - name: "BrewLog CLI"
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
@@ -82,8 +82,10 @@ tasks:
     product: "BrewSpec"
     priority: P2
     tier: express
-    status: ready_for_deploy
+    status: done
     assigned_to: null
+    completed_date: "2026-06-06"
+    pr: https://github.com/coffee-standards/brewspec/pull/18
     review_verdict: PASS
     review_date: "2026-06-06"
     depends_on:
