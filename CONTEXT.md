@@ -7,7 +7,7 @@ profile: standard
 visibility: local          # public repo — only this CONTEXT.md is committed; guidance internals are bootstrapped locally
 repo:
   name: brewspec
-  linear: none             # EXCEPTION: not on Linear yet — manifest.yaml is the local task record (see "Tracking work")
+  linear: none             # not on Linear yet — adopt it when work begins (see "Tracking work")
 layers:
   linear: false            # the standard is Linear; brewspec is the exception until it goes active
   design_system: false
@@ -27,7 +27,7 @@ branches:
   integration: main        # CI (pytest) runs on PRs to main
   release: main            # site/ deploys to GitHub Pages from main (deploy-site.yml, CNAME)
 tools:
-  linear_cli: "none — not on Linear; edit manifest.yaml directly; process roadmap.md ideas into manifest tasks"
+  linear_cli: "none — not on Linear yet; roadmap.md is the idea inbox until Linear is adopted"
 paths:
   spec: brewspec-v1.0.md          # human-readable standard
   schema: brewspec.schema.json     # the machine contract (also bundled in brewlog as package-data)
@@ -40,8 +40,7 @@ paths:
   decisions: specs/decisions/
   principles: specs/principles.md
   strategy: specs/strategy.md
-  manifest: manifest.yaml
-  roadmap: roadmap.md
+  roadmap: roadmap.md              # idea inbox (no manifest.yaml — retired with the old process)
 env:
   file: none
 ```
@@ -58,7 +57,7 @@ Three deliverables in one repo:
 - **brewlog/.** A standalone Python package (Click CLI + Pydantic v2 models) that reads and writes BrewSpec files. It has its own `pyproject.toml`, its own tests, and **bundles a copy of `brewspec.schema.json`** as package data — that copy must stay in sync with the root schema.
 - **site/.** The docs site, deployed to GitHub Pages from `main` (`.github/workflows/deploy-site.yml`, `CNAME`).
 
-Planning layer (prior-art shaped, already here): `specs/` holds `arch/`, `decisions/` (ADRs), `designs/`, `products/`, `principles.md`, `strategy.md`, `templates/`. `manifest.yaml` is in-flight work; `roadmap.md` is the freeform ideation backlog.
+Planning layer: `specs/` holds `arch/`, `decisions/` (ADRs), `designs/`, `products/`, `principles.md`, `strategy.md`, `templates/`. `roadmap.md` is the freeform ideation backlog. (The old `manifest.yaml` from the prior-art pipeline has been retired — the standard uses Linear, which brewspec will adopt when active.)
 
 ## Repo-specific principles
 
@@ -68,13 +67,9 @@ The spec's own evolution rule is load-bearing: **the schema is a backward-compat
 
 ## Tracking work
 
-There is no Linear or external tracker. The `linear-sync` skill's protocol still applies in spirit (a tracked item is the front door, status moves as work progresses), but the "tracker" is `manifest.yaml`, edited directly:
+brewspec is **not on Linear yet** — it is the rare `linear: false` exception (the standard, and where it is heading when work picks up). There is no `manifest.yaml`; that was a prior-art artifact, now retired.
 
-- New work becomes a task entry in `manifest.yaml` (`id`, `name`, `type`, `level`, `status`).
-- Status flows `todo → in_progress → ready_for_review → ready_for_deploy → done` (the existing convention in the file's history).
-- `roadmap.md` is the idea inbox; ideas are processed into manifest tasks deliberately, not auto-promoted.
-
-When the guidance says "open the ticket" or "set In Review", read and update the `manifest.yaml` entry instead.
+Until Linear is adopted, `roadmap.md` is the idea inbox — capture ideas there freely. When real work begins, put brewspec on Linear and follow the standard flow (`spec-driven-development`): the Linear issue is the front door and the home of the change spec. Items carried over from the retired manifest are listed at the bottom of `roadmap.md`.
 
 ## Decisions index
 
@@ -88,7 +83,7 @@ Full text in `specs/decisions/`.
 
 - **What the format is** → `brewspec-v1.0.md` + `brewspec.schema.json`
 - **Why things are the way they are** → `specs/decisions/`
-- **In-flight work** → `manifest.yaml` · **Ideas** → `roadmap.md`
+- **Ideas / backlog** → `roadmap.md` (no in-flight tracker until Linear is adopted)
 - **Direction** → `specs/principles.md`, `specs/strategy.md`
 
 ## Gotchas
