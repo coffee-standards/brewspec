@@ -1,10 +1,22 @@
 # Worktrees — parallel task branches checked out locally
 .worktrees/
 
-# Harness — Claude Code configuration and pipeline artifacts
-.claude/
-CLAUDE.md
-hooks/
+# Agent guidance (local mode) — bootstrapped locally, NOT committed in this
+# public repo. Only CONTEXT.md (agent-facing repo docs) is tracked. On a fresh
+# clone, re-run BOOTSTRAP from the guidance source to restore the rest.
+/.claude/
+/.codex/
+/.gemini/
+/CLAUDE.md
+/AGENTS.md
+/GEMINI.md
+/skills/
+/agents/
+/commands/
+/hooks/
+/templates/
+/process/
+/.guidance-lock.yaml
 reviews/
 
 # Python
