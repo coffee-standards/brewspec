@@ -82,8 +82,10 @@ tasks:
     product: "BrewSpec"
     priority: P2
     tier: express
-    status: ready_for_review
+    status: ready_for_deploy
     assigned_to: null
+    review_verdict: PASS
+    review_date: "2026-06-06"
     depends_on:
       - brewspec-result-dose-duration
     description: >
