@@ -8,7 +8,7 @@
 # result.yield_g  = actual output weight collected in the cup
 # result.duration_s = actual measured extraction time
 # equipment.pressure_bar and equipment.flow_rate_ml_s are new in v1.0.
-brewspec_version: "1.0"
+brewspec_version: "1.1"
 brews:
   - date: "2026-03-20T07:30:00Z"
     type: "espresso"

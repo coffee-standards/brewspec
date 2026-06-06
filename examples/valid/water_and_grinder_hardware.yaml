@@ -1,0 +1,53 @@
+brewspec_version: "1.1"
+brews:
+  - date: "2026-06-06"
+    type: "espresso"
+    method: "La Marzocco Linea Mini"
+    dose_g: 18
+    water_g: 36
+    yield_g: 36
+    water_temp_c: 93.0
+    coffee:
+      name: "Ethiopia Benti Nenqa"
+      roaster: "Onyx Coffee Lab"
+      roast_level: "light"
+      roast_date: "2026-05-28"
+      type: "single_origin"
+      origins:
+        - country: "Ethiopia"
+          region: "Sidama"
+          producer: "Benti Nenqa Washing Station"
+          process: "Washed"
+          varietal: "Heirloom"
+          elevation_masl: 2050
+          cupping_notes: "Blueberry, jasmine, honey sweetness"
+    water:
+      ppm: 150
+      type: "filtered"
+      notes: "Brita filter, replaced monthly — tap base at ~300ppm hardness"
+    equipment:
+      grinder: "Lagom P100"
+      grinder_setting: 2.5
+      burr_set: "HU-32 98mm SSP"
+      rpm: 300
+      pressure_bar: 9.0
+      flow_rate_ml_s: 2.5
+      notes: "Burr set installed 2026-04-01, ~5kg seasoned"
+    grind: "espresso"
+    duration_s: 28
+    process_notes: "Pre-infuse 4s at 3 bar, ramp to 9 bar"
+    result:
+      dose_g: 18.1
+      water_g: 36.2
+      yield_g: 36.4
+      duration_s: 29
+      tds: 9.2
+      ey: 20.4
+      tasting_notes: "Intense blueberry, violet, honey finish — clean and vibrant"
+      ratings:
+        overall: 8
+        aroma: 8
+        flavour: 8
+        acidity: 7
+        sweetness: 7
+        aftertaste: 7

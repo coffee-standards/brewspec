@@ -1,7 +1,7 @@
 # Valid example: blend where each origin carries its own process and varietal.
 # Demonstrates coffee.name at coffee level and per-origin process and varietal —
 # the correct v1.0 model for blends.
-brewspec_version: "1.0"
+brewspec_version: "1.1"
 brews:
   - date: "2026-03-02"
     type: "pour_over"

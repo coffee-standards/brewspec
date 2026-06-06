@@ -2,7 +2,7 @@
 # coffee.cupping_notes = sensory notes on the coffee as a whole (from bag description or pre-brew cupping)
 # origin.cupping_notes = per-component sensory notes (for single origin, describes the coffee overall)
 # brew.process_notes = operational observations about preparation (renamed from notes in v1.0)
-brewspec_version: "1.0"
+brewspec_version: "1.1"
 brews:
   - date: "2026-03-22T08:00:00Z"
     type: "pour_over"

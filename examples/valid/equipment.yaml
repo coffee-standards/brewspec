@@ -1,4 +1,4 @@
-brewspec_version: "1.0"
+brewspec_version: "1.1"
 brews:
   - date: "2026-02-20T07:30:00Z"
     type: "pour_over"
