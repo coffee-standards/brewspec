@@ -3,7 +3,7 @@
 **Last Updated:** 2026-03-18
 **Status:** Active
 
-These principles govern technical and system design decisions for BrewSpec and BrewLog. They are distinct from the product principles in `specs/principles.md` — those define what we build and why; these define how we build it. All architecture decisions (recorded in `specs/decisions/`) should be traceable to one or more of these principles.
+These principles govern technical and system design decisions for BrewSpec and BrewLog. They are distinct from the product principles in `specs/principles.md` — those define what we build and why; these define how we build it. This is the **architecture-principles reference spec**: cross-cutting decisions are recorded here as Decision blocks, and feature-local decisions in the relevant feature spec (`specs/features/`). Every recorded decision should trace to one or more of these principles.
 
 ---
 
