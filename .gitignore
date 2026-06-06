@@ -16,6 +16,7 @@
 /hooks/
 /templates/
 /process/
+/settings/
 /.guidance-lock.yaml
 reviews/
 
