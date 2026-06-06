@@ -60,7 +60,7 @@ products:
     status: "in_progress"
     description: "Open source standard for describing coffee brews (YAML/JSON). The trust anchor — free and open forever."
     spec: specs/products/brewspec.md
-    current_version: "1.0"
+    current_version: "1.1"
   - name: "BrewLog CLI"
     status: "in_progress"
     description: "Local command-line brew tracker using the BrewSpec format. Proves the spec works end-to-end."
@@ -75,6 +75,82 @@ tasks:
   # BrewSpec Schema
   # Open tasks first, then done (newest → oldest).
   # ──────────────────────────────────────────────────────────────────────────
+
+  - id: brewspec-v1.1
+    name: "BrewSpec v1.1 — water source fields and grinder hardware fields"
+    type: feature
+    product: "BrewSpec"
+    priority: P2
+    tier: express
+    status: done
+    assigned_to: null
+    completed_date: "2026-06-06"
+    pr: https://github.com/coffee-standards/brewspec/pull/18
+    review_verdict: PASS
+    review_date: "2026-06-06"
+    depends_on:
+      - brewspec-result-dose-duration
+    description: >
+      True-up the BrewSpec schema against what Slate (the reference product) has
+      built. Four additive fields are missing from the spec. All changes are
+      non-breaking — this is a minor version bump (v1.0 → v1.1).
+
+      Source: cross-repo field comparison against Slate DB schema (slate/app/models/,
+      alembic/versions/0001_initial.py), June 2026.
+
+      Fields to add:
+
+      1. water.type (string, enum)
+         Enum values: tap | filtered | reverse_osmosis | bottled | engineered
+         Optional. Water source category. Placed in the water object alongside
+         the existing water.ppm field. Follows the snake_case enum convention
+         used elsewhere in the spec.
+
+      2. water.notes (string, minLength: 1, maxLength: 2000)
+         Optional. Free-text water descriptor — water profile, mineral content
+         notes, brand name for bottled water, or treatment description.
+         Distinct from equipment.notes (equipment maintenance state) and
+         brew.process_notes (operational prep observations). Follows the
+         existing notes field pattern in the spec.
+
+      3. equipment.burr_set (string, minLength: 1, maxLength: 100)
+         Optional. Identifier for the burr set installed in the grinder —
+         model name, material, serial number, or descriptive label (e.g.
+         "HU-32 98mm SSP", "Burr set #2", "Stock burrs"). Complements the
+         existing equipment.grinder (model) and equipment.grinder_setting
+         (dial position) fields. Lives flat in the equipment object, not in a
+         nested grinder sub-object — consistent with the spec's existing shape.
+
+      4. equipment.rpm (number, exclusiveMinimum: 0)
+         Optional. Grinder rotational speed in RPM. Relevant for variable-speed
+         grinders where RPM affects grind character and particle distribution.
+         Positive number, following the exclusiveMinimum: 0 convention used by
+         other equipment measurements (grinder_setting, pressure_bar,
+         flow_rate_ml_s).
+
+      Version: non-breaking minor bump. The brewspec_version const changes
+      from "1.0" to "1.1". The schema $id and title update accordingly.
+      Existing v1.0 documents validate cleanly against the 1.0 schema; to
+      adopt 1.1 a document only needs to update its brewspec_version string.
+      The spec doc filename stays brewspec-v1.0.md (major version in name;
+      minor version in the header). No version snapshot needed — additive only.
+
+      Deliverables:
+      - brewspec.schema.json (root): add four fields to their objects. Bump
+        const "1.0" → "1.1", title "BrewSpec v1.0" → "BrewSpec v1.1", $id
+        .../v1.0.json → .../v1.1.json.
+      - brewlog/src/brewlog/brewspec.schema.json: keep in sync with root.
+      - brewspec-v1.0.md: update Version header and Last Updated date. Add
+        rows to Water Object table (type, notes) and Equipment Object table
+        (burr_set, rpm). Add a "What Changed in v1.1" section listing all four
+        new fields. Update Scope bullet list to mention new fields.
+      - examples/valid/: add at least one example demonstrating all four new
+        fields (a pour-over or espresso with water.type, water.notes,
+        equipment.burr_set, equipment.rpm is sufficient).
+      - tests/test_brewspec_schema.py: add validation tests for all four new
+        fields — at minimum: valid presence of each, invalid type, invalid
+        enum value for water.type.
+      - TDD throughout.
 
   - id: brewspec-result-dose-duration
     name: "BrewSpec — backport result.dose_g and result.duration_s"

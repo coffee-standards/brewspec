@@ -1,8 +1,8 @@
 # BrewSpec v1.0
 
 Status: Stable
-Version: 1.0
-Last Updated: 2026-03-29
+Version: 1.1
+Last Updated: 2026-06-06
 
 ---
 
@@ -18,7 +18,7 @@ Make the coffee supply chain more sustainable for everyone by enabling open, int
 
 ### Scope
 
-BrewSpec v1.0 defines:
+BrewSpec v1.1 defines:
 - A JSON Schema for validation
 - All brew-level fields are optional — tools may record only the fields they capture
 - `brew.water_g` for recipe target water weight (renamed from `water_weight_g` in v0.x)
@@ -29,6 +29,10 @@ BrewSpec v1.0 defines:
 - `brew.process_notes` for operational observations about preparation (renamed from `notes`)
 - `equipment.pressure_bar` for line or lever pressure in bars
 - `equipment.flow_rate_ml_s` for volumetric flow rate in ml/s
+- `equipment.burr_set` for the burr set identifier (new in v1.1)
+- `equipment.rpm` for grinder rotational speed (new in v1.1)
+- `water.type` for water source category (new in v1.1)
+- `water.notes` for free-text water description (new in v1.1)
 - A `coffee.roaster` field for the company or person who roasted the coffee
 - A `coffee.roast_level` field with a three-value enum (`light`, `medium`, `dark`)
 - An `origin.elevation_masl` field for growing elevation in meters above sea level
@@ -39,7 +43,7 @@ BrewSpec v1.0 defines:
 - Water mineral content (`ppm`)
 - A `result` object grouping brew outcome measurements and sensory evaluation (`tds`, `ey`, `brix`, `water_g`, `yield_g`, `tasting_notes`, `ratings`)
 - A `ratings` object with 8 CVA-aligned sensory dimensions on a 1-9 hedonic scale
-- Equipment descriptor (`grinder`, `brewer`, `grinder_setting`, `notes`, `pressure_bar`, `flow_rate_ml_s`)
+- Equipment descriptor (`grinder`, `brewer`, `grinder_setting`, `notes`, `pressure_bar`, `flow_rate_ml_s`, `burr_set`, `rpm`)
 - `brew_ratio` as an optional float at the brew level
 - `maxLength` constraints on all freeform string fields
 - A strict 7-value enumeration for `grind`
@@ -47,7 +51,7 @@ BrewSpec v1.0 defines:
 - Constraints on field types and values
 - A standard file format (YAML or JSON)
 
-What v1.0 still defers to future versions:
+What v1.1 still defers to future versions:
 - Standardized enumeration for `method` (deferred pending further usage data)
 - Pour schedules and step-by-step timing
 - Extended water chemistry (pH, bicarbonate, mineral breakdown)
@@ -64,7 +68,7 @@ Complete reference for all fields in v1.0. Every field in the JSON Schema appear
 
 | Field | Type | Required | Constraints | Description |
 |-------|------|----------|-------------|-------------|
-| `brewspec_version` | string | Yes | const: `"1.0"` | Must be the literal string `"1.0"`. Rejected if missing or any other value. |
+| `brewspec_version` | string | Yes | const: `"1.1"` | Must be the literal string `"1.1"`. Rejected if missing or any other value. |
 | `brews` | array | Yes | minItems: 1 | Array of brew objects. At least one brew required. |
 
 ### Brew Object Fields
@@ -122,6 +126,8 @@ All fields in the brew object are optional. Tools may record only the fields the
 | Field | Type | Required | Constraints | Description | Examples |
 |-------|------|----------|-------------|-------------|----------|
 | `ppm` | number | No | >= 0 | Total dissolved solids in parts per million. | `150`, `75`, `0` |
+| `type` | string | No | Enum: `tap`, `filtered`, `reverse_osmosis`, `bottled`, `engineered` | Water source category. New in v1.1. | `"filtered"`, `"tap"` |
+| `notes` | string | No | minLength 1, maxLength 2000 | Free-text water descriptor — water profile, mineral content notes, brand name for bottled water, or treatment description. Distinct from `equipment.notes` (equipment state) and `brew.process_notes` (operational prep). New in v1.1. | `"Brita filter, changed monthly"`, `"SoftWater engineered to 150ppm"` |
 
 ### Equipment Object (entire object optional; all fields within optional)
 
@@ -133,6 +139,8 @@ All fields in the brew object are optional. Tools may record only the fields the
 | `notes` | string | No | minLength 1, maxLength 2000 | Equipment state observations — burr age, maintenance, filter type, calibration state. | `"Burrs replaced 2026-01"` |
 | `pressure_bar` | number | No | > 0 (exclusive) | Line or lever pressure in bars. Primarily relevant to espresso. New in v1.0. | `9.0`, `6.0`, `8.5` |
 | `flow_rate_ml_s` | number | No | > 0 (exclusive) | Volumetric flow rate in millilitres per second. Useful for espresso profiling and controlled pour-over. New in v1.0. | `2.5`, `1.8`, `3.0` |
+| `burr_set` | string | No | minLength 1, maxLength 100 | Identifier for the burr set installed in the grinder — model name, material, serial number, or descriptive label. Complements `equipment.grinder` (model) and `equipment.grinder_setting` (dial position). New in v1.1. | `"HU-32 98mm SSP"`, `"Burr set #2"`, `"Stock burrs"` |
+| `rpm` | number | No | > 0 (exclusive) | Grinder rotational speed in RPM. Relevant for variable-speed grinders where RPM affects grind character and particle distribution. New in v1.1. | `300`, `450`, `600` |
 
 ### Result Object (entire object optional; all fields within optional)
 
@@ -162,6 +170,22 @@ Context: result-level fields represent actual measurements, as opposed to brew-l
 | `acidity` | integer | No | 1-9 inclusive | Quality (not quantity) of acidity; brightness. |
 | `sweetness` | integer | No | 1-9 inclusive | Perceived sweetness. |
 | `mouthfeel` | integer | No | 1-9 inclusive | Tactile sensation; body and texture. |
+
+---
+
+## What Changed in v1.1
+
+All changes in v1.1 are additive and non-breaking. Existing v1.0 documents remain valid against the v1.0 schema. To validate against v1.1, the only required change is updating `brewspec_version` from `"1.0"` to `"1.1"`.
+
+### New Fields
+
+**`water.type`** (string, optional, enum) — Water source category. Enum values: `tap`, `filtered`, `reverse_osmosis`, `bottled`, `engineered`. Placed in the water object alongside the existing `water.ppm` field. New in v1.1.
+
+**`water.notes`** (string, optional, minLength 1, maxLength 2000) — Free-text water descriptor. Records water profile, mineral content notes, brand name for bottled water, or treatment description. Distinct from `equipment.notes` (equipment maintenance state) and `brew.process_notes` (operational prep observations). New in v1.1.
+
+**`equipment.burr_set`** (string, optional, minLength 1, maxLength 100) — Identifier for the burr set installed in the grinder — model name, material, serial number, or descriptive label (e.g. `"HU-32 98mm SSP"`, `"Burr set #2"`, `"Stock burrs"`). Complements `equipment.grinder` (model) and `equipment.grinder_setting` (dial position). Placed flat in the equipment object, consistent with the existing shape. New in v1.1.
+
+**`equipment.rpm`** (number, optional, > 0) — Grinder rotational speed in RPM. Relevant for variable-speed grinders where RPM affects grind character and particle distribution. Follows the `exclusiveMinimum: 0` convention used by other equipment measurements (`grinder_setting`, `pressure_bar`, `flow_rate_ml_s`). New in v1.1.
 
 ---
 
@@ -348,6 +372,7 @@ Valid examples in `examples/valid/`:
 - `examples/valid/valid_blend_with_per_origin_varietal.yaml` — Blend with per-origin `process` and `varietal`
 - `examples/valid/valid_blend_origin.yaml` — Multi-origin blend
 - `examples/valid/light_roast_ethiopian.yaml` — Light roast Ethiopian with full coffee metadata and `ratings.aftertaste: 7` (demonstrates 6-9 CVA range)
+- `examples/valid/water_and_grinder_hardware.yaml` — Demonstrates all four v1.1 fields: `water.type`, `water.notes`, `equipment.burr_set`, `equipment.rpm`
 
 Invalid examples in `examples/invalid/` (for testing validators):
 - `examples/invalid/invalid_water_weight_g.yaml` — `water_weight_g` present (removed in v1.0; use `water_g`)
