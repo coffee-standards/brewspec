@@ -356,6 +356,18 @@ import Footer from '../components/Footer.astro';
                   <td>&ge; 0</td>
                   <td>Total dissolved solids in parts per million.</td>
                 </tr>
+                <tr>
+                  <td><code>type</code></td>
+                  <td>string</td>
+                  <td>enum: tap | filtered | reverse_osmosis | bottled | engineered</td>
+                  <td>Water source category.</td>
+                </tr>
+                <tr>
+                  <td><code>notes</code></td>
+                  <td>string</td>
+                  <td>minLength: 1, maxLength: 2000</td>
+                  <td>Free-text notes on the water used (brand, mineral profile, etc.).</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -392,6 +404,18 @@ import Footer from '../components/Footer.astro';
                   <td>number</td>
                   <td>&gt; 0</td>
                   <td>Dial position or click setting. Integer or decimal tenths.</td>
+                </tr>
+                <tr>
+                  <td><code>burr_set</code></td>
+                  <td>string</td>
+                  <td>minLength: 1, maxLength: 100</td>
+                  <td>Burr set installed in the grinder.</td>
+                </tr>
+                <tr>
+                  <td><code>rpm</code></td>
+                  <td>number</td>
+                  <td>&gt; 0</td>
+                  <td>Grinder motor speed in RPM (variable-speed grinders).</td>
                 </tr>
                 <tr>
                   <td><code>pressure_bar</code></td>
