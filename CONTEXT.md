@@ -3,7 +3,7 @@
 Agent-facing context for **BrewSpec**. `README.md` is for humans; this is for agents. Read it first. The guidance files (skills, agents, commands) are universal and point here for everything repo-specific.
 
 ```yaml
-profile: standard
+profile: harness           # the one shared surface (the name is a label, not a repo-type selector); repo-type variation is the layers below
 visibility: local          # public repo — only this CONTEXT.md is committed; guidance internals are bootstrapped locally
 repo:
   name: brewspec
@@ -88,4 +88,4 @@ Until Linear is adopted, `roadmap.md` is the idea inbox — capture ideas there 
 - **History committed straight to `main`.** Going forward, feature work should branch into a worktree (`worktree-isolation`); CI runs `pytest` only on PRs to `main`.
 
 ---
-*Profile note: BrewSpec is a "standard + reference tooling" repo — not a typical consumer product, not the pipeline harness. The `standard` profile is the closest fit and works, but the imperfect match is itself a useful signal (a candidate `library`/`standard` profile). Raise it via `/assess harness`.*
+*Profile note: the standard-vs-harness profile split is retired — there is now **one** guidance surface, and repo-type variation lives in the `layers:` block above, not in a profile choice. BrewSpec is a "standard + reference tooling" repo: `feature_specs: true` (canonical specs in `specs/features/`), `design_system: false`. The old fit question is now a layers question. BrewSpec carries the full one-surface install: `design-system` is present but dormant (`design_system: false`), and `ux-design` applies to its CLI and docs surface. Raise any remaining gap via `/assess`.*
