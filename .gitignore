@@ -2,14 +2,17 @@
 .worktrees/
 
 # Agent guidance (local mode) — bootstrapped locally, NOT committed in this
-# public repo. Only CONTEXT.md (agent-facing repo docs) is tracked. On a fresh
-# clone, re-run BOOTSTRAP from the guidance source to restore the rest.
+# public repo. Nothing here is tracked, including CONTEXT.md (repo-specific
+# agent facts). On a fresh clone, re-run BOOTSTRAP from the guidance source to
+# restore the universal files; CONTEXT.md is hand-authored and NOT derivable
+# from the source, so restore it from a local copy.
 /.claude/
 /.codex/
 /.gemini/
 /CLAUDE.md
 /AGENTS.md
 /GEMINI.md
+/CONTEXT.md
 /skills/
 /agents/
 /commands/
