@@ -518,7 +518,7 @@ class TestImportResultDoseDuration:
     def test_import_result_dose_g_roundtrip(self, tmp_path, monkeypatch):
         """Import a file with result.dose_g, export, assert value preserved."""
         v10_doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [
                 {
                     "date": "2026-03-30",
@@ -553,7 +553,7 @@ class TestImportResultDoseDuration:
     def test_import_result_duration_s_roundtrip(self, tmp_path, monkeypatch):
         """Import a file with result.duration_s, export, assert value preserved."""
         v10_doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [
                 {
                     "date": "2026-03-30",
@@ -588,7 +588,7 @@ class TestImportResultDoseDuration:
     def test_import_both_fields_roundtrip(self, tmp_path, monkeypatch):
         """Import a file with both result.dose_g and result.duration_s, export, assert both preserved."""
         v10_doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [
                 {
                     "date": "2026-03-30",

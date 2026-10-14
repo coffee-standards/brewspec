@@ -1,0 +1,19 @@
+# coffee.caffeine_level (new in v1.2): regular, decaf, half_caf or extra
+# (more caffeine than regular). Absent means not recorded.
+brewspec_version: "1.2"
+brews:
+  - type: "pour_over"
+    coffee:
+      name: "Colombia Sugarcane Decaf"
+      caffeine_level: "decaf"
+  - type: "espresso"
+    coffee:
+      name: "House Half-Caf"
+      caffeine_level: "half_caf"
+  - type: "immersion"
+    coffee:
+      caffeine_level: "regular"
+  - type: "hybrid"
+    coffee:
+      name: "Robusta Blend"
+      caffeine_level: "extra"
