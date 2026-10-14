@@ -2967,3 +2967,34 @@ def test_long_notes_example_exceeds_the_old_cap():
     brew = _load_example_file(VALID_DIR / "valid_long_notes.yaml")["brews"][0]
     assert len(brew["coffee"]["cupping_notes"]) > 2000
     assert len(brew["equipment"]["notes"]) > 2000
+
+
+# ---------------------------------------------------------------------------
+# README stays current (CAL-2301): its quick-start example sat at v0.6, using
+# fields removed in v1.0, and it linked a spec file that no longer existed.
+# ---------------------------------------------------------------------------
+
+README_PATH = REPO_ROOT / "README.md"
+
+
+def test_readme_quick_start_example_is_valid(validator):
+    """The first YAML block in README.md validates against the current schema."""
+    text = README_PATH.read_text(encoding="utf-8")
+    start = text.index("```yaml\n") + len("```yaml\n")
+    block = text[start:text.index("```", start)]
+    validator.validate(json.loads(json.dumps(yaml.safe_load(block)), parse_float=decimal.Decimal))
+
+
+def test_readme_spec_links_resolve():
+    """Every brewspec-v*.md path README.md links exists in the repository."""
+    import re
+    text = README_PATH.read_text(encoding="utf-8")
+    linked = set(re.findall(r"\]\(\./((?:versions/)?brewspec-v[0-9.]+\.md)\)", text))
+    assert linked, "README.md links no spec file"
+    missing = sorted(p for p in linked if not (REPO_ROOT / p).exists())
+    assert missing == []
+
+
+def test_readme_names_the_current_spec():
+    """README.md links the current spec, brewspec-v1.2.md."""
+    assert "](./brewspec-v1.2.md)" in README_PATH.read_text(encoding="utf-8")

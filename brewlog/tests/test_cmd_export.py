@@ -123,6 +123,14 @@ def test_export_document_structure(runner_with_db, tmp_path):
     assert isinstance(doc["brews"], list)
 
 
+def test_export_help_names_the_current_version():
+    """CAL-2301: `brewlog --help` and `brewlog export --help` name BrewSpec v1.2
+    (they said v0.7 through 1.0 and 1.1)."""
+    runner = CliRunner()
+    assert "BrewSpec v1.2" in runner.invoke(cli, ["--help"]).output
+    assert "BrewSpec v1.2" in runner.invoke(cli, ["export", "--help"]).output
+
+
 def test_export_version_matches_bundled_schema_const():
     """CAL-2301: export writes the version the bundled schema requires.
 

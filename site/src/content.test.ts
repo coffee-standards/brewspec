@@ -126,3 +126,25 @@ describe('Hero.astro — v1.2', () => {
     expect(source).not.toContain('v1.1');
   });
 });
+
+describe('WhatItCovers.astro — v1.2 fields', () => {
+  const source = readSource('components/WhatItCovers.astro');
+
+  function card(tag: string, nextTag: string): string {
+    const start = source.indexOf(`field-group-tag">${tag}<`);
+    const end = source.indexOf(`field-group-tag">${nextTag}<`, start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    return source.slice(start, end);
+  }
+
+  it('Brew card lists the brew instant and servings', () => {
+    const brew = card('Brew', 'Coffee');
+    expect(brew).toMatch(/instant/i);
+    expect(brew).toMatch(/servings/i);
+  });
+
+  it('Coffee card lists caffeine level', () => {
+    expect(card('Coffee', 'Water')).toMatch(/caffeine level/i);
+  });
+});
