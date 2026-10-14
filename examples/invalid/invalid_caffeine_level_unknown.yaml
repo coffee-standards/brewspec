@@ -1,0 +1,7 @@
+# coffee.caffeine_level is one of regular, decaf, half_caf, extra.
+# Any other value fails.
+brewspec_version: "1.2"
+brews:
+  - type: "pour_over"
+    coffee:
+      caffeine_level: "low"

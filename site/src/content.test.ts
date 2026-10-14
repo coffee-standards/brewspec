@@ -64,3 +64,87 @@ describe('schema.astro — Result section table', () => {
     expect(resultSection).toMatch(/duration_s[\s\S]*?number[\s\S]*?&gt; 0/);
   });
 });
+
+/**
+ * CAL-2301: the field reference and the hero describe BrewSpec v1.2.
+ */
+
+function section(source: string, id: string, nextId: string): string {
+  const start = source.indexOf(`id="${id}"`);
+  const end = source.indexOf(`id="${nextId}"`, start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  return source.slice(start, end);
+}
+
+function row(sectionSource: string, field: string): string {
+  const start = sectionSource.indexOf(`<code>${field}</code>`);
+  expect(start).toBeGreaterThan(-1);
+  return sectionSource.slice(start, sectionSource.indexOf('</tr>', start));
+}
+
+describe('schema.astro — v1.2 field reference', () => {
+  const source = readSource('pages/schema.astro');
+
+  it('labels itself v1.2 and links the v1.2 schema', () => {
+    expect(source).toContain('v1.2 Field Reference');
+    expect(source).toContain('https://brewspec.coffee/schema/v1.2.json');
+    expect(source).not.toContain('v1.1');
+  });
+
+  it('documents the version const as "1.2"', () => {
+    expect(row(section(source, 'top-level', 'brew'), 'brewspec_version')).toContain('"1.2"');
+  });
+
+  it('documents brew.brewed_at with a required offset', () => {
+    expect(row(section(source, 'brew', 'coffee'), 'brewed_at')).toMatch(/offset/i);
+  });
+
+  it('documents brew.servings with a minimum of 1', () => {
+    expect(row(section(source, 'brew', 'coffee'), 'servings')).toMatch(/minimum: 1/);
+  });
+
+  it('documents coffee.caffeine_level and its four values', () => {
+    const r = row(section(source, 'coffee', 'origin'), 'caffeine_level');
+    for (const value of ['regular', 'decaf', 'half_caf', 'extra']) {
+      expect(r).toContain(`<code>${value}</code>`);
+    }
+  });
+
+  it('lists no maxLength for coffee.cupping_notes or equipment.notes', () => {
+    expect(row(section(source, 'coffee', 'origin'), 'cupping_notes')).not.toContain('maxLength');
+    expect(row(section(source, 'equipment', 'result'), 'notes')).not.toContain('maxLength');
+  });
+});
+
+describe('Hero.astro — v1.2', () => {
+  const source = readSource('components/Hero.astro');
+
+  it('shows a v1.2 document and the v1.2 label', () => {
+    expect(source).toContain('brewspec_version: "1.2"');
+    expect(source).toContain('v1.2');
+    expect(source).not.toContain('v1.1');
+  });
+});
+
+describe('WhatItCovers.astro — v1.2 fields', () => {
+  const source = readSource('components/WhatItCovers.astro');
+
+  function card(tag: string, nextTag: string): string {
+    const start = source.indexOf(`field-group-tag">${tag}<`);
+    const end = source.indexOf(`field-group-tag">${nextTag}<`, start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    return source.slice(start, end);
+  }
+
+  it('Brew card lists the brew instant and servings', () => {
+    const brew = card('Brew', 'Coffee');
+    expect(brew).toMatch(/instant/i);
+    expect(brew).toMatch(/servings/i);
+  });
+
+  it('Coffee card lists caffeine level', () => {
+    expect(card('Coffee', 'Water')).toMatch(/caffeine level/i);
+  });
+});

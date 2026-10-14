@@ -1,7 +1,7 @@
 """
 `brewlog import` command.
 
-Imports brews from a BrewSpec v1.0 YAML or JSON file.
+Imports brews from a BrewSpec YAML or JSON file of the version export writes.
 Validates the file against the JSON Schema before any DB writes.
 Uses yaml.safe_load() for all YAML parsing — yaml.load() is prohibited.
 All inserts are performed in a single transaction (all-or-nothing).
@@ -18,16 +18,18 @@ import yaml
 
 from brewlog import db, schema, serialise
 
-# Verbatim error message for non-v1.0 BrewSpec files.
-# The {version} placeholder is replaced with the version string found in the file.
-_V10_REQUIRED_MSG = """\
+# Verbatim error message for a BrewSpec file of any version but the one
+# export writes. {version} is the version found in the file; {required} is
+# serialise.BREWSPEC_VERSION.
+_VERSION_REQUIRED_MSG = """\
 Error: This file uses BrewSpec v{version}, which is not supported by BrewLog v1.0.
-BrewLog v1.0 requires BrewSpec v1.0.
+BrewLog v1.0 requires BrewSpec v{required}.
 
-To migrate your file from v0.9 to v1.0, make the following changes:
-  1. Bump brewspec_version from "0.9" to "1.0"
-  2. Rename water_weight_g to water_g
-  3. Rename notes to process_notes
+To migrate a v1.0 or v1.1 file, change brewspec_version to "{required}". No other change is needed.
+
+To migrate a v0.9 file, also make the following changes:
+  1. Rename water_weight_g to water_g
+  2. Rename notes to process_notes
 
 Full migration guide: https://github.com/coffee-standards/brewspec"""
 
@@ -53,7 +55,7 @@ def _brew_exists(brew_dict: dict, conn) -> bool:
 @click.argument("path", type=str)
 @click.pass_context
 def import_cmd(ctx: click.Context, path: str) -> None:
-    """Import brews from a BrewSpec v1.0 YAML or JSON file."""
+    """Import brews from a BrewSpec v1.2 YAML or JSON file."""
 
     # -- Path validation (before opening the file) --
     in_path = serialise.validate_import_path(path)
@@ -91,11 +93,14 @@ def import_cmd(ctx: click.Context, path: str) -> None:
         click.echo("Error: file content is not a valid BrewSpec document.", err=True)
         sys.exit(1)
 
-    # -- Check for non-v1.0 BrewSpec version before schema validation --
+    # -- Check the BrewSpec version before schema validation --
     file_version = str(doc.get("brewspec_version", ""))
-    if file_version != "1.0":
+    if file_version != serialise.BREWSPEC_VERSION:
         version_label = file_version if file_version else "(unknown)"
-        click.echo(_V10_REQUIRED_MSG.format(version=version_label), err=True)
+        click.echo(
+            _VERSION_REQUIRED_MSG.format(version=version_label, required=serialise.BREWSPEC_VERSION),
+            err=True,
+        )
         sys.exit(1)
 
     # -- Schema validation (before any DB writes or dedup checks) AC-19 --

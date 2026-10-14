@@ -2,7 +2,7 @@
 Serialisation tests for BrewLog CLI v1.0.
 
 Tests cover acceptance criteria for serialise.py and insert_brew_dict:
-AC-1:  BREWSPEC_VERSION is "1.0"
+AC-1:  BREWSPEC_VERSION is "1.2"
 AC-40: row_to_brew_dict reads water_g (not water_weight_g)
 AC-41: row_to_brew_dict reads process_notes (not notes)
 AC-42: row_to_brew_dict includes brew-level yield_g when present
@@ -32,18 +32,18 @@ from brewlog.serialise import BREWSPEC_VERSION
 
 
 # ---------------------------------------------------------------------------
-# AC-1: BREWSPEC_VERSION is "1.0"
+# AC-1: BREWSPEC_VERSION is "1.2"
 # ---------------------------------------------------------------------------
 
 class TestBrewspecVersion:
-    """AC-1: BREWSPEC_VERSION constant is "1.0"."""
+    """AC-1: BREWSPEC_VERSION constant is "1.2"."""
 
     def test_brewspec_version_is_1_0(self):
-        """BREWSPEC_VERSION must be '1.0'."""
-        assert BREWSPEC_VERSION == "1.0"
+        """BREWSPEC_VERSION must be '1.2'."""
+        assert BREWSPEC_VERSION == "1.2"
 
     def test_exported_document_has_version_1_0(self, tmp_db):
-        """rows_to_brewspec_document includes brewspec_version: "1.0"."""
+        """rows_to_brewspec_document includes brewspec_version: "1.2"."""
         db_module.insert_brew_dict({
             "date": "2026-03-30",
             "type": "espresso",
@@ -53,7 +53,7 @@ class TestBrewspecVersion:
         tmp_db.commit()
         rows = db_module.get_all_brews(tmp_db)
         doc = serialise.rows_to_brewspec_document(rows)
-        assert doc["brewspec_version"] == "1.0"
+        assert doc["brewspec_version"] == "1.2"
 
 
 # ---------------------------------------------------------------------------

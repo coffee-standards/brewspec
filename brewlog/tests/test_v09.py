@@ -643,8 +643,8 @@ class TestStatsDisplay:
 # ===========================================================================
 
 def test_brewspec_version_is_0_9():
-    """AC-13: BREWSPEC_VERSION == '1.0' (updated in v1.0)."""
-    assert BREWSPEC_VERSION == "1.0"
+    """AC-13: BREWSPEC_VERSION == '1.2' (updated in v1.0)."""
+    assert BREWSPEC_VERSION == "1.2"
 
 
 # ===========================================================================
@@ -658,7 +658,7 @@ def test_export_produces_brewspec_version_0_9(runner, db_path, tmp_path):
     result = runner.invoke(cli, ["export", str(out_file)])
     assert result.exit_code == 0
     data = yaml.safe_load(out_file.read_text())
-    assert data["brewspec_version"] == "1.0"
+    assert data["brewspec_version"] == "1.2"
 
 
 def test_export_rating_9_round_trips(runner, db_path, tmp_path):
@@ -691,7 +691,7 @@ class TestImportV09:
     def test_import_v09_document_accepted(self, runner, db_path, tmp_path):
         """AC-15: v1.0 document with rating 9 imports without error."""
         doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
@@ -707,7 +707,7 @@ class TestImportV09:
     def test_import_v09_document_rating_7_stored(self, runner, db_path, tmp_path):
         """AC-15: imported rating of 7 stored correctly in DB."""
         doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
@@ -730,7 +730,7 @@ class TestImportV09:
     def test_import_v09_document_all_ratings_1_through_9_valid(self, runner, db_path, tmp_path):
         """AC-15: v1.0 document with all dimensions at 9 accepted."""
         doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{
                 "date": "2026-03-21",
                 "type": "pour_over",
@@ -783,14 +783,14 @@ class TestBundledSchema:
         return json.loads(schema_path.read_text())
 
     def test_bundled_schema_version_const_is_0_9(self):
-        """D-3: brewspec_version const is '1.0' (updated in v1.0)."""
+        """D-3: brewspec_version const is '1.2' (updated in v1.0)."""
         schema = self._load_schema()
-        assert schema["properties"]["brewspec_version"]["const"] == "1.0"
+        assert schema["properties"]["brewspec_version"]["const"] == "1.2"
 
     def test_bundled_schema_title_mentions_v0_9(self):
         """D-3: schema title references v1.0 (updated in v1.0)."""
         schema = self._load_schema()
-        assert "1.0" in schema["title"]
+        assert "1.2" in schema["title"]
 
     def test_bundled_schema_ratings_overall_max_is_9(self):
         """D-3: ratings.overall maximum is 9."""

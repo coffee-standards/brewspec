@@ -23,38 +23,45 @@ BrewSpec solves this by providing a published JSON Schema and standard file form
 
 ### 1. Write a brew file
 
-Create a YAML file describing your brew:
+Create a YAML file describing your brew. Every field inside a brew is optional, so record what you measure:
 
 ```yaml
 # my_brew.yaml
-brewspec_version: "0.6"
+brewspec_version: "1.2"
 brews:
-  - date: "2026-02-15T08:30:00Z"
+  - date: "2026-10-14"
+    brewed_at: "2026-10-14T07:30:00+11:00"
     type: "pour_over"
     method: "Hario V60"
     dose_g: 20
-    water_weight_g: 320
+    water_g: 320
     water_temp_c: 96
+    grind: "medium_fine"
+    duration_s: 180
+    process_notes: "Rinsed filter paper before brewing"
     coffee:
-      roast_date: "2026-01-20"
-      type: "single_origin"
       name: "Ethiopia Yirgacheffe"
+      roaster: "Onyx"
+      roast_date: "2026-10-01"
+      roast_level: "light"
+      caffeine_level: "regular"
+      type: "single_origin"
       origins:
         - country: "Ethiopia"
           varietal: "Heirloom"
     water:
       ppm: 150
-    grind: "medium_fine"
-    duration_s: 180
-    notes: "Washed filter paper before brewing"
     result:
       tds: 1.38
-      tasting_notes: "Bright acidity, slightly under-extracted"
+      ey: 21.5
+      tasting_notes: "Bright acidity, jasmine, slightly under-extracted"
       ratings:
-        overall: 4
+        overall: 7
 ```
 
 ### 2. Validate against the schema
+
+The schema is published at `https://brewspec.coffee/schema/v1.2.json`, and the same file is [`brewspec.schema.json`](./brewspec.schema.json) in this repository.
 
 **Python:**
 ```bash
@@ -74,18 +81,20 @@ validator.validate(data)
 print("Valid!")
 ```
 
+`water_temp_c` uses `multipleOf: 0.1`, which binary floats get wrong. Parse numbers as `Decimal` before validating; the spec's *Validation* section shows how.
+
 **JavaScript/Node.js:**
 ```bash
 npm install ajv yaml
 ```
 
 ```javascript
-const Ajv = require("ajv");
+const Ajv2020 = require("ajv/dist/2020");
 const YAML = require("yaml");
 const fs = require("fs");
 
-const ajv = new Ajv();
-const schema = JSON.parse(fs.readFileSync("brewspec.schema.json"));
+const ajv = new Ajv2020();
+const schema = JSON.parse(fs.readFileSync("brewspec.schema.json", "utf8"));
 const validate = ajv.compile(schema);
 
 const data = YAML.parse(fs.readFileSync("my_brew.yaml", "utf8"));
@@ -96,54 +105,51 @@ if (validate(data)) {
 }
 ```
 
+The schema is JSON Schema Draft 2020-12, so use Ajv's 2020 build. The default `Ajv` class targets draft-07 and cannot compile it.
+
 **Command-line (ajv-cli):**
 ```bash
 npm install -g ajv-cli
-ajv validate -s brewspec.schema.json -d my_brew.yaml
+ajv validate --spec=draft2020 -s brewspec.schema.json -d my_brew.yaml
 ```
 
 ### 3. Read the spec
 
-See [`brewspec-v0.6.md`](./brewspec-v0.6.md) for the full field reference, constraints, and design decisions.
+See [`brewspec-v1.2.md`](./brewspec-v1.2.md) for the full field reference, constraints, and design decisions.
+
+---
+
+## What's new in v1.2
+
+BrewSpec 1.2 is an additive release. A valid 1.0 or 1.1 document is valid under 1.2 once `brewspec_version` is changed to `"1.2"`.
+
+- **`brew.brewed_at`**: the instant the brew was made, as an ISO 8601 date-time that must state its offset (`Z` or `±HH:MM`). When it is present, `date` is the brewer's local calendar day.
+- **`brew.servings`**: how many times the recipe was made, an integer of at least 1. Absent means 1. `dose_g`, `water_g` and `yield_g` describe one serving.
+- **`coffee.caffeine_level`**: `regular`, `decaf`, `half_caf` or `extra`. Absent means not recorded.
+- **`coffee.cupping_notes` and `equipment.notes`** no longer have a maximum length.
+
+The spec's *What Changed in v1.2* section explains each change and why.
 
 ---
 
 ## Repository Structure
 
 ```
-├── brewspec.schema.json     # JSON Schema (canonical spec)
-├── brewspec-v0.6.md         # Human-readable spec document (current)
+├── brewspec.schema.json     # JSON Schema: the canonical, machine-readable spec
+├── brewspec-v1.2.md         # Human-readable spec document (current)
 ├── README.md                # This file
 ├── LICENSE                  # Apache 2.0
 ├── NOTICE                   # Copyright attribution
 ├── examples/
-│   ├── valid/               # Valid example files (YAML + JSON)
-│   │   ├── pour_over.yaml
-│   │   ├── pour_over.json
-│   │   ├── immersion_minimal.yaml
-│   │   ├── espresso.yaml
-│   │   ├── multi_brew.yaml
-│   │   ├── hybrid.yaml
-│   │   └── equipment.yaml
-│   └── invalid/             # Invalid examples (for testing)
-│       ├── missing_version.yaml
-│       ├── missing_required_field.yaml
-│       ├── invalid_type_enum.yaml
-│       ├── negative_weight.yaml
-│       ├── empty_brews_array.yaml
-│       ├── v0.1_format.yaml
-│       └── zero_duration.yaml
-├── versions/
-│   ├── brewspec-v0.1.md     # Archived spec (v0.1)
-│   ├── brewspec-v0.2.md     # Archived spec (v0.2)
-│   ├── brewspec-v0.3.md     # Archived spec (v0.3)
-│   ├── brewspec-v0.4.md     # Archived spec (v0.4)
-│   └── brewspec-v0.5.md     # Archived spec (v0.5)
-├── tests/
-│   └── test_brewspec_schema.py
+│   ├── valid/               # Documents that pass validation (YAML and JSON)
+│   └── invalid/             # Documents that fail it, for testing validators
+├── versions/                # Archived spec documents for earlier versions
+├── tests/                   # Schema and example tests (pytest)
+├── site/                    # brewspec.coffee: docs site and published schemas
+│   └── public/schema/       # Every published schema, v0.7 to v1.2
 └── brewlog/                 # BrewLog CLI (reference implementation)
     ├── pyproject.toml
-    ├── src/brewlog/         # Python package
+    ├── src/brewlog/         # Python package, with a bundled copy of the schema
     └── tests/               # Test suite
 ```
 
@@ -151,48 +157,40 @@ See [`brewspec-v0.6.md`](./brewspec-v0.6.md) for the full field reference, const
 
 ## Schema
 
-BrewSpec v0.6 uses **JSON Schema Draft 2020-12**.
+BrewSpec v1.2 uses **JSON Schema Draft 2020-12**.
 
 - **Schema file:** [`brewspec.schema.json`](./brewspec.schema.json)
-- **Version:** 0.6 (stable)
+- **Published at:** `https://brewspec.coffee/schema/v1.2.json`. Earlier versions stay at `https://brewspec.coffee/schema/v<version>.json`.
+- **Version:** 1.2 (stable)
 - **Format:** YAML or JSON (both validate against the same schema)
 
 ---
 
 ## Examples
 
-**Valid examples** demonstrate correct usage:
-- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml) — Pour over with full coffee metadata, water ppm, result object
-- [`examples/valid/pour_over.json`](./examples/valid/pour_over.json) — Same brew in JSON format
-- [`examples/valid/immersion_minimal.yaml`](./examples/valid/immersion_minimal.yaml) — Minimal brew (required fields only)
-- [`examples/valid/espresso.yaml`](./examples/valid/espresso.yaml) — Espresso with result.ratings and tasting_notes
-- [`examples/valid/multi_brew.yaml`](./examples/valid/multi_brew.yaml) — Multiple brews; includes blend with multiple origins
-- [`examples/valid/hybrid.yaml`](./examples/valid/hybrid.yaml) — AeroPress hybrid brew with blend coffee and water ppm
-- [`examples/valid/equipment.yaml`](./examples/valid/equipment.yaml) — Full brew with equipment including numeric grinder_setting and all v0.6 result fields
+[`examples/valid/`](./examples/valid/) holds documents that pass validation, and [`examples/invalid/`](./examples/invalid/) holds documents that fail it, which are useful for testing a parser or validator. A few starting points:
 
-**Invalid examples** demonstrate common validation failures (useful for testing parsers):
-- [`examples/invalid/missing_version.yaml`](./examples/invalid/missing_version.yaml)
-- [`examples/invalid/missing_required_field.yaml`](./examples/invalid/missing_required_field.yaml)
-- [`examples/invalid/invalid_type_enum.yaml`](./examples/invalid/invalid_type_enum.yaml)
-- [`examples/invalid/negative_weight.yaml`](./examples/invalid/negative_weight.yaml)
-- [`examples/invalid/empty_brews_array.yaml`](./examples/invalid/empty_brews_array.yaml)
-- [`examples/invalid/v0.1_format.yaml`](./examples/invalid/v0.1_format.yaml) — v0.1 structure with nested dose_g
-- [`examples/invalid/zero_duration.yaml`](./examples/invalid/zero_duration.yaml) — duration_s: 0
-- [`examples/invalid/invalid_date_no_z.yaml`](./examples/invalid/invalid_date_no_z.yaml) — datetime string without Z suffix (`YYYY-MM-DDTHH:MM:SS` without the required UTC marker)
-- [`examples/invalid/invalid_grind_freeform.yaml`](./examples/invalid/invalid_grind_freeform.yaml) — freeform grind value not in the 7-value enum
-- [`examples/invalid/invalid_tds_at_brew_level.yaml`](./examples/invalid/invalid_tds_at_brew_level.yaml) — `tds` placed at the brew level (moved to `result.tds` in v0.4)
+- [`examples/valid/pour_over.yaml`](./examples/valid/pour_over.yaml): pour over with full coffee metadata, water ppm and a result object
+- [`examples/valid/espresso_full_symmetry.yaml`](./examples/valid/espresso_full_symmetry.yaml): espresso recording both the recipe target and the actual measurement for dose, water, yield and duration
+- [`examples/valid/valid_brewed_at.yaml`](./examples/valid/valid_brewed_at.yaml): `brewed_at` with `Z`, positive and negative offsets
+- [`examples/valid/valid_servings.yaml`](./examples/valid/valid_servings.yaml): a two-serving brew with per-serving recipe fields
+- [`examples/invalid/invalid_brewed_at_no_offset.yaml`](./examples/invalid/invalid_brewed_at_no_offset.yaml): an instant without an offset
+
+The spec's *Examples* section describes the main ones.
 
 ---
 
 ## Spec Document
 
-The human-readable spec is in [`brewspec-v0.6.md`](./brewspec-v0.6.md). It includes:
+The human-readable spec is [`brewspec-v1.2.md`](./brewspec-v1.2.md). It includes:
 - Field reference tables (types, constraints, descriptions, examples)
-- Enumeration definitions (brew types, coffee types, grind sizes)
-- Validation instructions (Python, JavaScript, CLI) with storage-time guidance
-- Design decisions (result object, grind enum, dual-format date, etc.)
-- Backward compatibility guide (v0.5 to v0.6 migration, step-by-step)
-- Archived specs: [`versions/brewspec-v0.5.md`](./versions/brewspec-v0.5.md), [`versions/brewspec-v0.4.md`](./versions/brewspec-v0.4.md), [`versions/brewspec-v0.3.md`](./versions/brewspec-v0.3.md), [`versions/brewspec-v0.2.md`](./versions/brewspec-v0.2.md), [`versions/brewspec-v0.1.md`](./versions/v0.1.md)
+- Enumeration definitions (brew types, coffee types, grind sizes, roast levels, water types, caffeine levels)
+- What changed in each version since v1.0, with design notes
+- Validation guidance, including storage-time validation and decimal parsing
+- Backward compatibility and migration steps
+- The CVA hedonic scale used by the 1–9 ratings
+
+Archived specs for earlier versions are in [`versions/`](./versions/). The previous version is [`versions/brewspec-v1.1.md`](./versions/brewspec-v1.1.md).
 
 ---
 
@@ -215,14 +213,16 @@ BrewSpec is an open standard. We welcome contributions!
 
 ### Testing your changes
 
-If you modify the schema or add examples, run the test suite:
+If you modify the schema or add examples, run both test suites. The schema is copied in three places (`brewspec.schema.json`, `site/public/schema/v<version>.json` and `brewlog/src/brewlog/brewspec.schema.json`), and the root suite checks that the copies match.
 
 ```bash
-# Install dependencies
+# Schema and examples
 pip install -r requirements.txt
+pytest tests/
 
-# Run tests
-pytest tests/test_brewspec_schema.py -v
+# BrewLog CLI
+pip install -e brewlog
+cd brewlog && pytest
 ```
 
 All tests must pass before changes are accepted.
@@ -241,7 +241,7 @@ Copyright 2026 Scott Luengen. See [NOTICE](./NOTICE) for details.
 
 **BrewLog** is the reference CLI implementation for BrewSpec — a local command-line tool for logging and tracking coffee brews using the BrewSpec format.
 
-Current version: **0.6.0** (targets BrewSpec v0.6)
+Current version: **1.0.0** (reads and writes BrewSpec v1.2)
 
 ### Install
 
@@ -252,137 +252,40 @@ pip install -e .
 
 ### Commands
 
-#### `brewlog add` — Log a new brew
+| Command | Does |
+|---|---|
+| `brewlog add` | Log a new brew. Prompts for date, type, dose and water if they are not given as flags. |
+| `brewlog list` | List recent brews, filtered by type, date range or overall rating. |
+| `brewlog show <id>` | Show every stored field for one brew. |
+| `brewlog update [<id>]` | Update optional fields on a brew; without an ID, the latest brew. |
+| `brewlog delete <id>` | Delete a brew, after confirmation unless `--force` is given. |
+| `brewlog search <query>` | Search notes, tasting notes, coffee name and origin data. |
+| `brewlog stats` | Print a summary of brew history. |
+| `brewlog export <path>` | Export brews to a BrewSpec v1.2 YAML or JSON file, or to CSV. |
+| `brewlog import <path>` | Import brews from a BrewSpec v1.2 YAML or JSON file. |
 
-Required fields (date, type, dose, water) are prompted interactively if not supplied as flags. All optional fields can be supplied as flags.
+Every command documents its flags under `--help`, for example `brewlog add --help`. Ratings use the 1–9 CVA scale.
 
 ```bash
-# Fully interactive
-brewlog add
-
-# Non-interactive with flags
-brewlog add --date 2026-02-23 --type pour_over --dose 20 --water 320
-
-# With result fields
-brewlog add --date 2026-02-23 --type pour_over --dose 20 --water 320 \
+# Log a brew with result fields
+brewlog add --date 2026-10-14 --type pour_over --dose 20 --water 320 \
   --method "V60" --grind medium_fine --temp 95 --duration 180 \
-  --tds 1.38 --ey 21.5 --brix 1.4 \
-  --tasting-notes "Bright acidity, floral" \
-  --rating-overall 4 --rating-aroma 4 --rating-flavour 5
-```
+  --tds 1.38 --ey 21.5 --tasting-notes "Bright acidity, floral" \
+  --rating-overall 7
 
-**Flags:**
+# Filter the list
+brewlog list --since 2026-10-01 --type espresso --rating-min 6
 
-| Flag | Type | Description |
-|---|---|---|
-| `--date` | string | Brew date: `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SSZ` (defaults to today) |
-| `--type` | enum | Brew type: `espresso`, `hybrid`, `immersion`, `pour_over` |
-| `--dose` | float | Coffee dose in grams (> 0) |
-| `--water` | float | Water weight in grams (> 0) |
-| `--method` | string | Brewer description, e.g. `"Hario V60"` |
-| `--grind` | enum | Grind size: `turkish`, `espresso`, `fine`, `medium_fine`, `medium`, `medium_coarse`, `coarse` |
-| `--temp` | float | Water temperature in Celsius (0–100) |
-| `--duration` | int | Brew duration in seconds (> 0) |
-| `--notes` | string | Brew process notes (up to 2000 chars) |
-| `--tds` | float | TDS percentage (> 0) |
-| `--ey` | float | Extraction yield percentage (> 0) |
-| `--brix` | float | Degrees Brix (>= 0) |
-| `--tasting-notes` | string | Sensory tasting notes — cup impressions (up to 2000 chars) |
-| `--rating-overall` | int | Overall impression, 1–5 |
-| `--rating-fragrance` | int | Fragrance rating, 1–5 |
-| `--rating-aroma` | int | Aroma rating, 1–5 |
-| `--rating-flavour` | int | Flavour rating, 1–5 |
-| `--rating-aftertaste` | int | Aftertaste rating, 1–5 |
-| `--rating-acidity` | int | Acidity rating, 1–5 |
-| `--rating-sweetness` | int | Sweetness rating, 1–5 |
-| `--rating-mouthfeel` | int | Mouthfeel rating, 1–5 |
-| `--roast-date` | string | Coffee roast date (YYYY-MM-DD) |
-| `--coffee-type` | enum | `single_origin` or `blend` |
-| `--coffee-name` | string | Coffee product name or descriptive label (e.g. `"Ethiopia Yirgacheffe"`) |
-| `--origin` | string | Coffee origin country (repeatable: `--origin Ethiopia --origin Colombia`) |
-| `--water-ppm` | float | Water mineral content in ppm (>= 0) |
-| `--grinder` | string | Grinder name or description |
-| `--brewer` | string | Brewer/dripper name or description |
-
-#### `brewlog list` — List recent brews
-
-Displays a table of recent brews ordered by date descending. Filters are combinable (logical AND) and the limit applies to the filtered result set.
-
-```bash
-brewlog list                              # last 20 brews
-brewlog list --limit 50                   # last 50 brews
-brewlog list --all                        # all brews
-brewlog list --type pour_over             # filter by type
-brewlog list --since 2026-01-01           # on or after date
-brewlog list --until 2026-02-01           # on or before date
-brewlog list --since 2026-01-01 --until 2026-02-01  # date range
-brewlog list --rating-min 4               # overall rating >= 4
-brewlog list --rating-max 3               # overall rating <= 3
-brewlog list --rating-min 3 --rating-max 4 --type espresso  # combined
-```
-
-**Flags:**
-
-| Flag | Type | Description |
-|---|---|---|
-| `--limit` | int | Number of brews to show (default: 20) |
-| `--all` | flag | Show all brews (overrides `--limit`) |
-| `--type` | enum | Filter by brew type: `espresso`, `hybrid`, `immersion`, `pour_over` |
-| `--since` | string | Filter brews on or after this date (YYYY-MM-DD) |
-| `--until` | string | Filter brews on or before this date (YYYY-MM-DD) |
-| `--rating-min` | int | Filter brews with overall rating >= N (1–5) |
-| `--rating-max` | int | Filter brews with overall rating <= N (1–5) |
-
-#### `brewlog show` — Show brew details
-
-Displays all stored fields for a brew by ID. Sections with no data (Results, Coffee, Water, Equipment) are omitted.
-
-```bash
-brewlog show 3
-```
-
-Output includes a Results section (TDS, EY, Brix, tasting notes, ratings dimensions) when result data is present.
-
-#### `brewlog update` — Update an existing brew
-
-Updates optional fields on an existing brew by ID. Omit the ID to update the most recently dated brew. At least one flag must be provided.
-
-```bash
-brewlog update 3 --rating-overall 4 --tasting-notes "Bright, floral"
-brewlog update --tds 1.40 --ey 22.1   # updates the latest brew
-```
-
-Supports all optional flags from `brewlog add` except the required fields (date, type, dose, water).
-
-#### `brewlog delete` — Delete a brew
-
-Deletes a brew by ID with a confirmation prompt. The `--force` flag skips confirmation. ID is required (no default-to-latest behaviour).
-
-```bash
-brewlog delete 3           # prompts for confirmation
-brewlog delete 3 --force   # skips confirmation
-```
-
-#### `brewlog export` — Export to BrewSpec file
-
-Exports all brews to a BrewSpec v0.6 YAML or JSON file. File format is determined by extension (`.yaml`, `.yml`, or `.json`).
-
-```bash
+# Round-trip through BrewSpec
 brewlog export my_brews.yaml
-brewlog export my_brews.json
-```
-
-#### `brewlog import` — Import from BrewSpec file
-
-Imports brews from a BrewSpec file. Requires BrewSpec v0.6 — earlier versions are rejected with an actionable error message.
-
-```bash
 brewlog import my_brews.yaml
 ```
 
+`import` accepts only BrewSpec v1.2. A file of any other version is rejected with the steps to migrate it; a v1.0 or v1.1 file needs only its `brewspec_version` changed.
+
 ### Storage
 
-BrewLog stores brews in a local SQLite database (`~/.brewlog/brews.db`). All input is validated against the BrewSpec v0.6 schema via Pydantic before writing.
+BrewLog stores brews in a local SQLite database (`~/.brewlog/brews.db`; `--db` selects another). `add` and `update` validate input before writing. `import` validates the whole file against the bundled BrewSpec v1.2 schema before writing anything, and stores the fields BrewLog tracks. Fields it does not track are dropped on import, among them `brewed_at`, `servings`, `caffeine_level`, `water.type` and `equipment.burr_set`. `export` validates its own output against the same schema before writing the file.
 
 See [`brewlog/`](./brewlog/) for the full source code and tests.
 
@@ -390,7 +293,7 @@ See [`brewlog/`](./brewlog/) for the full source code and tests.
 
 ## Questions?
 
-- Read the spec: [`brewspec-v0.6.md`](./brewspec-v0.6.md)
+- Read the spec: [`brewspec-v1.2.md`](./brewspec-v1.2.md)
 - Check the examples: [`examples/`](./examples/)
 - Open an issue: https://github.com/coffee-standards/brewspec
 - Email us: hello@brewspec.coffee

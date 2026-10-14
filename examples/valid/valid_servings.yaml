@@ -1,0 +1,10 @@
+# brew.servings (new in v1.2) is how many times the recipe was made. dose_g,
+# water_g and yield_g describe one serving, so this brew used 36 g of coffee
+# and 600 g of water in total. Absent means 1.
+brewspec_version: "1.2"
+brews:
+  - date: "2026-10-14"
+    type: "pour_over"
+    servings: 2
+    dose_g: 18.0
+    water_g: 300.0

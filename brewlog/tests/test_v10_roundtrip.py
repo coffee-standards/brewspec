@@ -130,7 +130,7 @@ class TestV10RoundTrip:
         """Import a v1.0 YAML file, export, validate, assert field values preserved."""
         # Construct a v1.0 BrewSpec document with all new fields
         v10_doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [
                 {
                     "date": "2026-03-30",
@@ -203,7 +203,7 @@ class TestImportV10ThenExportValidatesSchema:
     def test_import_v10_export_passes_schema(self, tmp_path, monkeypatch):
         """Standard import→export round-trip validates against v1.0 schema."""
         v10_doc = {
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [
                 {
                     "date": "2026-03-30",

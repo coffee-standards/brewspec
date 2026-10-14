@@ -118,9 +118,29 @@ def test_export_document_structure(runner_with_db, tmp_path):
     runner_with_db.invoke(cli, ["export", out_file])
     doc = yaml.safe_load(Path(out_file).read_text())
     assert "brewspec_version" in doc
-    assert doc["brewspec_version"] == "1.0"
+    assert doc["brewspec_version"] == "1.2"
     assert "brews" in doc
     assert isinstance(doc["brews"], list)
+
+
+def test_export_help_names_the_current_version():
+    """CAL-2301: `brewlog --help` and `brewlog export --help` name BrewSpec v1.2
+    (they said v0.7 through 1.0 and 1.1)."""
+    runner = CliRunner()
+    assert "BrewSpec v1.2" in runner.invoke(cli, ["--help"]).output
+    assert "BrewSpec v1.2" in runner.invoke(cli, ["export", "--help"]).output
+
+
+def test_export_version_matches_bundled_schema_const():
+    """CAL-2301: export writes the version the bundled schema requires.
+
+    serialise.py wrote "1.0" while the bundled schema's const was "1.1", so
+    every export failed its own schema check and wrote no file.
+    """
+    from brewlog import serialise
+    bundled_path = Path(schema_module.__file__).parent / schema_module.SCHEMA_RESOURCE_NAME
+    bundled = json.loads(bundled_path.read_text(encoding="utf-8"))
+    assert serialise.BREWSPEC_VERSION == bundled["properties"]["brewspec_version"]["const"]
 
 
 # ---------------------------------------------------------------------------

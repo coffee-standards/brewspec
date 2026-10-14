@@ -43,7 +43,7 @@ VALID_BREW = {
     "dose_g": 20,
     "water_g": 320
 }
-VALID_DOC = {"brewspec_version": "1.0", "brews": [VALID_BREW]}
+VALID_DOC = {"brewspec_version": "1.2", "brews": [VALID_BREW]}
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ def test_schema_is_valid_draft_2020_12(schema):
 
 def test_bundled_schema_is_v1_0(schema):
     """Bundled schema must declare version 1.0."""
-    assert schema["title"] == "BrewSpec v1.0"
+    assert schema["title"] == "BrewSpec v1.2"
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +67,7 @@ def test_bundled_schema_is_v1_0(schema):
 # ---------------------------------------------------------------------------
 
 def test_version_must_be_1_0(validator):
-    """brewspec_version is required and must be exactly '1.0'. Other values rejected."""
+    """brewspec_version is required and must be exactly '1.2'. Other values rejected."""
     # Missing version
     with pytest.raises(ValidationError):
         validator.validate({"brews": [VALID_BREW]})
@@ -128,11 +128,11 @@ def test_brews_must_be_nonempty_array(validator):
     """brews is required and must be an array with minimum 1 element."""
     # Missing brews
     with pytest.raises(ValidationError):
-        validator.validate({"brewspec_version": "1.0"})
+        validator.validate({"brewspec_version": "1.2"})
 
     # Empty array
     with pytest.raises(ValidationError):
-        validator.validate({"brewspec_version": "1.0", "brews": []})
+        validator.validate({"brewspec_version": "1.2", "brews": []})
 
     # Valid single-element array
     validator.validate(VALID_DOC)
@@ -145,34 +145,34 @@ def test_brews_must_be_nonempty_array(validator):
 def test_brew_fields_optional_in_v07(validator):
     """In v1.0 all four brew fields (date, type, dose_g, water_g) are optional."""
     # Empty brew object is valid
-    validator.validate({"brewspec_version": "1.0", "brews": [{}]})
+    validator.validate({"brewspec_version": "1.2", "brews": [{}]})
 
     # Missing date — valid
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{"type": "pour_over", "dose_g": 20, "water_g": 320}]
     })
 
     # Missing type — valid
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{"date": "2026-02-15T08:30:00Z", "dose_g": 20, "water_g": 320}]
     })
 
     # Missing dose_g — valid
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{"date": "2026-02-15T08:30:00Z", "type": "pour_over", "water_g": 320}]
     })
 
     # Missing water_g — valid
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{"date": "2026-02-15T08:30:00Z", "type": "pour_over", "dose_g": 20}]
     })
 
     # All four fields present — still valid
-    validator.validate({"brewspec_version": "1.0", "brews": [VALID_BREW]})
+    validator.validate({"brewspec_version": "1.2", "brews": [VALID_BREW]})
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +182,7 @@ def test_brew_fields_optional_in_v07(validator):
 def test_date_full_datetime_accepted(validator):
     """Full UTC datetime YYYY-MM-DDTHH:MM:SSZ is accepted."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "date": "2026-02-15T08:30:00Z"}]
     })
 
@@ -190,7 +190,7 @@ def test_date_full_datetime_accepted(validator):
 def test_date_only_accepted(validator):
     """Date-only YYYY-MM-DD is accepted in v0.4."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "date": "2026-02-15"}]
     })
 
@@ -207,7 +207,7 @@ def test_date_invalid_formats_rejected(validator):
     for invalid_date in invalid_dates:
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, "date": invalid_date}]
             })
 
@@ -223,7 +223,7 @@ def test_date_invalid_formats_rejected(validator):
 def test_grind_enum_values_accepted(validator, grind_value):
     """All 7 grind enum values are accepted."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "grind": grind_value}]
     })
 
@@ -232,7 +232,7 @@ def test_grind_freeform_rejected(validator):
     """Freeform grind value rejected — grind is enum in v0.4."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "grind": "setting 15"}]
         })
 
@@ -241,7 +241,7 @@ def test_grind_old_hyphenated_rejected(validator):
     """Old hyphenated value 'medium-fine' is rejected in v0.4 (enum uses underscores)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "grind": "medium-fine"}]
         })
 
@@ -250,7 +250,7 @@ def test_grind_wrong_case_rejected(validator):
     """Uppercase grind value rejected (enum is lowercase)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "grind": "MEDIUM"}]
         })
 
@@ -262,7 +262,7 @@ def test_grind_wrong_case_rejected(validator):
 def test_result_object_accepted(validator):
     """result object with valid fields is accepted."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{
             **VALID_BREW,
             "result": {"tds": 1.38, "ey": 20.5, "brix": 1.5}
@@ -273,7 +273,7 @@ def test_result_object_accepted(validator):
 def test_result_tds_valid(validator):
     """result.tds with positive value passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "result": {"tds": 1.38}}]
     })
 
@@ -282,7 +282,7 @@ def test_result_tds_zero_rejected(validator):
     """result.tds: 0 is rejected (exclusiveMinimum: 0)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"tds": 0}}]
         })
 
@@ -291,7 +291,7 @@ def test_result_tds_negative_rejected(validator):
     """result.tds: -1 is rejected."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"tds": -1}}]
         })
 
@@ -299,7 +299,7 @@ def test_result_tds_negative_rejected(validator):
 def test_result_ey_valid(validator):
     """result.ey with positive value passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "result": {"ey": 20.1}}]
     })
 
@@ -308,7 +308,7 @@ def test_result_ey_zero_rejected(validator):
     """result.ey: 0 is rejected (exclusiveMinimum: 0)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"ey": 0}}]
         })
 
@@ -317,7 +317,7 @@ def test_result_ey_negative_rejected(validator):
     """result.ey: -1 is rejected."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"ey": -1}}]
         })
 
@@ -325,11 +325,11 @@ def test_result_ey_negative_rejected(validator):
 def test_result_brix_valid(validator):
     """result.brix with non-negative value passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "result": {"brix": 0}}]
     })
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "result": {"brix": 1.5}}]
     })
 
@@ -338,7 +338,7 @@ def test_result_brix_negative_rejected(validator):
     """result.brix: -1 is rejected (minimum: 0)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"brix": -1}}]
         })
 
@@ -346,7 +346,7 @@ def test_result_brix_negative_rejected(validator):
 def test_result_tasting_notes_valid(validator):
     """result.tasting_notes non-empty string passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "result": {"tasting_notes": "Dark chocolate"}}]
     })
 
@@ -355,7 +355,7 @@ def test_result_tasting_notes_empty_rejected(validator):
     """result.tasting_notes empty string rejected."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"tasting_notes": ""}}]
         })
 
@@ -364,7 +364,7 @@ def test_result_unknown_field_rejected(validator):
     """result with unknown field rejected (additionalProperties: false)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"unknown": "bad"}}]
         })
 
@@ -376,7 +376,7 @@ def test_result_unknown_field_rejected(validator):
 def test_ratings_all_dimensions_accepted(validator):
     """ratings object with all 8 SCA dimensions passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{
             **VALID_BREW,
             "result": {
@@ -403,13 +403,13 @@ def test_ratings_dimension_range_1_to_9(validator, dim):
     """Each ratings dimension accepts 1-9 (v1.0 range); rejects 0, 10, and -1."""
     for valid_val in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"ratings": {dim: valid_val}}}]
         })
     for invalid_val in [0, 10, -1]:
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, "result": {"ratings": {dim: invalid_val}}}]
             })
 
@@ -418,7 +418,7 @@ def test_ratings_unknown_field_rejected(validator):
     """ratings with unknown field rejected (additionalProperties: false)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "result": {"ratings": {"style": 4}}}]
         })
 
@@ -431,7 +431,7 @@ def test_flat_tds_at_brew_level_rejected(validator):
     """tds directly on brew (not inside result) is rejected in v0.4."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "tds": 1.38}]
         })
 
@@ -440,7 +440,7 @@ def test_flat_ey_at_brew_level_rejected(validator):
     """ey directly on brew (not inside result) is rejected in v0.4."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "ey": 20.5}]
         })
 
@@ -449,7 +449,7 @@ def test_flat_rating_at_brew_level_rejected(validator):
     """rating directly on brew (not inside result.ratings) is rejected in v0.4."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "rating": 4}]
         })
 
@@ -461,7 +461,7 @@ def test_flat_rating_at_brew_level_rejected(validator):
 def test_optional_brew_fields_accepted(validator):
     """Optional brew-level fields are accepted when valid."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{
             **VALID_BREW,
             "method": "Hario V60",
@@ -476,7 +476,7 @@ def test_optional_brew_fields_accepted(validator):
 def test_minimal_brew_passes(validator):
     """Brew with only required fields should pass."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{"date": "2026-02-15T08:30:00Z", "type": "immersion",
                    "dose_g": 30, "water_g": 500}]
     })
@@ -493,7 +493,7 @@ def test_negative_values_rejected(validator):
     ]:
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, field: value}]
             })
 
@@ -503,7 +503,7 @@ def test_zero_weight_rejected(validator):
     for field in ("dose_g", "water_g"):
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, field: 0}]
             })
 
@@ -513,12 +513,12 @@ def test_temperature_range(validator):
     for invalid_temp in [-1, 101]:
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, "water_temp_c": invalid_temp}]
             })
     for valid_temp in [0, 50, 100]:
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "water_temp_c": valid_temp}]
         })
 
@@ -532,12 +532,12 @@ def test_type_enum_validation(validator):
     for invalid_type in ["drip", "aeropress", "cold_brew"]:
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, "type": invalid_type}]
             })
     for valid_type in ["immersion", "pour_over", "espresso", "hybrid"]:
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "type": valid_type}]
         })
 
@@ -551,7 +551,7 @@ def test_freeform_text_fields_not_empty(validator):
     for field in ("method", "process_notes"):
         with pytest.raises(ValidationError):
             validator.validate({
-                "brewspec_version": "1.0",
+                "brewspec_version": "1.2",
                 "brews": [{**VALID_BREW, field: ""}]
             })
 
@@ -559,12 +559,12 @@ def test_freeform_text_fields_not_empty(validator):
 def test_method_maxlength_boundary(validator):
     """method: 100 chars passes; 101 chars fails (maxLength: 100)."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "method": "x" * 100}]
     })
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "method": "x" * 101}]
         })
 
@@ -572,12 +572,12 @@ def test_method_maxlength_boundary(validator):
 def test_notes_maxlength_boundary(validator):
     """notes: 2000 chars passes; 2001 chars fails (maxLength: 2000)."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "process_notes": "x" * 2000}]
     })
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "process_notes": "x" * 2001}]
         })
 
@@ -590,7 +590,7 @@ def test_additional_properties_rejected(validator):
     """Unknown fields at brew level rejected (additionalProperties: false)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "unknown_field": "should fail"}]
         })
 
@@ -602,7 +602,7 @@ def test_additional_properties_rejected(validator):
 def test_equipment_both_fields_accepted(validator):
     """equipment with both grinder and brewer passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "equipment": {
             "grinder": "Comandante C40 MK4", "brewer": "Hario V60 02"
         }}]
@@ -612,7 +612,7 @@ def test_equipment_both_fields_accepted(validator):
 def test_equipment_grinder_only_accepted(validator):
     """equipment with only grinder passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "equipment": {"grinder": "Niche Zero"}}]
     })
 
@@ -620,7 +620,7 @@ def test_equipment_grinder_only_accepted(validator):
 def test_equipment_brewer_only_accepted(validator):
     """equipment with only brewer passes."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "equipment": {"brewer": "French Press"}}]
     })
 
@@ -628,7 +628,7 @@ def test_equipment_brewer_only_accepted(validator):
 def test_equipment_empty_object_accepted(validator):
     """equipment: {} (empty object) passes (no fields required inside)."""
     validator.validate({
-        "brewspec_version": "1.0",
+        "brewspec_version": "1.2",
         "brews": [{**VALID_BREW, "equipment": {}}]
     })
 
@@ -637,7 +637,7 @@ def test_equipment_unknown_field_rejected(validator):
     """equipment with unrecognised field rejected (additionalProperties: false)."""
     with pytest.raises(ValidationError):
         validator.validate({
-            "brewspec_version": "1.0",
+            "brewspec_version": "1.2",
             "brews": [{**VALID_BREW, "equipment": {"kettle": "Fellow Stagg EKG"}}]
         })
 
@@ -685,7 +685,7 @@ def test_json_format_supported(validator):
 # Schema $id canonical URL
 # ---------------------------------------------------------------------------
 
-CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.0.json"
+CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.2.json"
 
 
 def test_schema_id_is_canonical_url(schema):

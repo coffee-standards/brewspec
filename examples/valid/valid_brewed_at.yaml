@@ -1,0 +1,16 @@
+# brew.brewed_at (new in v1.2) is the instant the brew was made, and it must state
+# its offset. date stays date-only: the brewer's local calendar day.
+brewspec_version: "1.2"
+brews:
+  - date: "2026-10-14"
+    brewed_at: "2026-10-14T07:30:00+11:00"
+    type: "pour_over"
+    dose_g: 18.0
+    water_g: 288.0
+  - date: "2026-10-13"
+    brewed_at: "2026-10-13T21:05:12.483117-07:00"
+    type: "espresso"
+    dose_g: 18.0
+    yield_g: 36.0
+  - brewed_at: "2026-10-12T06:45:00Z"
+    type: "immersion"

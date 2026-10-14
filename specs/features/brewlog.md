@@ -1,7 +1,7 @@
 ---
 feature: brewlog-cli
 status: implemented        # implemented | partial | planned
-last_updated: 2026-06-06
+last_updated: 2026-10-14
 linear: []
 ---
 
@@ -27,7 +27,7 @@ linear: []
 | `brewlog stats` | Aggregate statistics over the log. |
 | `brewlog search` | Search brews. |
 
-The user-facing reference (flags, examples) lives in `brewlog/README.md`.
+The user-facing reference is the root `README.md` → *BrewLog CLI* section, which lists the commands and gives examples. Each command's flags are documented only by its `--help`; the README carries no flag table, because the hand-copied one drifted (it still listed 1–5 ratings at v0.6). `brewlog --help` and `brewlog export --help` name the BrewSpec version export writes, and a test pins that to v1.2.
 
 ## Data model
 
@@ -36,6 +36,10 @@ Brews persist in a local **SQLite** database (`db.py`). In memory they are **Pyd
 ## Interface surface
 
 A local CLI — no network, no server, single user. The interop boundary is `import` / `export` (BrewSpec files), which is what makes a user's data portable: log here, export, take it elsewhere.
+
+**Version.** `export` writes, and `import` accepts, exactly the BrewSpec version in `serialise.BREWSPEC_VERSION`, which is `"1.2"`. `import` reads that constant rather than a second literal. A file of any other version is refused before schema validation, with a message naming the required version and the migration: from v1.0 or v1.1, change `brewspec_version` only; from v0.9, also rename `water_weight_g` to `water_g` and `notes` to `process_notes`. A test pins `BREWSPEC_VERSION` to the bundled schema's `brewspec_version` const. Until CAL-2301 the two had drifted (`"1.0"` against `"1.1"`), so every export failed its own schema check and every import was refused.
+
+**Fields import drops.** `import` validates the whole document against the bundled schema, then stores only the fields BrewLog models. It drops v1.1's `water.type`, `water.notes`, `equipment.burr_set` and `equipment.rpm`, and v1.2's `brew.brewed_at`, `brew.servings` and `coffee.caffeine_level`. A file using them imports, and those values are not stored or exported again.
 
 ## Known limitations
 
@@ -59,4 +63,4 @@ Local, single-user only — no sync or multi-device. This is deliberate (local-f
 
 - `specs/features/brewspec.md` — the format BrewLog stores and round-trips
 - `brewlog/` — the package (`src/`, `tests/`)
-- `brewlog/README.md` — user-facing command reference
+- `README.md` → *BrewLog CLI* — user-facing command reference; flags are under each command's `--help`

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import click
 
-BREWSPEC_VERSION = "1.0"
+BREWSPEC_VERSION = "1.2"
 
 
 # ---------------------------------------------------------------------------
@@ -175,8 +175,8 @@ def row_to_brew_dict(row: sqlite3.Row) -> dict:
 
 def rows_to_brewspec_document(rows: list[sqlite3.Row]) -> dict:
     """
-    Convert a list of DB rows to a full BrewSpec v1.0 document dict.
-    Returns {"brewspec_version": "1.0", "brews": [...]}.
+    Convert a list of DB rows to a full BrewSpec document dict.
+    Returns {"brewspec_version": BREWSPEC_VERSION, "brews": [...]}.
 
     Note: any _invalid_grind sentinels are stripped here. Use the export
     command's inline construction if you need to emit per-brew warnings.

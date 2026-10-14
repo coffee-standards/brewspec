@@ -121,7 +121,7 @@ def test_migration_idempotent(tmp_path):
 def test_import_v07_doc_with_yield_stores_result_yield_g(tmp_path):
     """AC: importing a v0.7 document with result.yield_g stores it in DB."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - date: "2026-03-16"
     type: "espresso"
@@ -154,7 +154,7 @@ brews:
 def test_import_v07_doc_without_yield_stores_null(tmp_path):
     """AC: importing a v0.7 document without result.yield_g stores NULL."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - date: "2026-03-16"
     type: "pour_over"
@@ -238,7 +238,7 @@ def test_export_document_version_is_current(tmp_path):
     conn.close()
 
     doc = rows_to_brewspec_document(rows)
-    assert doc["brewspec_version"] == "1.0"
+    assert doc["brewspec_version"] == "1.2"
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +248,7 @@ def test_export_document_version_is_current(tmp_path):
 def test_import_export_roundtrip_with_yield(tmp_path):
     """AC: yield_g survives import → DB → export with same value."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - date: "2026-03-16"
     type: "espresso"
@@ -326,7 +326,7 @@ def test_show_brew_without_yield_omits_yield_line(tmp_path):
 def test_import_v09_file_accepted(tmp_path):
     """AC: importing a file with brewspec_version '0.9' succeeds (CLI v0.8 adopts BrewSpec v0.9)."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - date: "2026-03-16"
     type: "pour_over"
@@ -383,7 +383,7 @@ brews:
     assert result.exit_code == 1
     expected = (
         "Error: This file uses BrewSpec v0.6, which is not supported by BrewLog v1.0.\n"
-        "BrewLog v1.0 requires BrewSpec v1.0."
+        "BrewLog v1.0 requires BrewSpec v1.2."
     )
     assert expected in result.output
 
@@ -400,7 +400,7 @@ def test_bundled_schema_is_v09():
     ) as f:
         import json as json_mod
         schema = json_mod.load(f)
-    assert schema["properties"]["brewspec_version"]["const"] == "1.0"
+    assert schema["properties"]["brewspec_version"]["const"] == "1.2"
 
 
 # ---------------------------------------------------------------------------
@@ -411,7 +411,7 @@ def test_import_minimal_v07_brew_no_required_fields_stores_without_error(tmp_pat
     """AC-4: importing a v1.0 brew with none of the four formerly-required fields
     (date, type, dose_g, water_g) succeeds and stores a row with NULLs."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - process_notes: "partial brew, no required fields"
 """
@@ -441,7 +441,7 @@ def test_import_minimal_v07_brew_round_trips(tmp_path):
     """AC-4: partial brew (no date/type/dose_g/water_g) round-trips through
     import → DB → export without error and preserves present fields."""
     yaml_content = """
-brewspec_version: "1.0"
+brewspec_version: "1.2"
 brews:
   - process_notes: "espresso experiment"
     result:
@@ -461,7 +461,7 @@ brews:
     doc = rows_to_brewspec_document(rows)
     conn.close()
 
-    assert doc["brewspec_version"] == "1.0"
+    assert doc["brewspec_version"] == "1.2"
     brew = doc["brews"][0]
     assert brew.get("process_notes") == "espresso experiment"
     assert brew["result"]["yield_g"] == 42.0
