@@ -685,7 +685,7 @@ def test_json_format_supported(validator):
 # Schema $id canonical URL
 # ---------------------------------------------------------------------------
 
-CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.0.json"
+CANONICAL_SCHEMA_ID = "https://brewspec.coffee/schema/v1.2.json"
 
 
 def test_schema_id_is_canonical_url(schema):
