@@ -27,7 +27,7 @@ linear: []
 | `brewlog stats` | Aggregate statistics over the log. |
 | `brewlog search` | Search brews. |
 
-The user-facing reference (flags, examples) lives in `brewlog/README.md`.
+The user-facing reference is the root `README.md` → *BrewLog CLI* section, which lists the commands and gives examples. Each command's flags are documented only by its `--help`; the README carries no flag table, because the hand-copied one drifted (it still listed 1–5 ratings at v0.6). `brewlog --help` and `brewlog export --help` name the BrewSpec version export writes, and a test pins that to v1.2.
 
 ## Data model
 
@@ -63,4 +63,4 @@ Local, single-user only — no sync or multi-device. This is deliberate (local-f
 
 - `specs/features/brewspec.md` — the format BrewLog stores and round-trips
 - `brewlog/` — the package (`src/`, `tests/`)
-- `brewlog/README.md` — user-facing command reference
+- `README.md` → *BrewLog CLI* — user-facing command reference; flags are under each command's `--help`
