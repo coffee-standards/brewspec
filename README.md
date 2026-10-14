@@ -176,7 +176,7 @@ BrewSpec v1.2 uses **JSON Schema Draft 2020-12**.
 - [`examples/valid/valid_servings.yaml`](./examples/valid/valid_servings.yaml): a two-serving brew with per-serving recipe fields
 - [`examples/invalid/invalid_brewed_at_no_offset.yaml`](./examples/invalid/invalid_brewed_at_no_offset.yaml): an instant without an offset
 
-The spec's *Examples* section describes every example file.
+The spec's *Examples* section describes the main ones.
 
 ---
 
