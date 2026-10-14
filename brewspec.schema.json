@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://brewspec.coffee/schema/v1.1.json",
-  "title": "BrewSpec v1.1",
+  "$id": "https://brewspec.coffee/schema/v1.2.json",
+  "title": "BrewSpec v1.2",
   "description": "An open standard for describing coffee brews.",
   "type": "object",
   "required": ["brewspec_version", "brews"],
   "additionalProperties": false,
   "properties": {
     "brewspec_version": {
-      "const": "1.1",
-      "description": "The BrewSpec version. Must be \"1.1\"."
+      "const": "1.2",
+      "description": "The BrewSpec version. Must be \"1.2\"."
     },
     "brews": {
       "type": "array",
@@ -37,8 +37,14 @@
               "description": "Date-only in YYYY-MM-DD format."
             }
           ],
-          "description": "Brew date. Accepts YYYY-MM-DD (date-only) or YYYY-MM-DDTHH:MM:SSZ (full UTC datetime).",
+          "description": "Brew date. Accepts YYYY-MM-DD (date-only) or YYYY-MM-DDTHH:MM:SSZ (full UTC datetime). When brewed_at is present, date is date-only: the brewer's local calendar day, and brewed_at carries the instant.",
           "examples": ["2026-02-21", "2026-02-15T08:30:00Z"]
+        },
+        "brewed_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$",
+          "description": "The instant the brew was made: an ISO 8601 date-time (RFC 3339 profile) that must state its offset, either Z or ±HH:MM. Fractional seconds are allowed. The offset is enforced by pattern, because format: date-time is annotation-only in a validator built without a format checker. When present, brewed_at is the instant and date is date-only (the brewer's local calendar day), so the two never carry competing instants. New in v1.2.",
+          "examples": ["2026-10-14T07:30:00+11:00", "2026-10-13T21:05:12.483117-07:00", "2026-10-12T06:45:00Z"]
         },
         "type": {
           "type": "string",
@@ -66,6 +72,12 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "description": "Recipe target output weight in grams. Must be > 0. Primarily useful for espresso dialling — the intended liquid yield before pulling the shot. For actual output weight measured after brewing, use result.yield_g."
+        },
+        "servings": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many times the recipe was made. Integer >= 1, no maximum. Absent means 1. dose_g, water_g and yield_g describe one serving, so a reader that ignores servings still reads a correct recipe. New in v1.2.",
+          "examples": [1, 2, 4]
         },
         "brew_ratio": {
           "type": "number",
@@ -133,6 +145,11 @@
           "enum": ["light", "medium", "dark"],
           "description": "Roast level category. Deliberately coarse — three values cover the labels on the majority of retail bags. For finer roast detail, use process_notes. New in v0.8."
         },
+        "caffeine_level": {
+          "type": "string",
+          "enum": ["regular", "decaf", "half_caf", "extra"],
+          "description": "Caffeine level of the coffee. extra means more caffeine than regular. Absent means not recorded. New in v1.2."
+        },
         "roast_date": {
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
@@ -155,8 +172,7 @@
         "cupping_notes": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 2000,
-          "description": "Sensory notes on the coffee as a whole — typically from a bag description or a pre-brew cupping session (e.g. 'blueberry, jasmine, honey sweetness'). For a single-origin coffee, coffee.cupping_notes describes the coffee overall; origin.cupping_notes may duplicate it or be more specific. For blends, coffee.cupping_notes describes the blend as a whole while each origin.cupping_notes describes the individual component. New in v1.0."
+          "description": "Sensory notes on the coffee as a whole — typically from a bag description or a pre-brew cupping session (e.g. 'blueberry, jasmine, honey sweetness'). For a single-origin coffee, coffee.cupping_notes describes the coffee overall; origin.cupping_notes may duplicate it or be more specific. For blends, coffee.cupping_notes describes the blend as a whole while each origin.cupping_notes describes the individual component. New in v1.0. No maxLength since v1.2."
         }
       }
     },
@@ -292,8 +308,7 @@
         "notes": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 2000,
-          "description": "Equipment state notes — observations about maintenance, calibration, filter type, or burr age. Distinct from brew-level process_notes, which record preparation observations.",
+          "description": "Equipment state notes — observations about maintenance, calibration, filter type, or burr age. Distinct from brew-level process_notes, which record preparation observations. No maxLength since v1.2.",
           "examples": ["Burrs replaced 2026-01", "AeroPress rubber seal replaced"]
         },
         "pressure_bar": {

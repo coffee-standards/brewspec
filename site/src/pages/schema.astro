@@ -5,13 +5,13 @@ import Footer from '../components/Footer.astro';
 ---
 <Base
   title="BrewSpec Field Reference — Every field in the schema"
-  description="Complete field reference for BrewSpec v1.1: every field, type, constraint, and description."
+  description="Complete field reference for BrewSpec v1.2: every field, type, constraint, and description."
 >
   <Nav />
   <main>
     <section id="schema-hero">
       <div class="content-width">
-        <p class="schema-eyebrow">v1.1 Field Reference</p>
+        <p class="schema-eyebrow">v1.2 Field Reference</p>
         <h1>What's in the schema.</h1>
         <p class="schema-intro">
           Every field BrewSpec defines: type, constraints, and what it's for.
@@ -37,11 +37,11 @@ import Footer from '../components/Footer.astro';
           </ul>
           <div class="sidebar-footer">
             <a
-              href="https://brewspec.coffee/schema/v1.1.json"
+              href="https://brewspec.coffee/schema/v1.2.json"
               class="sidebar-schema-link"
               target="_blank"
               rel="noopener noreferrer"
-            >v1.1.json ↗</a>
+            >v1.2.json ↗</a>
           </div>
         </nav>
       </aside>
@@ -66,8 +66,8 @@ import Footer from '../components/Footer.astro';
                   <td><code>brewspec_version</code></td>
                   <td>string</td>
                   <td>Yes</td>
-                  <td>const: <code>"1.0"</code></td>
-                  <td>Must be the literal string "1.0".</td>
+                  <td>const: <code>"1.2"</code></td>
+                  <td>Must be the literal string "1.2".</td>
                 </tr>
                 <tr>
                   <td><code>brews</code></td>
@@ -99,7 +99,13 @@ import Footer from '../components/Footer.astro';
                   <td><code>date</code></td>
                   <td>string</td>
                   <td><code>YYYY-MM-DD</code> or <code>YYYY-MM-DDTHH:MM:SSZ</code></td>
-                  <td>Brew date or datetime (UTC).</td>
+                  <td>Brew date or datetime (UTC). When brewed_at is present, date is date-only: the brewer's local calendar day.</td>
+                </tr>
+                <tr>
+                  <td><code>brewed_at</code></td>
+                  <td>string</td>
+                  <td>ISO 8601 date-time with a required offset: <code>Z</code> or <code>±HH:MM</code></td>
+                  <td>The instant the brew was made. New in v1.2.</td>
                 </tr>
                 <tr>
                   <td><code>type</code></td>
@@ -118,6 +124,12 @@ import Footer from '../components/Footer.astro';
                   <td>number</td>
                   <td>&gt; 0</td>
                   <td>Recipe target water in grams.</td>
+                </tr>
+                <tr>
+                  <td><code>servings</code></td>
+                  <td>integer</td>
+                  <td>minimum: 1</td>
+                  <td>How many times the recipe was made. Absent means 1. <code>dose_g</code>, <code>water_g</code> and <code>yield_g</code> describe one serving. New in v1.2.</td>
                 </tr>
                 <tr>
                   <td><code>brew_ratio</code></td>
@@ -223,6 +235,12 @@ import Footer from '../components/Footer.astro';
                   <td>Roast level category.</td>
                 </tr>
                 <tr>
+                  <td><code>caffeine_level</code></td>
+                  <td>string</td>
+                  <td>Enum: <code>regular</code>, <code>decaf</code>, <code>half_caf</code>, <code>extra</code></td>
+                  <td>Caffeine level. <code>extra</code> means more caffeine than regular. Absent means not recorded. New in v1.2.</td>
+                </tr>
+                <tr>
                   <td><code>roast_date</code></td>
                   <td>string</td>
                   <td><code>YYYY-MM-DD</code></td>
@@ -243,8 +261,8 @@ import Footer from '../components/Footer.astro';
                 <tr>
                   <td><code>cupping_notes</code></td>
                   <td>string</td>
-                  <td>maxLength: 2000</td>
-                  <td>Sensory notes for the coffee (bag description or pre-brew cupping).</td>
+                  <td>minLength: 1</td>
+                  <td>Sensory notes for the coffee (bag description or pre-brew cupping). No length limit since v1.2.</td>
                 </tr>
               </tbody>
             </table>
@@ -432,8 +450,8 @@ import Footer from '../components/Footer.astro';
                 <tr>
                   <td><code>notes</code></td>
                   <td>string</td>
-                  <td>maxLength: 2000</td>
-                  <td>Equipment state observations (burr age, filter type, etc.).</td>
+                  <td>minLength: 1</td>
+                  <td>Equipment state observations (burr age, filter type, etc.). No length limit since v1.2.</td>
                 </tr>
               </tbody>
             </table>
