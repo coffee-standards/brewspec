@@ -2487,21 +2487,16 @@ def test_schema_copies_are_identical():
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# Version bump — const "1.1", title "BrewSpec v1.1"
+# Version const — the current schema requires "1.2"
 # ---------------------------------------------------------------------------
 
-def test_schema_title_is_v1_1(schema):
-    """Schema title must be 'BrewSpec v1.1'."""
-    assert schema["title"] == "BrewSpec v1.2"
-
-
-def test_version_must_be_1_1(validator):
-    """brewspec_version '1.1' is required and accepted."""
+def test_version_must_be_1_2(validator):
+    """brewspec_version '1.2' is required and accepted."""
     validator.validate({"brewspec_version": "1.2", "brews": [VALID_BREW]})
 
 
-def test_version_1_1_rejects_1_0(validator):
-    """brewspec_version '1.0' is rejected by the v1.1 schema."""
+def test_version_1_2_rejects_1_0(validator):
+    """brewspec_version '1.0' is rejected by the v1.2 schema."""
     with pytest.raises(ValidationError):
         validator.validate({"brewspec_version": "1.0", "brews": [{"type": "pour_over"}]})
 
@@ -2756,7 +2751,7 @@ def test_equipment_all_v1_1_fields_accepted(validator):
 # ---------------------------------------------------------------------------
 
 def test_water_and_grinder_hardware_example_passes(validator):
-    """examples/valid/water_and_grinder_hardware.yaml passes v1.1 validation."""
+    """examples/valid/water_and_grinder_hardware.yaml passes v1.2 validation."""
     path = VALID_DIR / "water_and_grinder_hardware.yaml"
     data = _load_yaml_example(path)
     validator.validate(data)
